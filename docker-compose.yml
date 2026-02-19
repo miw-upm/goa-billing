@@ -5,6 +5,8 @@ services:
     restart: always
 #    ports: ["0:8083"] # Expose the container port on a random host port
 #    ports: ["8083"] # Don't expose the container port
+    ports:
+      - "8083:8083"
     environment:
       SPRING_DATA_MONGODB_URI: mongodb://mongo:mongo@mongo:27017/goabillingdb?authSource=admin
       EUREKA_CLIENT_SERVICE-URL_DEFAULTZONE: http://host.docker.internal:8761/eureka/
