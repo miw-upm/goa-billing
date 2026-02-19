@@ -1,0 +1,66 @@
+name: CD
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  cd:
+    name: Build & Push GitHub Package & Deploy on AWS Lightsail
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: ⬇️ Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: ☕ Set up Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: maven
+
+      - name: 🏷️ Extract GitHub Container Registry, repository (lowercase) & version from pom
+        run: |
+          echo "REPOSITORY=${GITHUB_REPOSITORY,,}" >> $GITHUB_ENV
+          echo "ARTIFACT=$(mvn help:evaluate -Dexpression=project.artifactId -q -DforceStdout)" >> $GITHUB_ENV          
+          echo "VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)" >> $GITHUB_ENV
+
+      - name: 📦 Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GHCR_PERSONAL_ACCESS_TOKEN }}
+
+      - name: 🐳 Build & Push Docker image
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          push: true
+          tags: |
+            ghcr.io/${{ env.REPOSITORY }}:${{ env.VERSION }}
+            ghcr.io/${{ env.REPOSITORY }}:latest
+
+      - name: 🚀 Deploy on AWS Lightsail
+        uses: appleboy/ssh-action@v1.2.1
+        with:
+          host: ${{ secrets.AWS_LIGHTSAIL_IP }}
+          username: ${{ secrets.AWS_LIGHTSAIL_USER }}
+          key: ${{ secrets.AWS_LIGHTSAIL_SSH_KEY }}
+          script: |
+            echo ${{ secrets.GHCR_PERSONAL_ACCESS_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+            docker rm -f ${{ env.ARTIFACT }} || true
+            docker pull ghcr.io/${{ env.REPOSITORY }}:latest
+            docker run -d \
+              --name ${{ env.ARTIFACT }} \
+              --restart always \
+              --network goa \
+              -e MONGODB_URI="${{ secrets.MONGODB_URI }}" \
+              -e API_CLIENT_ID="${{ secrets.API_CLIENT_ID }}" \
+              -e API_CLIENT_SECRET="${{ secrets.API_CLIENT_SECRET }}" \
+              ghcr.io/${{ env.REPOSITORY }}:latest
+            sleep 20
+            docker image prune --filter "until=12h" -f

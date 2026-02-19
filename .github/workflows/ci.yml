@@ -1,0 +1,54 @@
+name: CI
+on:
+  push:
+    branches:
+      - develop
+      - release-*
+
+jobs:
+  ci:
+    name: Tests & CodeQL & SonarCloud
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+      actions: read
+      security-events: write
+
+    steps:
+      - name: ⬇️ Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: ☕ Set up Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: maven
+
+      - name: 🛡️ Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: java
+          queries: security-extended
+
+      - name: ✅ Run Unit Test & Integration Test & Functional Test
+        run: mvn -B verify
+
+      - name: 🔍 CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+
+      # Organización de la cuenta de Sonar: miw-upm-github
+      - name: 🏷️ Extract artifact from pom & Sonar Organization
+        run: |
+          echo "ORGANIZATION=miw-upm-github" >> $GITHUB_ENV
+          echo "ARTIFACT=$(mvn help:evaluate -Dexpression=project.artifactId -q -DforceStdout)" >> $GITHUB_ENV
+
+      - name: 📊 Sonar Analysis
+        run: >
+          mvn -B sonar:sonar
+          -Dsonar.projectKey=${{ env.ORGANIZATION }}_${{ env.ARTIFACT }}
+          -Dsonar.organization=${{ env.ORGANIZATION }}
+          -Dsonar.host.url=https://sonarcloud.io 
+          -Dsonar.token=${{ secrets.SONAR_TOKEN }}
