@@ -76,16 +76,10 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-security</artifactId>
         </dependency>
-        <!-- Actuator -->
-        <!-- http://localhost:8080/actuator/info   -->
-        <!-- http://localhost:8080/actuator/health -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
-        <!-- OpenAPI http://localhost:8080/swagger-ui.html -->
-        <!-- OpenAPI http://localhost:8080/v3/api-docs -->
-        <!-- OpenAPI http://localhost:8081/v3/api-docs.yaml (yaml)  -->
         <dependency>
             <groupId>org.springdoc</groupId>
             <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
