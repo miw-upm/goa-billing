@@ -81,4 +81,23 @@ class ExpenseServiceIT {
         verify(this.engagementWebClient).readById(this.expense.getEngagementId());
         verify(this.expensePersistence, never()).create(any());
     }
+
+    @Test
+    void shouldReadExpenseById() {
+        UUID id = UUID.randomUUID();
+        Expense persistedExpense = Expense.builder()
+                .id(id)
+                .engagementId(UUID.randomUUID())
+                .amount(BigDecimal.valueOf(35))
+                .date(LocalDate.of(2026, 3, 21))
+                .description("Meal")
+                .build();
+        when(this.expensePersistence.readById(id)).thenReturn(persistedExpense);
+
+        Expense readExpense = this.expenseService.readById(id);
+
+        assertEquals(persistedExpense, readExpense);
+        verify(this.expensePersistence).readById(id);
+        verifyNoInteractions(this.engagementWebClient);
+    }
 }

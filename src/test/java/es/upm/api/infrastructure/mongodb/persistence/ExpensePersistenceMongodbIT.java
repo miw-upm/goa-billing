@@ -1,5 +1,6 @@
 package es.upm.api.infrastructure.mongodb.persistence;
 
+import es.upm.api.domain.exceptions.NotFoundException;
 import es.upm.api.domain.model.Expense;
 import es.upm.api.infrastructure.mongodb.entities.ExpenseEntity;
 import es.upm.api.infrastructure.mongodb.repositories.ExpenseRepository;
@@ -13,6 +14,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.Optional;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -73,5 +75,27 @@ class ExpensePersistenceMongodbIT {
         assertEquals("Mongo error", thrown.getMessage());
         verify(this.expenseRepository).save(any(ExpenseEntity.class));
     }
-}
 
+    @Test
+    void shouldReadExpenseById() {
+        when(this.expenseRepository.findById(this.expense.getId()))
+                .thenReturn(Optional.of(new ExpenseEntity(this.expense)));
+
+        Expense readExpense = this.expensePersistenceMongodb.readById(this.expense.getId());
+
+        assertEquals(this.expense, readExpense);
+        verify(this.expenseRepository).findById(this.expense.getId());
+    }
+
+    @Test
+    void shouldThrowNotFoundExceptionWhenExpenseDoesNotExist() {
+        when(this.expenseRepository.findById(this.expense.getId()))
+                .thenReturn(Optional.empty());
+
+        NotFoundException thrown = assertThrows(NotFoundException.class,
+                () -> this.expensePersistenceMongodb.readById(this.expense.getId()));
+
+        assertEquals("Not Found Exception. Expense id: " + this.expense.getId(), thrown.getMessage());
+        verify(this.expenseRepository).findById(this.expense.getId());
+    }
+}
