@@ -14,8 +14,10 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -97,5 +99,17 @@ class ExpensePersistenceMongodbIT {
 
         assertEquals("Not Found Exception. Expense id: " + this.expense.getId(), thrown.getMessage());
         verify(this.expenseRepository).findById(this.expense.getId());
+    }
+
+    @Test
+    void shouldFindAll() {
+        when(this.expenseRepository.findAll(ExpensePersistenceMongodb.DATE))
+                .thenReturn(List.of(new ExpenseEntity(this.expense)));
+
+        Stream<Expense> expenseStream = this.expensePersistenceMongodb.findAll();
+
+        verify(this.expenseRepository).findAll(ExpensePersistenceMongodb.DATE);
+
+        assertEquals(this.expense, expenseStream.findFirst().orElse(null));
     }
 }

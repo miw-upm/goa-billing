@@ -14,6 +14,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.UUID;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -99,5 +100,16 @@ class ExpenseServiceIT {
         assertEquals(persistedExpense, readExpense);
         verify(this.expensePersistence).readById(id);
         verifyNoInteractions(this.engagementWebClient);
+    }
+
+    @Test
+    void shouldFindAll() {
+        Stream<Expense> expenseStream = Stream.of(this.expense);
+        when(this.expensePersistence.findAll()).thenReturn(expenseStream);
+
+        Stream<Expense> allExpenses = this.expenseService.findAll();
+
+        verify(this.expensePersistence).findAll();
+        assertEquals(this.expense, allExpenses.findFirst().orElse(null));
     }
 }
