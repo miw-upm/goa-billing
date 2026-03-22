@@ -8,6 +8,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
+import java.util.stream.Stream;
 
 @RestController
 @RequestMapping(ExpenseResource.EXPENSES)
@@ -32,5 +33,10 @@ public class ExpenseResource {
     @Operation(summary = "Read expense by id")
     public Expense readById(@PathVariable UUID id) {
         return this.expenseService.readById(id);
+    }
+
+    @GetMapping
+    public Stream<Expense> findAll() {
+        return this.expenseService.findAll();
     }
 }

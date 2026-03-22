@@ -17,6 +17,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.UUID;
+import java.util.stream.Stream;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -186,5 +187,31 @@ class ExpenseResourceIT {
                 .andExpect(status().isNotFound());
 
         verify(this.expenseService).readById(expenseId);
+    }
+
+    @Test
+    @WithMockUser(roles = "admin")
+    void shouldFindAllWithValues() throws Exception {
+        UUID expenseId = UUID.randomUUID();
+        UUID engagementId = UUID.randomUUID();
+        Expense response = Expense.builder()
+                .id(expenseId)
+                .engagementId(engagementId)
+                .amount(BigDecimal.valueOf(10))
+                .date(LocalDate.of(2026, 3, 20))
+                .description("Taxi")
+                .build();
+
+        when(this.expenseService.findAll()).thenReturn(Stream.of(response));
+
+        this.mockMvc.perform(get("/expenses"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.[0].id").value(expenseId.toString()))
+                .andExpect(jsonPath("$.[0].engagementId").value(engagementId.toString()))
+                .andExpect(jsonPath("$.[0].amount").value(10))
+                .andExpect(jsonPath("$.[0].date").value("2026-03-20"))
+                .andExpect(jsonPath("$.[0].description").value("Taxi"));
+
+        verify(this.expenseService).findAll();
     }
 }
