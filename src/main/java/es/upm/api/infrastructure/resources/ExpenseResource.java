@@ -7,6 +7,8 @@ import jakarta.validation.Valid;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.UUID;
+
 @RestController
 @RequestMapping(ExpenseResource.EXPENSES)
 @PreAuthorize(Security.ADMIN_MANAGER_OPERATOR)
@@ -24,5 +26,11 @@ public class ExpenseResource {
     @Operation(summary = "Create expense")
     public Expense create(@Valid @RequestBody Expense expense) {
         return this.expenseService.create(expense);
+    }
+
+    @GetMapping("/{id}")
+    @Operation(summary = "Read expense by id")
+    public Expense readById(@PathVariable UUID id) {
+        return this.expenseService.readById(id);
     }
 }
