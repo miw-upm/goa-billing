@@ -24,4 +24,8 @@ public class ExpenseService {
         this.expensePersistence.create(expense);
         return expense;
     }
+
+    public Expense readById(UUID id) {
+        return this.expensePersistence.readById(id);
+    }
 }

@@ -1,6 +1,7 @@
 package es.upm.api.infrastructure.resources;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import es.upm.api.domain.exceptions.NotFoundException;
 import es.upm.api.domain.model.Expense;
 import es.upm.api.domain.services.ExpenseService;
 import org.junit.jupiter.api.Test;
@@ -18,9 +19,11 @@ import java.time.LocalDate;
 import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -144,5 +147,44 @@ class ExpenseResourceIT {
                 .andExpect(status().isBadRequest());
 
         verify(this.expenseService, never()).create(any());
+    }
+
+    @Test
+    @WithMockUser(roles = "admin")
+    void shouldReadExpenseById() throws Exception {
+        UUID expenseId = UUID.randomUUID();
+        UUID engagementId = UUID.randomUUID();
+        Expense response = Expense.builder()
+                .id(expenseId)
+                .engagementId(engagementId)
+                .amount(BigDecimal.valueOf(50))
+                .date(LocalDate.of(2026, 3, 20))
+                .description("Taxi")
+                .build();
+
+        when(this.expenseService.readById(expenseId)).thenReturn(response);
+
+        this.mockMvc.perform(get("/expenses/{id}", expenseId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(expenseId.toString()))
+                .andExpect(jsonPath("$.engagementId").value(engagementId.toString()))
+                .andExpect(jsonPath("$.amount").value(50))
+                .andExpect(jsonPath("$.date").value("2026-03-20"))
+                .andExpect(jsonPath("$.description").value("Taxi"));
+
+        verify(this.expenseService).readById(expenseId);
+    }
+
+    @Test
+    @WithMockUser(roles = "admin")
+    void shouldReturnNotFoundWhenExpenseDoesNotExist() throws Exception {
+        UUID expenseId = UUID.randomUUID();
+        when(this.expenseService.readById(eq(expenseId)))
+                .thenThrow(new NotFoundException("Expense id: " + expenseId));
+
+        this.mockMvc.perform(get("/expenses/{id}", expenseId))
+                .andExpect(status().isNotFound());
+
+        verify(this.expenseService).readById(expenseId);
     }
 }
