@@ -6,6 +6,7 @@ import es.upm.api.domain.webclients.EngagementWebClient;
 import org.springframework.stereotype.Service;
 
 import java.util.UUID;
+import java.util.stream.Stream;
 
 @Service
 public class ExpenseService {
@@ -27,5 +28,9 @@ public class ExpenseService {
 
     public Expense readById(UUID id) {
         return this.expensePersistence.readById(id);
+    }
+
+    public Stream<Expense> findAll() {
+        return this.expensePersistence.findAll();
     }
 }
