@@ -112,4 +112,50 @@ class ExpenseServiceIT {
         verify(this.expensePersistence).findAll();
         assertEquals(this.expense, allExpenses.findFirst().orElse(null));
     }
+
+    @Test
+    void shouldUpdateExpense() {
+        UUID id = UUID.randomUUID();
+        Expense updateData = Expense.builder()
+                .engagementId(UUID.randomUUID())
+                .amount(BigDecimal.valueOf(90))
+                .description("Updated description")
+                .build();
+
+        Expense updatedExpense = Expense.builder()
+                .id(id)
+                .engagementId(updateData.getEngagementId())
+                .amount(updateData.getAmount())
+                .date(LocalDate.of(2026, 3, 20))
+                .description(updateData.getDescription())
+                .build();
+
+        when(this.engagementWebClient.readById(updateData.getEngagementId())).thenReturn(new Object());
+        when(this.expensePersistence.update(id, updateData)).thenReturn(updatedExpense);
+
+        Expense response = this.expenseService.update(id, updateData);
+
+        assertEquals(updatedExpense, response);
+        verify(this.engagementWebClient).readById(updateData.getEngagementId());
+        verify(this.expensePersistence).update(id, updateData);
+    }
+
+    @Test
+    void shouldNotUpdateExpenseWhenEngagementDoesNotExist() {
+        UUID id = UUID.randomUUID();
+        Expense updateData = Expense.builder()
+                .engagementId(UUID.randomUUID())
+                .amount(BigDecimal.valueOf(90))
+                .description("Updated description")
+                .build();
+        RuntimeException exception = new RuntimeException("Engagement not found");
+        when(this.engagementWebClient.readById(updateData.getEngagementId())).thenThrow(exception);
+
+        RuntimeException thrown = assertThrows(RuntimeException.class,
+                () -> this.expenseService.update(id, updateData));
+
+        assertEquals("Engagement not found", thrown.getMessage());
+        verify(this.engagementWebClient).readById(updateData.getEngagementId());
+        verify(this.expensePersistence, never()).update(any(), any());
+    }
 }

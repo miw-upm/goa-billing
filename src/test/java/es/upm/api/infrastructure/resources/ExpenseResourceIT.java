@@ -1,6 +1,5 @@
 package es.upm.api.infrastructure.resources;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import es.upm.api.domain.exceptions.NotFoundException;
 import es.upm.api.domain.model.Expense;
 import es.upm.api.domain.services.ExpenseService;
@@ -26,6 +25,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest
@@ -36,9 +36,6 @@ class ExpenseResourceIT {
     @Autowired
     private MockMvc mockMvc;
 
-    @Autowired
-    private ObjectMapper objectMapper;
-
     @MockitoBean
     private ExpenseService expenseService;
 
@@ -47,13 +44,14 @@ class ExpenseResourceIT {
     void shouldCreateExpense() throws Exception {
         UUID expenseId = UUID.randomUUID();
         UUID engagementId = UUID.randomUUID();
-
-        Expense request = Expense.builder()
-                .engagementId(engagementId)
-                .amount(BigDecimal.valueOf(50))
-                .date(LocalDate.of(2026, 3, 20))
-                .description("Taxi")
-                .build();
+        String requestBody = """
+                {
+                  "engagementId": "%s",
+                  "amount": 50,
+                  "date": "2026-03-20",
+                  "description": "Taxi"
+                }
+                """.formatted(engagementId);
 
         Expense response = Expense.builder()
                 .id(expenseId)
@@ -67,7 +65,7 @@ class ExpenseResourceIT {
 
         this.mockMvc.perform(post("/expenses")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(this.objectMapper.writeValueAsString(request)))
+                        .content(requestBody))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(expenseId.toString()))
                 .andExpect(jsonPath("$.engagementId").value(engagementId.toString()))
@@ -81,16 +79,18 @@ class ExpenseResourceIT {
     @Test
     @WithMockUser(roles = "admin")
     void shouldReturnBadRequestWhenAmountIsZero() throws Exception {
-        Expense request = Expense.builder()
-                .engagementId(UUID.randomUUID())
-                .amount(BigDecimal.ZERO)
-                .date(LocalDate.of(2026, 3, 20))
-                .description("Taxi")
-                .build();
+        String requestBody = """
+                {
+                  "engagementId": "%s",
+                  "amount": 0,
+                  "date": "2026-03-20",
+                  "description": "Taxi"
+                }
+                """.formatted(UUID.randomUUID());
 
         this.mockMvc.perform(post("/expenses")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(this.objectMapper.writeValueAsString(request)))
+                        .content(requestBody))
                 .andExpect(status().isBadRequest());
 
         verify(this.expenseService, never()).create(any());
@@ -99,16 +99,18 @@ class ExpenseResourceIT {
     @Test
     @WithMockUser(roles = "admin")
     void shouldReturnBadRequestWhenDescriptionIsBlank() throws Exception {
-        Expense request = Expense.builder()
-                .engagementId(UUID.randomUUID())
-                .amount(BigDecimal.valueOf(10))
-                .date(LocalDate.of(2026, 3, 20))
-                .description("")
-                .build();
+        String requestBody = """
+                {
+                  "engagementId": "%s",
+                  "amount": 10,
+                  "date": "2026-03-20",
+                  "description": ""
+                }
+                """.formatted(UUID.randomUUID());
 
         this.mockMvc.perform(post("/expenses")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(this.objectMapper.writeValueAsString(request)))
+                        .content(requestBody))
                 .andExpect(status().isBadRequest());
 
         verify(this.expenseService, never()).create(any());
@@ -117,16 +119,17 @@ class ExpenseResourceIT {
     @Test
     @WithMockUser(roles = "admin")
     void shouldReturnBadRequestWhenEngagementIdIsNull() throws Exception {
-        Expense request = Expense.builder()
-                .engagementId(null)
-                .amount(BigDecimal.valueOf(10))
-                .date(LocalDate.of(2026, 3, 20))
-                .description("Taxi")
-                .build();
+        String requestBody = """
+                {
+                  "amount": 10,
+                  "date": "2026-03-20",
+                  "description": "Taxi"
+                }
+                """;
 
         this.mockMvc.perform(post("/expenses")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(this.objectMapper.writeValueAsString(request)))
+                        .content(requestBody))
                 .andExpect(status().isBadRequest());
 
         verify(this.expenseService, never()).create(any());
@@ -135,16 +138,17 @@ class ExpenseResourceIT {
     @Test
     @WithMockUser(roles = "admin")
     void shouldReturnBadRequestWhenDateIsNull() throws Exception {
-        Expense request = Expense.builder()
-                .engagementId(UUID.randomUUID())
-                .amount(BigDecimal.valueOf(10))
-                .date(null)
-                .description("Taxi")
-                .build();
+        String requestBody = """
+                {
+                  "engagementId": "%s",
+                  "amount": 10,
+                  "description": "Taxi"
+                }
+                """.formatted(UUID.randomUUID());
 
         this.mockMvc.perform(post("/expenses")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(this.objectMapper.writeValueAsString(request)))
+                        .content(requestBody))
                 .andExpect(status().isBadRequest());
 
         verify(this.expenseService, never()).create(any());
@@ -178,9 +182,64 @@ class ExpenseResourceIT {
 
     @Test
     @WithMockUser(roles = "admin")
+    void shouldUpdateExpense() throws Exception {
+        UUID expenseId = UUID.randomUUID();
+        UUID engagementId = UUID.randomUUID();
+        Expense response = Expense.builder()
+                .id(expenseId)
+                .engagementId(engagementId)
+                .amount(BigDecimal.valueOf(65))
+                .date(LocalDate.of(2026, 3, 20))
+                .description("Updated taxi")
+                .build();
+
+        String requestBody = """
+                {
+                  "engagementId": "%s",
+                  "amount": 65,
+                  "description": "Updated taxi"
+                }
+                """.formatted(engagementId);
+
+        when(this.expenseService.update(eq(expenseId), any())).thenReturn(response);
+
+        this.mockMvc.perform(put("/expenses/{id}", expenseId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestBody))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(expenseId.toString()))
+                .andExpect(jsonPath("$.engagementId").value(engagementId.toString()))
+                .andExpect(jsonPath("$.amount").value(65))
+                .andExpect(jsonPath("$.description").value("Updated taxi"));
+
+        verify(this.expenseService).update(eq(expenseId), any());
+    }
+
+    @Test
+    @WithMockUser(roles = "admin")
+    void shouldReturnBadRequestWhenUpdateAmountIsZero() throws Exception {
+        UUID expenseId = UUID.randomUUID();
+        String requestBody = """
+                {
+                  "engagementId": "aaaaaaaa-bbbb-cccc-dddd-eeeeffff2000",
+                  "amount": 0,
+                  "description": "Updated taxi"
+                }
+                """;
+
+        this.mockMvc.perform(put("/expenses/{id}", expenseId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestBody))
+                .andExpect(status().isBadRequest());
+
+        verify(this.expenseService, never()).update(any(), any());
+    }
+
+    @Test
+    @WithMockUser(roles = "admin")
     void shouldReturnNotFoundWhenExpenseDoesNotExist() throws Exception {
         UUID expenseId = UUID.randomUUID();
-        when(this.expenseService.readById(eq(expenseId)))
+                when(this.expenseService.readById(expenseId))
                 .thenThrow(new NotFoundException("Expense id: " + expenseId));
 
         this.mockMvc.perform(get("/expenses/{id}", expenseId))
