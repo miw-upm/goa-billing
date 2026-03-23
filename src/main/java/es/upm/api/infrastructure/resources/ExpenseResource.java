@@ -2,6 +2,8 @@ package es.upm.api.infrastructure.resources;
 
 import es.upm.api.domain.model.Expense;
 import es.upm.api.domain.services.ExpenseService;
+import es.upm.api.infrastructure.resources.dtos.ExpenseCreateRequest;
+import es.upm.api.infrastructure.resources.dtos.ExpenseUpdateRequest;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -25,8 +27,25 @@ public class ExpenseResource {
 
     @PostMapping
     @Operation(summary = "Create expense")
-    public Expense create(@Valid @RequestBody Expense expense) {
+    public Expense create(@Valid @RequestBody ExpenseCreateRequest request) {
+        Expense expense = Expense.builder()
+                .engagementId(request.getEngagementId())
+                .amount(request.getAmount())
+                .date(request.getDate())
+                .description(request.getDescription())
+                .build();
         return this.expenseService.create(expense);
+    }
+
+    @PutMapping("/{id}")
+    @Operation(summary = "Update expense")
+    public Expense update(@PathVariable UUID id, @Valid @RequestBody ExpenseUpdateRequest request) {
+        Expense expense = Expense.builder()
+                .engagementId(request.getEngagementId())
+                .amount(request.getAmount())
+                .description(request.getDescription())
+                .build();
+        return this.expenseService.update(id, expense);
     }
 
     @GetMapping("/{id}")

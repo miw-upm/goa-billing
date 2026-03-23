@@ -10,6 +10,8 @@ import java.util.stream.Stream;
 public interface ExpensePersistence {
     void create(Expense expense);
 
+    Expense update(UUID id, Expense expense);
+
     Expense readById(UUID id);
 
     Stream<Expense> findAll();
