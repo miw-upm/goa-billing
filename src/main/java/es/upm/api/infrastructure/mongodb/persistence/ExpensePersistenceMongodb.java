@@ -27,6 +27,18 @@ public class ExpensePersistenceMongodb implements ExpensePersistence {
     }
 
     @Override
+    public Expense update(UUID id, Expense expense) {
+        ExpenseEntity expenseEntity = this.expenseRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Expense id: " + id));
+
+        expenseEntity.setEngagementId(expense.getEngagementId());
+        expenseEntity.setAmount(expense.getAmount());
+        expenseEntity.setDescription(expense.getDescription());
+
+        return this.expenseRepository.save(expenseEntity).toExpense();
+    }
+
+    @Override
     public Expense readById(UUID id) {
         return this.expenseRepository.findById(id)
                 .map(ExpenseEntity::toExpense)

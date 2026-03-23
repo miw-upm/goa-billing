@@ -26,21 +26,21 @@ public class ExpenseSeeder {
         List<ExpenseEntity> expenses = List.of(
                 this.buildExpense(
                         "aaaaaaaa-bbbb-cccc-dddd-eeeeffff1000",
-                        "aaaaaaaa-bbbb-cccc-dddd-eeeeffff2000",
+                        "aaaaaaa0-bbbb-cccc-dddd-eeeeffff0000",
                         "35.50",
                         LocalDate.of(2026, 3, 15),
                         "Taxi from airport"
                 ),
                 this.buildExpense(
                         "aaaaaaaa-bbbb-cccc-dddd-eeeeffff1001",
-                        "aaaaaaaa-bbbb-cccc-dddd-eeeeffff2001",
+                        "aaaaaaa0-bbbb-cccc-dddd-eeeeffff0001",
                         "120.00",
                         LocalDate.of(2026, 3, 16),
                         "Hotel accommodation"
                 ),
                 this.buildExpense(
                         "aaaaaaaa-bbbb-cccc-dddd-eeeeffff1002",
-                        "aaaaaaaa-bbbb-cccc-dddd-eeeeffff2000",
+                        "aaaaaaa0-bbbb-cccc-dddd-eeeeffff0000",
                         "18.90",
                         LocalDate.of(2026, 3, 17),
                         "Team lunch"

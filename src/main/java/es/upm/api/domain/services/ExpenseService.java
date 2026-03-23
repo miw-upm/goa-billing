@@ -26,6 +26,11 @@ public class ExpenseService {
         return expense;
     }
 
+    public Expense update(UUID id, Expense expense) {
+        this.engagementWebClient.readById(expense.getEngagementId());
+        return this.expensePersistence.update(id, expense);
+    }
+
     public Expense readById(UUID id) {
         return this.expensePersistence.readById(id);
     }
