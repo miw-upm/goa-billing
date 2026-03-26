@@ -15,7 +15,9 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.UUID;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -117,4 +119,42 @@ class IncomeServiceIT {
         verifyNoInteractions(this.userWebClient);
         verify(this.incomePersistence, never()).create(any());
     }
+
+    @Test
+    void shouldFindAllIncomes() {
+        Income incomeA = Income.builder()
+                .id(UUID.randomUUID())
+                .engagementId(UUID.randomUUID())
+                .userId(UUID.randomUUID())
+                .amount(BigDecimal.valueOf(120))
+                .date(LocalDate.of(2026, 3, 21))
+                .build();
+
+        Income incomeB = Income.builder()
+                .id(UUID.randomUUID())
+                .engagementId(UUID.randomUUID())
+                .userId(UUID.randomUUID())
+                .amount(BigDecimal.valueOf(90))
+                .date(LocalDate.of(2026, 3, 20))
+                .build();
+
+        when(this.incomePersistence.findAll()).thenReturn(Stream.of(incomeA, incomeB));
+
+        List<Income> incomes = this.incomeService.findAll().toList();
+
+        assertEquals(2, incomes.size());
+        assertEquals(List.of(incomeA, incomeB), incomes);
+        verify(this.incomePersistence).findAll();
+    }
+
+    @Test
+    void shouldReturnEmptyWhenNoIncomesExist() {
+        when(this.incomePersistence.findAll()).thenReturn(Stream.empty());
+
+        List<Income> incomes = this.incomeService.findAll().toList();
+
+        assertTrue(incomes.isEmpty());
+        verify(this.incomePersistence).findAll();
+    }
+
 }
