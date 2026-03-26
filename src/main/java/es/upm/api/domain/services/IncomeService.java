@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.UUID;
+import java.util.stream.Stream;
 
 @Service
 public class IncomeService {
@@ -34,5 +35,9 @@ public class IncomeService {
         this.userWebClient.readUserById(income.getUserId());
         this.incomePersistence.create(income);
         return income;
+    }
+
+    public Stream<Income> findAll() {
+        return this.incomePersistence.findAll();
     }
 }
