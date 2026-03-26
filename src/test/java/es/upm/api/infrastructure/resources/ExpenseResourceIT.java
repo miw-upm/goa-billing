@@ -189,7 +189,7 @@ class ExpenseResourceIT {
                 .id(expenseId)
                 .engagementId(engagementId)
                 .amount(BigDecimal.valueOf(65))
-                .date(LocalDate.of(2026, 3, 20))
+                .date(LocalDate.of(2026, 3, 21))
                 .description("Updated taxi")
                 .build();
 
@@ -197,6 +197,7 @@ class ExpenseResourceIT {
                 {
                   "engagementId": "%s",
                   "amount": 65,
+                  "date": "2026-03-21",
                   "description": "Updated taxi"
                 }
                 """.formatted(engagementId);
@@ -210,6 +211,7 @@ class ExpenseResourceIT {
                 .andExpect(jsonPath("$.id").value(expenseId.toString()))
                 .andExpect(jsonPath("$.engagementId").value(engagementId.toString()))
                 .andExpect(jsonPath("$.amount").value(65))
+                .andExpect(jsonPath("$.date").value("2026-03-21"))
                 .andExpect(jsonPath("$.description").value("Updated taxi"));
 
         verify(this.expenseService).update(eq(expenseId), any());
