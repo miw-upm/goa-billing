@@ -40,4 +40,16 @@ public class IncomeService {
     public Stream<Income> findAll() {
         return this.incomePersistence.findAll();
     }
+
+    public Income update(UUID id, Income income) {
+        if (income.getDate().isAfter(LocalDate.now())) {
+            throw new BadRequestException("Income date cannot be in the future");
+        }
+        this.engagementWebClient.readById(income.getEngagementId());
+        this.userWebClient.readUserById(income.getUserId());
+        // Ensure the id is not changed
+        income.setId(id);
+        this.incomePersistence.update(id, income);
+        return income;
+    }
 }
