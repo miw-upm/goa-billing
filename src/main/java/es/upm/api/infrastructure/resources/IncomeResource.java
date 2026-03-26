@@ -9,6 +9,8 @@ import jakarta.validation.Valid;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.stream.Stream;
+
 @RestController
 @RequestMapping(IncomeResource.INCOMES)
 public class IncomeResource {
@@ -34,5 +36,13 @@ public class IncomeResource {
                         .date(request.getDate())
                         .build()
         );
+    }
+
+    @GetMapping
+    @Operation(summary = "List incomes")
+    @SecurityRequirement(name = "bearerAuth")
+    @PreAuthorize(Security.ADMIN_MANAGER_OPERATOR)
+    public Stream<Income> findAll() {
+        return this.incomeService.findAll();
     }
 }
