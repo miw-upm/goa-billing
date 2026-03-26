@@ -20,10 +20,12 @@ import java.util.stream.Stream;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest
@@ -226,5 +228,92 @@ class IncomeResourceIT {
                 .andExpect(content().json("[]"));
 
         verify(this.incomeService).findAll();
+    }
+
+    @Test
+    @WithMockUser(roles = "admin")
+    void shouldUpdateIncome() throws Exception {
+        UUID incomeId = UUID.randomUUID();
+        UUID engagementId = UUID.randomUUID();
+        UUID userId = UUID.randomUUID();
+
+        String requestBody = """
+                {
+                  "engagementId": "%s",
+                  "userId": "%s",
+                  "amount": 500,
+                  "date": "2026-03-25"
+                }
+                """.formatted(engagementId, userId);
+
+        Income response = Income.builder()
+                .id(incomeId)
+                .engagementId(engagementId)
+                .userId(userId)
+                .amount(BigDecimal.valueOf(500))
+                .date(LocalDate.of(2026, 3, 25))
+                .build();
+
+        when(this.incomeService.update(eq(incomeId), any())).thenReturn(response);
+
+        this.mockMvc.perform(put("/incomes/" + incomeId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestBody))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(incomeId.toString()))
+                .andExpect(jsonPath("$.engagementId").value(engagementId.toString()))
+                .andExpect(jsonPath("$.userId").value(userId.toString()))
+                .andExpect(jsonPath("$.amount").value(500))
+                .andExpect(jsonPath("$.date").value("2026-03-25"));
+
+        verify(this.incomeService).update(eq(incomeId), any());
+    }
+
+    @Test
+    @WithMockUser(roles = "admin")
+    void shouldReturnBadRequestWhenUpdateDateIsFuture() throws Exception {
+        UUID incomeId = UUID.randomUUID();
+        String requestBody = """
+                {
+                  "engagementId": "%s",
+                  "userId": "%s",
+                  "amount": 500,
+                  "date": "2029-03-25"
+                }
+                """.formatted(UUID.randomUUID(), UUID.randomUUID());
+
+        when(this.incomeService.update(eq(incomeId), any()))
+                .thenThrow(new BadRequestException("Income date cannot be in the future"));
+
+        this.mockMvc.perform(put("/incomes/" + incomeId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestBody))
+                .andExpect(status().isBadRequest());
+
+        verify(this.incomeService).update(eq(incomeId), any());
+    }
+
+    @Test
+    @WithMockUser(roles = "admin")
+    void shouldReturnNotFoundWhenUpdateIncomeDoesNotExist() throws Exception {
+        UUID incomeId = UUID.randomUUID();
+        String requestBody = """
+                {
+                  "engagementId": "%s",
+                  "userId": "%s",
+                  "amount": 500,
+                  "date": "2026-03-25"
+                }
+                """.formatted(UUID.randomUUID(), UUID.randomUUID());
+
+        when(this.incomeService.update(eq(incomeId), any()))
+                .thenThrow(new es.upm.api.domain.exceptions.NotFoundException("Income not found: " + incomeId));
+
+        this.mockMvc.perform(put("/incomes/" + incomeId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestBody))
+                .andExpect(status().isNotFound());
+
+        verify(this.incomeService).update(eq(incomeId), any());
     }
 }

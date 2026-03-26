@@ -3,6 +3,7 @@ package es.upm.api.infrastructure.resources;
 import es.upm.api.domain.model.Income;
 import es.upm.api.domain.services.IncomeService;
 import es.upm.api.infrastructure.resources.dtos.IncomeCreateRequest;
+import es.upm.api.infrastructure.resources.dtos.IncomeUpdateRequest;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
@@ -44,5 +45,23 @@ public class IncomeResource {
     @PreAuthorize(Security.ADMIN_MANAGER_OPERATOR)
     public Stream<Income> findAll() {
         return this.incomeService.findAll();
+    }
+
+    @PutMapping("/{id}")
+    @Operation(summary = "Update income")
+    @SecurityRequirement(name = "bearerAuth")
+    @PreAuthorize(Security.ADMIN_MANAGER_OPERATOR)
+    public Income update(
+            @PathVariable("id") java.util.UUID id,
+            @Valid @RequestBody IncomeUpdateRequest request) {
+        return this.incomeService.update(
+                id,
+                Income.builder()
+                        .engagementId(request.getEngagementId())
+                        .userId(request.getUserId())
+                        .amount(request.getAmount())
+                        .date(request.getDate())
+                        .build()
+        );
     }
 }
