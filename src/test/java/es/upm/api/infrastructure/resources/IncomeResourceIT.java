@@ -16,12 +16,14 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.UUID;
+import java.util.stream.Stream;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest
@@ -172,5 +174,57 @@ class IncomeResourceIT {
                 .andExpect(status().isBadRequest());
 
         verify(this.incomeService).create(any());
+    }
+
+    @Test
+    @WithMockUser(roles = "admin")
+    void shouldFindAllIncomes() throws Exception {
+        UUID engagementId = UUID.randomUUID();
+        UUID userId = UUID.randomUUID();
+
+        Income incomeA = Income.builder()
+                .id(UUID.randomUUID())
+                .engagementId(engagementId)
+                .userId(userId)
+                .amount(BigDecimal.valueOf(350))
+                .date(LocalDate.of(2026, 3, 20))
+                .build();
+
+        Income incomeB = Income.builder()
+                .id(UUID.randomUUID())
+                .engagementId(UUID.randomUUID())
+                .userId(UUID.randomUUID())
+                .amount(BigDecimal.valueOf(200))
+                .date(LocalDate.of(2026, 3, 19))
+                .build();
+
+        when(this.incomeService.findAll()).thenReturn(Stream.of(incomeA, incomeB));
+
+        this.mockMvc.perform(get("/incomes"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].id").value(incomeA.getId().toString()))
+                .andExpect(jsonPath("$[0].engagementId").value(incomeA.getEngagementId().toString()))
+                .andExpect(jsonPath("$[0].userId").value(incomeA.getUserId().toString()))
+                .andExpect(jsonPath("$[0].amount").value(350))
+                .andExpect(jsonPath("$[0].date").value("2026-03-20"))
+                .andExpect(jsonPath("$[1].id").value(incomeB.getId().toString()))
+                .andExpect(jsonPath("$[1].engagementId").value(incomeB.getEngagementId().toString()))
+                .andExpect(jsonPath("$[1].userId").value(incomeB.getUserId().toString()))
+                .andExpect(jsonPath("$[1].amount").value(200))
+                .andExpect(jsonPath("$[1].date").value("2026-03-19"));
+
+        verify(this.incomeService).findAll();
+    }
+
+    @Test
+    @WithMockUser(roles = "admin")
+    void shouldReturnEmptyArrayWhenNoIncomesExist() throws Exception {
+        when(this.incomeService.findAll()).thenReturn(Stream.empty());
+
+        this.mockMvc.perform(get("/incomes"))
+                .andExpect(status().isOk())
+                .andExpect(content().json("[]"));
+
+        verify(this.incomeService).findAll();
     }
 }
