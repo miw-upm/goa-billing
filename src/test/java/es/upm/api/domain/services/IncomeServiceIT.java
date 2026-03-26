@@ -120,23 +120,98 @@ class IncomeServiceIT {
         verify(this.incomePersistence, never()).create(any());
     }
 
+    // Helper para crear Income
+    private Income buildIncome(UUID id, UUID engagementId, UUID userId, BigDecimal amount, LocalDate date) {
+        return Income.builder()
+                .id(id)
+                .engagementId(engagementId)
+                .userId(userId)
+                .amount(amount)
+                .date(date)
+                .build();
+    }
+
+    @Test
+    void shouldUpdateIncome() {
+        UUID id = UUID.randomUUID();
+        UUID engagementId = UUID.randomUUID();
+        UUID userId = UUID.randomUUID();
+        Income updateData = buildIncome(null, engagementId, userId, BigDecimal.valueOf(500), LocalDate.of(2026, 3, 25));
+        Income updatedIncome = buildIncome(id, engagementId, userId, BigDecimal.valueOf(500), LocalDate.of(2026, 3, 25));
+
+        when(this.engagementWebClient.readById(engagementId)).thenReturn(new Object());
+        when(this.userWebClient.readUserById(userId)).thenReturn(es.upm.api.domain.model.UserDto.builder().id(userId).build());
+        // Simula persistencia
+        doNothing().when(this.incomePersistence).update(id, updateData);
+
+        Income response = this.incomeService.update(id, updateData);
+
+        assertEquals(updatedIncome.getEngagementId(), response.getEngagementId());
+        assertEquals(updatedIncome.getUserId(), response.getUserId());
+        assertEquals(updatedIncome.getAmount(), response.getAmount());
+        assertEquals(updatedIncome.getDate(), response.getDate());
+        assertEquals(id, response.getId());
+        verify(this.engagementWebClient).readById(engagementId);
+        verify(this.userWebClient).readUserById(userId);
+        verify(this.incomePersistence).update(id, updateData);
+    }
+
+    @Test
+    void shouldNotUpdateIncomeWhenEngagementDoesNotExist() {
+        UUID id = UUID.randomUUID();
+        UUID engagementId = UUID.randomUUID();
+        Income updateData = buildIncome(null, engagementId, UUID.randomUUID(), BigDecimal.valueOf(500), LocalDate.of(2026, 3, 25));
+        RuntimeException exception = new RuntimeException("Engagement not found");
+        when(this.engagementWebClient.readById(engagementId)).thenThrow(exception);
+
+        RuntimeException thrown = assertThrows(RuntimeException.class,
+                () -> this.incomeService.update(id, updateData));
+
+        assertEquals("Engagement not found", thrown.getMessage());
+        verify(this.engagementWebClient).readById(engagementId);
+        verify(this.userWebClient, never()).readUserById(any());
+        verify(this.incomePersistence, never()).update(any(), any());
+    }
+
+    @Test
+    void shouldNotUpdateIncomeWhenUserDoesNotExist() {
+        UUID id = UUID.randomUUID();
+        UUID engagementId = UUID.randomUUID();
+        UUID userId = UUID.randomUUID();
+        Income updateData = buildIncome(null, engagementId, userId, BigDecimal.valueOf(500), LocalDate.of(2026, 3, 25));
+        when(this.engagementWebClient.readById(engagementId)).thenReturn(new Object());
+        RuntimeException exception = new RuntimeException("User not found");
+        when(this.userWebClient.readUserById(userId)).thenThrow(exception);
+
+        RuntimeException thrown = assertThrows(RuntimeException.class,
+                () -> this.incomeService.update(id, updateData));
+
+        assertEquals("User not found", thrown.getMessage());
+        verify(this.engagementWebClient).readById(engagementId);
+        verify(this.userWebClient).readUserById(userId);
+        verify(this.incomePersistence, never()).update(any(), any());
+    }
+
+    @Test
+    void shouldNotUpdateIncomeWhenDateIsFuture() {
+        UUID id = UUID.randomUUID();
+        UUID engagementId = UUID.randomUUID();
+        UUID userId = UUID.randomUUID();
+        Income updateData = buildIncome(null, engagementId, userId, BigDecimal.valueOf(500), LocalDate.now().plusDays(1));
+
+        BadRequestException thrown = assertThrows(BadRequestException.class,
+                () -> this.incomeService.update(id, updateData));
+
+        assertEquals("Bad Request Exception. Income date cannot be in the future", thrown.getMessage());
+        verifyNoInteractions(this.engagementWebClient);
+        verifyNoInteractions(this.userWebClient);
+        verify(this.incomePersistence, never()).update(any(), any());
+    }
+
     @Test
     void shouldFindAllIncomes() {
-        Income incomeA = Income.builder()
-                .id(UUID.randomUUID())
-                .engagementId(UUID.randomUUID())
-                .userId(UUID.randomUUID())
-                .amount(BigDecimal.valueOf(120))
-                .date(LocalDate.of(2026, 3, 21))
-                .build();
-
-        Income incomeB = Income.builder()
-                .id(UUID.randomUUID())
-                .engagementId(UUID.randomUUID())
-                .userId(UUID.randomUUID())
-                .amount(BigDecimal.valueOf(90))
-                .date(LocalDate.of(2026, 3, 20))
-                .build();
+        Income incomeA = buildIncome(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), BigDecimal.valueOf(120), LocalDate.of(2026, 3, 21));
+        Income incomeB = buildIncome(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), BigDecimal.valueOf(90), LocalDate.of(2026, 3, 20));
 
         when(this.incomePersistence.findAll()).thenReturn(Stream.of(incomeA, incomeB));
 

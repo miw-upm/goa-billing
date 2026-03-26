@@ -1,7 +1,6 @@
 package es.upm.api.domain.model;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import es.upm.api.domain.model.validations.PositiveBigDecimal;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;

@@ -76,82 +76,54 @@ class ExpenseResourceIT {
         verify(this.expenseService).create(any());
     }
 
-    @Test
+    @org.junit.jupiter.params.ParameterizedTest
+    @org.junit.jupiter.params.provider.MethodSource("badRequestExpenseBodies")
     @WithMockUser(roles = "admin")
-    void shouldReturnBadRequestWhenAmountIsZero() throws Exception {
-        String requestBody = """
-                {
-                  "engagementId": "%s",
-                  "amount": 0,
-                  "date": "2026-03-20",
-                  "description": "Taxi"
-                }
-                """.formatted(UUID.randomUUID());
-
+    void shouldReturnBadRequestWhenInvalidExpenseBody(String requestBody) throws Exception {
         this.mockMvc.perform(post("/expenses")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBody))
                 .andExpect(status().isBadRequest());
-
         verify(this.expenseService, never()).create(any());
     }
 
-    @Test
-    @WithMockUser(roles = "admin")
-    void shouldReturnBadRequestWhenDescriptionIsBlank() throws Exception {
-        String requestBody = """
+    static java.util.stream.Stream<String> badRequestExpenseBodies() {
+        return java.util.stream.Stream.of(
+                // amount = 0
+                """
                 {
-                  "engagementId": "%s",
-                  "amount": 10,
-                  "date": "2026-03-20",
-                  "description": ""
+                  \"engagementId\": \"%s\",
+                  \"amount\": 0,
+                  \"date\": \"2026-03-20\",
+                  \"description\": \"Taxi\"
                 }
-                """.formatted(UUID.randomUUID());
-
-        this.mockMvc.perform(post("/expenses")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(requestBody))
-                .andExpect(status().isBadRequest());
-
-        verify(this.expenseService, never()).create(any());
-    }
-
-    @Test
-    @WithMockUser(roles = "admin")
-    void shouldReturnBadRequestWhenEngagementIdIsNull() throws Exception {
-        String requestBody = """
+                """.formatted(java.util.UUID.randomUUID()),
+                // description blank
+                """
                 {
-                  "amount": 10,
-                  "date": "2026-03-20",
-                  "description": "Taxi"
+                  \"engagementId\": \"%s\",
+                  \"amount\": 10,
+                  \"date\": \"2026-03-20\",
+                  \"description\": \"\"
                 }
-                """;
-
-        this.mockMvc.perform(post("/expenses")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(requestBody))
-                .andExpect(status().isBadRequest());
-
-        verify(this.expenseService, never()).create(any());
-    }
-
-    @Test
-    @WithMockUser(roles = "admin")
-    void shouldReturnBadRequestWhenDateIsNull() throws Exception {
-        String requestBody = """
+                """.formatted(java.util.UUID.randomUUID()),
+                // engagementId null
+                """
                 {
-                  "engagementId": "%s",
-                  "amount": 10,
-                  "description": "Taxi"
+                  \"amount\": 10,
+                  \"date\": \"2026-03-20\",
+                  \"description\": \"Taxi\"
                 }
-                """.formatted(UUID.randomUUID());
-
-        this.mockMvc.perform(post("/expenses")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(requestBody))
-                .andExpect(status().isBadRequest());
-
-        verify(this.expenseService, never()).create(any());
+                """,
+                // date null
+                """
+                {
+                  \"engagementId\": \"%s\",
+                  \"amount\": 10,
+                  \"description\": \"Taxi\"
+                }
+                """.formatted(java.util.UUID.randomUUID())
+        );
     }
 
     @Test
