@@ -43,6 +43,7 @@ public class ExpenseResource {
         Expense expense = Expense.builder()
                 .engagementId(request.getEngagementId())
                 .amount(request.getAmount())
+                .date(request.getDate())
                 .description(request.getDescription())
                 .build();
         return this.expenseService.update(id, expense);

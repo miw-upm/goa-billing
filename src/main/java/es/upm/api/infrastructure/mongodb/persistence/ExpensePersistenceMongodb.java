@@ -33,6 +33,7 @@ public class ExpensePersistenceMongodb implements ExpensePersistence {
 
         expenseEntity.setEngagementId(expense.getEngagementId());
         expenseEntity.setAmount(expense.getAmount());
+        expenseEntity.setDate(expense.getDate());
         expenseEntity.setDescription(expense.getDescription());
 
         return this.expenseRepository.save(expenseEntity).toExpense();
