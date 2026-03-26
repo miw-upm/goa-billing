@@ -6,10 +6,12 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.data.mongo.DataMongoTest;
+import org.springframework.data.domain.Sort;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -64,5 +66,30 @@ class IncomeRepositoryTest {
         assertEquals(savedIncomeEntity.getUserId(), foundIncomeEntity.getUserId());
         assertEquals(savedIncomeEntity.getAmount(), foundIncomeEntity.getAmount());
         assertEquals(savedIncomeEntity.getDate(), foundIncomeEntity.getDate());
+    }
+
+    @Test
+    void shouldFindAllIncomesOrderedByDateDesc() {
+        IncomeEntity oldestIncome = this.incomeRepository.save(new IncomeEntity(Income.builder()
+                .id(UUID.randomUUID())
+                .engagementId(UUID.randomUUID())
+                .userId(UUID.randomUUID())
+                .amount(BigDecimal.valueOf(100))
+                .date(LocalDate.of(2026, 3, 20))
+                .build()));
+
+        IncomeEntity newestIncome = this.incomeRepository.save(new IncomeEntity(Income.builder()
+                .id(UUID.randomUUID())
+                .engagementId(UUID.randomUUID())
+                .userId(UUID.randomUUID())
+                .amount(BigDecimal.valueOf(300))
+                .date(LocalDate.of(2026, 3, 21))
+                .build()));
+
+        List<IncomeEntity> incomes = this.incomeRepository.findAll(Sort.by(Sort.Direction.DESC, "date"));
+
+        assertFalse(incomes.isEmpty());
+        assertEquals(newestIncome.getId(), incomes.get(0).getId());
+        assertEquals(oldestIncome.getId(), incomes.get(1).getId());
     }
 }

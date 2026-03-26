@@ -8,11 +8,13 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.Sort;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -72,5 +74,43 @@ class IncomePersistenceMongodbIT {
 
         assertEquals("Mongo error", thrown.getMessage());
         verify(this.incomeRepository).save(any(IncomeEntity.class));
+    }
+
+    @Test
+    void shouldFindAllIncomes() {
+        IncomeEntity newestIncome = new IncomeEntity(Income.builder()
+                .id(UUID.randomUUID())
+                .engagementId(UUID.randomUUID())
+                .userId(UUID.randomUUID())
+                .amount(BigDecimal.valueOf(300))
+                .date(LocalDate.of(2026, 3, 21))
+                .build());
+
+        IncomeEntity oldestIncome = new IncomeEntity(Income.builder()
+                .id(UUID.randomUUID())
+                .engagementId(UUID.randomUUID())
+                .userId(UUID.randomUUID())
+                .amount(BigDecimal.valueOf(150))
+                .date(LocalDate.of(2026, 3, 20))
+                .build());
+
+        when(this.incomeRepository.findAll(Sort.by(Sort.Direction.DESC, "date")))
+                .thenReturn(List.of(newestIncome, oldestIncome));
+
+        List<Income> incomes = this.incomePersistenceMongodb.findAll().toList();
+
+        assertEquals(2, incomes.size());
+        assertEquals(newestIncome.toIncome(), incomes.get(0));
+        assertEquals(oldestIncome.toIncome(), incomes.get(1));
+    }
+
+    @Test
+    void shouldReturnEmptyWhenNoIncomesExist() {
+        when(this.incomeRepository.findAll(Sort.by(Sort.Direction.DESC, "date")))
+                .thenReturn(List.of());
+
+        List<Income> incomes = this.incomePersistenceMongodb.findAll().toList();
+
+        assertEquals(0, incomes.size());
     }
 }
