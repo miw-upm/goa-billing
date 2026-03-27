@@ -10,6 +10,7 @@ import jakarta.validation.Valid;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.UUID;
 import java.util.stream.Stream;
 
 @RestController
@@ -43,8 +44,8 @@ public class IncomeResource {
     @Operation(summary = "List incomes")
     @SecurityRequirement(name = "bearerAuth")
     @PreAuthorize(Security.ADMIN_MANAGER_OPERATOR)
-    public Stream<Income> findAll() {
-        return this.incomeService.findAll();
+    public Stream<Income> findAll(@RequestParam(required = false) UUID engagementId) {
+        return this.incomeService.findAll(engagementId);
     }
 
     @PutMapping("/{id}")
