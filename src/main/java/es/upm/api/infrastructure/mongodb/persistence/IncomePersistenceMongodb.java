@@ -7,6 +7,7 @@ import es.upm.api.infrastructure.mongodb.repositories.IncomeRepository;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Repository;
 
+import java.util.UUID;
 import java.util.stream.Stream;
 
 @Repository
@@ -27,6 +28,13 @@ public class IncomePersistenceMongodb implements IncomePersistence {
     @Override
     public Stream<Income> findAll() {
         return this.incomeRepository.findAll(DATE)
+                .stream()
+                .map(IncomeEntity::toIncome);
+    }
+
+    @Override
+    public Stream<Income> findByEngagementId(UUID engagementId) {
+        return this.incomeRepository.findByEngagementId(engagementId, DATE)
                 .stream()
                 .map(IncomeEntity::toIncome);
     }

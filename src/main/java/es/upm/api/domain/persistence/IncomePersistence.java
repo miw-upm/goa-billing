@@ -11,6 +11,7 @@ import java.util.stream.Stream;
 public interface IncomePersistence {
     void create(Income income);
     Stream<Income> findAll();
-    
+    Stream<Income> findByEngagementId(UUID engagementId);
+
     void update(UUID id, Income income);
 }
