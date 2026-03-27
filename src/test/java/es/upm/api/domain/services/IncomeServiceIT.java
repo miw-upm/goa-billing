@@ -215,7 +215,7 @@ class IncomeServiceIT {
 
         when(this.incomePersistence.findAll()).thenReturn(Stream.of(incomeA, incomeB));
 
-        List<Income> incomes = this.incomeService.findAll().toList();
+        List<Income> incomes = this.incomeService.findAll(null).toList();
 
         assertEquals(2, incomes.size());
         assertEquals(List.of(incomeA, incomeB), incomes);
@@ -226,10 +226,43 @@ class IncomeServiceIT {
     void shouldReturnEmptyWhenNoIncomesExist() {
         when(this.incomePersistence.findAll()).thenReturn(Stream.empty());
 
-        List<Income> incomes = this.incomeService.findAll().toList();
+        List<Income> incomes = this.incomeService.findAll(null).toList();
 
         assertTrue(incomes.isEmpty());
         verify(this.incomePersistence).findAll();
+    }
+
+    @Test
+    void shouldFindIncomesByEngagementId() {
+        UUID engagementId = UUID.randomUUID();
+        Income incomeA = buildIncome(UUID.randomUUID(), engagementId, UUID.randomUUID(), BigDecimal.valueOf(120), LocalDate.of(2026, 3, 21));
+        Income incomeB = buildIncome(UUID.randomUUID(), engagementId, UUID.randomUUID(), BigDecimal.valueOf(90), LocalDate.of(2026, 3, 20));
+
+        when(this.engagementWebClient.readById(engagementId)).thenReturn(new Object());
+        when(this.incomePersistence.findByEngagementId(engagementId)).thenReturn(Stream.of(incomeA, incomeB));
+
+        List<Income> incomes = this.incomeService.findAll(engagementId).toList();
+
+        assertEquals(2, incomes.size());
+        assertEquals(List.of(incomeA, incomeB), incomes);
+        verify(this.engagementWebClient).readById(engagementId);
+        verify(this.incomePersistence).findByEngagementId(engagementId);
+        verify(this.incomePersistence, never()).findAll();
+    }
+
+    @Test
+    void shouldFailFindIncomesByInvalidEngagementId() {
+        UUID engagementId = UUID.randomUUID();
+        RuntimeException exception = new RuntimeException("Engagement not found");
+        when(this.engagementWebClient.readById(engagementId)).thenThrow(exception);
+
+        RuntimeException thrown = assertThrows(RuntimeException.class,
+                () -> this.incomeService.findAll(engagementId).toList());
+
+        assertEquals("Engagement not found", thrown.getMessage());
+        verify(this.engagementWebClient).readById(engagementId);
+        verify(this.incomePersistence, never()).findByEngagementId(any());
+        verify(this.incomePersistence, never()).findAll();
     }
 
 }
