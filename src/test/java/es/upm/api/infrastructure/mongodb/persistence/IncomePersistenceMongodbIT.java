@@ -113,4 +113,34 @@ class IncomePersistenceMongodbIT {
 
         assertEquals(0, incomes.size());
     }
+
+    @Test
+    void shouldFindIncomesByEngagementId() {
+        UUID engagementId = UUID.randomUUID();
+
+        IncomeEntity newestIncome = new IncomeEntity(Income.builder()
+                .id(UUID.randomUUID())
+                .engagementId(engagementId)
+                .userId(UUID.randomUUID())
+                .amount(BigDecimal.valueOf(300))
+                .date(LocalDate.of(2026, 3, 21))
+                .build());
+
+        IncomeEntity oldestIncome = new IncomeEntity(Income.builder()
+                .id(UUID.randomUUID())
+                .engagementId(engagementId)
+                .userId(UUID.randomUUID())
+                .amount(BigDecimal.valueOf(150))
+                .date(LocalDate.of(2026, 3, 20))
+                .build());
+
+        when(this.incomeRepository.findByEngagementId(engagementId, Sort.by(Sort.Direction.DESC, "date")))
+                .thenReturn(List.of(newestIncome, oldestIncome));
+
+        List<Income> incomes = this.incomePersistenceMongodb.findByEngagementId(engagementId).toList();
+
+        assertEquals(2, incomes.size());
+        assertEquals(newestIncome.toIncome(), incomes.get(0));
+        assertEquals(oldestIncome.toIncome(), incomes.get(1));
+    }
 }

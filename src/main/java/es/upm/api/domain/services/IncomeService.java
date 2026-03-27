@@ -37,8 +37,12 @@ public class IncomeService {
         return income;
     }
 
-    public Stream<Income> findAll() {
-        return this.incomePersistence.findAll();
+    public Stream<Income> findAll(UUID engagementId) {
+        if (engagementId == null) {
+            return this.incomePersistence.findAll();
+        }
+        this.engagementWebClient.readById(engagementId);
+        return this.incomePersistence.findByEngagementId(engagementId);
     }
 
     public Income update(UUID id, Income income) {

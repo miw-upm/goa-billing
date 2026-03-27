@@ -1,6 +1,7 @@
 package es.upm.api.infrastructure.resources;
 
 import es.upm.api.domain.exceptions.BadRequestException;
+import es.upm.api.domain.exceptions.NotFoundException;
 import es.upm.api.domain.model.Income;
 import es.upm.api.domain.services.IncomeService;
 import org.junit.jupiter.api.Test;
@@ -200,7 +201,7 @@ class IncomeResourceIT {
                 .date(LocalDate.of(2026, 3, 19))
                 .build();
 
-        when(this.incomeService.findAll()).thenReturn(Stream.of(incomeA, incomeB));
+        when(this.incomeService.findAll(null)).thenReturn(Stream.of(incomeA, incomeB));
 
         this.mockMvc.perform(get("/incomes"))
                 .andExpect(status().isOk())
@@ -215,19 +216,19 @@ class IncomeResourceIT {
                 .andExpect(jsonPath("$[1].amount").value(200))
                 .andExpect(jsonPath("$[1].date").value("2026-03-19"));
 
-        verify(this.incomeService).findAll();
+        verify(this.incomeService).findAll(null);
     }
 
     @Test
     @WithMockUser(roles = "admin")
     void shouldReturnEmptyArrayWhenNoIncomesExist() throws Exception {
-        when(this.incomeService.findAll()).thenReturn(Stream.empty());
+        when(this.incomeService.findAll(null)).thenReturn(Stream.empty());
 
         this.mockMvc.perform(get("/incomes"))
                 .andExpect(status().isOk())
                 .andExpect(content().json("[]"));
 
-        verify(this.incomeService).findAll();
+        verify(this.incomeService).findAll(null);
     }
 
     @Test
@@ -315,5 +316,50 @@ class IncomeResourceIT {
                 .andExpect(status().isNotFound());
 
         verify(this.incomeService).update(eq(incomeId), any());
+    }
+
+    @Test
+    @WithMockUser(roles = "admin")
+    void shouldFindIncomesByEngagementId() throws Exception {
+        UUID engagementId = UUID.randomUUID();
+
+        Income incomeA = Income.builder()
+                .id(UUID.randomUUID())
+                .engagementId(engagementId)
+                .userId(UUID.randomUUID())
+                .amount(BigDecimal.valueOf(350))
+                .date(LocalDate.of(2026, 3, 20))
+                .build();
+
+        Income incomeB = Income.builder()
+                .id(UUID.randomUUID())
+                .engagementId(engagementId)
+                .userId(UUID.randomUUID())
+                .amount(BigDecimal.valueOf(200))
+                .date(LocalDate.of(2026, 3, 19))
+                .build();
+
+        when(this.incomeService.findAll(engagementId)).thenReturn(Stream.of(incomeA, incomeB));
+
+        this.mockMvc.perform(get("/incomes").param("engagementId", engagementId.toString()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].engagementId").value(engagementId.toString()))
+                .andExpect(jsonPath("$[1].engagementId").value(engagementId.toString()));
+
+        verify(this.incomeService).findAll(engagementId);
+    }
+
+    @Test
+    @WithMockUser(roles = "admin")
+    void shouldReturnNotFoundWhenEngagementIdIsInvalidInFilter() throws Exception {
+        UUID engagementId = UUID.randomUUID();
+
+        when(this.incomeService.findAll(engagementId))
+                .thenThrow(new NotFoundException("Engagement not found: " + engagementId));
+
+        this.mockMvc.perform(get("/incomes").param("engagementId", engagementId.toString()))
+                .andExpect(status().isNotFound());
+
+        verify(this.incomeService).findAll(engagementId);
     }
 }

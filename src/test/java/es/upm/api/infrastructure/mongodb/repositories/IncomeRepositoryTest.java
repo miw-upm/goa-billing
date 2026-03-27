@@ -92,4 +92,42 @@ class IncomeRepositoryTest {
         assertEquals(newestIncome.getId(), incomes.get(0).getId());
         assertEquals(oldestIncome.getId(), incomes.get(1).getId());
     }
+
+    @Test
+    void shouldFindIncomesByEngagementIdOrderedByDateDesc() {
+        UUID engagementId = UUID.randomUUID();
+
+        IncomeEntity oldestIncome = this.incomeRepository.save(new IncomeEntity(Income.builder()
+                .id(UUID.randomUUID())
+                .engagementId(engagementId)
+                .userId(UUID.randomUUID())
+                .amount(BigDecimal.valueOf(100))
+                .date(LocalDate.of(2026, 3, 20))
+                .build()));
+
+        IncomeEntity newestIncome = this.incomeRepository.save(new IncomeEntity(Income.builder()
+                .id(UUID.randomUUID())
+                .engagementId(engagementId)
+                .userId(UUID.randomUUID())
+                .amount(BigDecimal.valueOf(300))
+                .date(LocalDate.of(2026, 3, 21))
+                .build()));
+
+        this.incomeRepository.save(new IncomeEntity(Income.builder()
+                .id(UUID.randomUUID())
+                .engagementId(UUID.randomUUID())
+                .userId(UUID.randomUUID())
+                .amount(BigDecimal.valueOf(999))
+                .date(LocalDate.of(2026, 3, 22))
+                .build()));
+
+        List<IncomeEntity> incomes = this.incomeRepository.findByEngagementId(
+                engagementId,
+                Sort.by(Sort.Direction.DESC, "date")
+        );
+
+        assertEquals(2, incomes.size());
+        assertEquals(newestIncome.getId(), incomes.get(0).getId());
+        assertEquals(oldestIncome.getId(), incomes.get(1).getId());
+    }
 }
