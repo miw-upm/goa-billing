@@ -1,6 +1,7 @@
 package es.upm.api.domain.services;
 
 import es.upm.api.domain.model.Expense;
+import es.upm.api.domain.model.ExpenseFindCriteria;
 import es.upm.api.domain.persistence.ExpensePersistence;
 import es.upm.api.domain.webclients.EngagementWebClient;
 import org.junit.jupiter.api.BeforeEach;
@@ -33,6 +34,7 @@ class ExpenseServiceIT {
     private EngagementWebClient engagementWebClient;
 
     private Expense expense;
+    private final ExpenseFindCriteria criteria = new ExpenseFindCriteria();
 
     @BeforeEach
     void setUp() {
@@ -98,11 +100,11 @@ class ExpenseServiceIT {
     @Test
     void shouldFindAll() {
         Stream<Expense> expenseStream = Stream.of(this.expense);
-        when(this.expensePersistence.findAll()).thenReturn(expenseStream);
+        when(this.expensePersistence.findAll(this.criteria)).thenReturn(expenseStream);
 
-        Stream<Expense> allExpenses = this.expenseService.findAll();
+        Stream<Expense> allExpenses = this.expenseService.findAll(this.criteria);
 
-        verify(this.expensePersistence).findAll();
+        verify(this.expensePersistence).findAll(this.criteria);
         assertEquals(this.expense, allExpenses.findFirst().orElse(null));
     }
 
