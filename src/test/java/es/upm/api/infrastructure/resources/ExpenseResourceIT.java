@@ -2,6 +2,7 @@ package es.upm.api.infrastructure.resources;
 
 import es.upm.api.domain.exceptions.NotFoundException;
 import es.upm.api.domain.model.Expense;
+import es.upm.api.domain.model.ExpenseFindCriteria;
 import es.upm.api.domain.services.ExpenseService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,6 +39,8 @@ class ExpenseResourceIT {
 
     @MockitoBean
     private ExpenseService expenseService;
+
+    private final ExpenseFindCriteria criteria = new ExpenseFindCriteria();
 
     @Test
     @WithMockUser(roles = "admin")
@@ -235,7 +238,7 @@ class ExpenseResourceIT {
                 .description("Taxi")
                 .build();
 
-        when(this.expenseService.findAll()).thenReturn(Stream.of(response));
+        when(this.expenseService.findAll(this.criteria)).thenReturn(Stream.of(response));
 
         this.mockMvc.perform(get("/expenses"))
                 .andExpect(status().isOk())
@@ -245,6 +248,6 @@ class ExpenseResourceIT {
                 .andExpect(jsonPath("$.[0].date").value("2026-03-20"))
                 .andExpect(jsonPath("$.[0].description").value("Taxi"));
 
-        verify(this.expenseService).findAll();
+        verify(this.expenseService).findAll(this.criteria);
     }
 }

@@ -2,6 +2,7 @@ package es.upm.api.infrastructure.mongodb.persistence;
 
 import es.upm.api.domain.exceptions.NotFoundException;
 import es.upm.api.domain.model.Expense;
+import es.upm.api.domain.model.ExpenseFindCriteria;
 import es.upm.api.infrastructure.mongodb.entities.ExpenseEntity;
 import es.upm.api.infrastructure.mongodb.repositories.ExpenseRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -36,6 +37,7 @@ class ExpensePersistenceMongodbIT {
     private ExpenseRepository expenseRepository;
 
     private Expense expense;
+    private final ExpenseFindCriteria criteria = new ExpenseFindCriteria();
 
     @BeforeEach
     void setUp() {
@@ -106,9 +108,22 @@ class ExpensePersistenceMongodbIT {
         when(this.expenseRepository.findAll(ExpensePersistenceMongodb.DATE))
                 .thenReturn(List.of(new ExpenseEntity(this.expense)));
 
-        Stream<Expense> expenseStream = this.expensePersistenceMongodb.findAll();
+        Stream<Expense> expenseStream = this.expensePersistenceMongodb.findAll(this.criteria);
 
         verify(this.expenseRepository).findAll(ExpensePersistenceMongodb.DATE);
+
+        assertEquals(this.expense, expenseStream.findFirst().orElse(null));
+    }
+
+    @Test
+    void shouldFindAllWithDate() {
+        this.criteria.setDate(LocalDate.now());
+        when(this.expenseRepository.findByDate(LocalDate.now()))
+                .thenReturn(List.of(new ExpenseEntity(this.expense)));
+
+        Stream<Expense> expenseStream = this.expensePersistenceMongodb.findAll(this.criteria);
+
+        verify(this.expenseRepository).findByDate(LocalDate.now());
 
         assertEquals(this.expense, expenseStream.findFirst().orElse(null));
     }

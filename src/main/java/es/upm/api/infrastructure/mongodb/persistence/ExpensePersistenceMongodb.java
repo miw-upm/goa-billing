@@ -2,12 +2,14 @@ package es.upm.api.infrastructure.mongodb.persistence;
 
 import es.upm.api.domain.exceptions.NotFoundException;
 import es.upm.api.domain.model.Expense;
+import es.upm.api.domain.model.ExpenseFindCriteria;
 import es.upm.api.domain.persistence.ExpensePersistence;
 import es.upm.api.infrastructure.mongodb.entities.ExpenseEntity;
 import es.upm.api.infrastructure.mongodb.repositories.ExpenseRepository;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.UUID;
 import java.util.stream.Stream;
 
@@ -46,8 +48,16 @@ public class ExpensePersistenceMongodb implements ExpensePersistence {
                 .orElseThrow(() -> new NotFoundException("Expense id: " + id));
     }
 
-    public Stream<Expense> findAll() {
-        return this.expenseRepository.findAll(DATE).stream()
+    public Stream<Expense> findAll(ExpenseFindCriteria criteria) {
+        List<ExpenseEntity> result;
+
+        if (criteria.getDate() != null) {
+            result = this.expenseRepository.findByDate(criteria.getDate());
+        } else {
+            result = this.expenseRepository.findAll(DATE);
+        }
+
+        return result.stream()
                 .map(ExpenseEntity::toExpense);
     }
 }

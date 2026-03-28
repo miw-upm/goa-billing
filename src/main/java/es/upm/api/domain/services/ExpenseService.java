@@ -1,6 +1,7 @@
 package es.upm.api.domain.services;
 
 import es.upm.api.domain.model.Expense;
+import es.upm.api.domain.model.ExpenseFindCriteria;
 import es.upm.api.domain.persistence.ExpensePersistence;
 import es.upm.api.domain.webclients.EngagementWebClient;
 import org.springframework.stereotype.Service;
@@ -35,7 +36,7 @@ public class ExpenseService {
         return this.expensePersistence.readById(id);
     }
 
-    public Stream<Expense> findAll() {
-        return this.expensePersistence.findAll();
+    public Stream<Expense> findAll(ExpenseFindCriteria criteria) {
+        return this.expensePersistence.findAll(criteria);
     }
 }
