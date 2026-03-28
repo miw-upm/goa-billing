@@ -18,6 +18,7 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @DataMongoTest
@@ -80,5 +81,45 @@ class InvoiceRepositoryTest {
         assertEquals(savedInvoiceEntity.getDate(), foundInvoiceEntity.getDate());
         assertEquals(savedInvoiceEntity.getExpenses(), foundInvoiceEntity.getExpenses());
         assertEquals(savedInvoiceEntity.getIncomes(), foundInvoiceEntity.getIncomes());
+    }
+
+    @Test
+    void shouldFindInvoiceByExpenseId() {
+        InvoiceEntity savedInvoiceEntity = this.invoiceRepository.save(new InvoiceEntity(this.invoice));
+        UUID expenseId = this.invoice.getExpenses().get(0).getId();
+
+        InvoiceEntity foundInvoiceEntity = this.invoiceRepository.findByExpensesId(expenseId);
+
+        assertNotNull(foundInvoiceEntity);
+        assertEquals(savedInvoiceEntity.getId(), foundInvoiceEntity.getId());
+    }
+
+    @Test
+    void shouldReturnNullWhenExpenseIdIsNotAssigned() {
+        this.invoiceRepository.save(new InvoiceEntity(this.invoice));
+
+        InvoiceEntity foundInvoiceEntity = this.invoiceRepository.findByExpensesId(UUID.randomUUID());
+
+        assertNull(foundInvoiceEntity);
+    }
+
+    @Test
+    void shouldFindInvoiceByIncomeId() {
+        InvoiceEntity savedInvoiceEntity = this.invoiceRepository.save(new InvoiceEntity(this.invoice));
+        UUID incomeId = this.invoice.getIncomes().get(0).getId();
+
+        InvoiceEntity foundInvoiceEntity = this.invoiceRepository.findByIncomesId(incomeId);
+
+        assertNotNull(foundInvoiceEntity);
+        assertEquals(savedInvoiceEntity.getId(), foundInvoiceEntity.getId());
+    }
+
+    @Test
+    void shouldReturnNullWhenIncomeIdIsNotAssigned() {
+        this.invoiceRepository.save(new InvoiceEntity(this.invoice));
+
+        InvoiceEntity foundInvoiceEntity = this.invoiceRepository.findByIncomesId(UUID.randomUUID());
+
+        assertNull(foundInvoiceEntity);
     }
 }

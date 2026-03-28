@@ -6,6 +6,8 @@ import es.upm.api.infrastructure.mongodb.entities.InvoiceEntity;
 import es.upm.api.infrastructure.mongodb.repositories.InvoiceRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.UUID;
+
 @Repository
 public class InvoicePersistenceMongodb implements InvoicePersistence {
 
@@ -18,5 +20,17 @@ public class InvoicePersistenceMongodb implements InvoicePersistence {
     @Override
     public void create(Invoice invoice) {
         this.invoiceRepository.save(new InvoiceEntity(invoice));
+    }
+
+    @Override
+    public Invoice findByExpenseId(UUID expenseId) {
+        InvoiceEntity invoiceEntity = this.invoiceRepository.findByExpensesId(expenseId);
+        return invoiceEntity == null ? null : invoiceEntity.toInvoice();
+    }
+
+    @Override
+    public Invoice findByIncomeId(UUID incomeId) {
+        InvoiceEntity invoiceEntity = this.invoiceRepository.findByIncomesId(incomeId);
+        return invoiceEntity == null ? null : invoiceEntity.toInvoice();
     }
 }

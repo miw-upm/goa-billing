@@ -6,4 +6,6 @@ import org.springframework.data.mongodb.repository.MongoRepository;
 import java.util.UUID;
 
 public interface InvoiceRepository extends MongoRepository<InvoiceEntity, UUID> {
+    InvoiceEntity findByExpensesId(UUID expenseId);
+    InvoiceEntity findByIncomesId(UUID incomeId);
 }
