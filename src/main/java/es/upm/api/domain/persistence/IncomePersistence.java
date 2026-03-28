@@ -10,6 +10,7 @@ import java.util.stream.Stream;
 @Repository
 public interface IncomePersistence {
     void create(Income income);
+    Income readById(UUID id);
     Stream<Income> findAll();
     Stream<Income> findByEngagementId(UUID engagementId);
 
