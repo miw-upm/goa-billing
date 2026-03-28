@@ -83,6 +83,8 @@ class InvoiceServiceIT {
         when(this.engagementWebClient.readById(this.invoice.getEngagementId())).thenReturn(new Object());
         when(this.expensePersistence.readById(this.expense.getId())).thenReturn(this.expense);
         when(this.incomePersistence.readById(this.income.getId())).thenReturn(this.income);
+        when(this.invoicePersistence.findByExpenseId(this.expense.getId())).thenReturn(null);
+        when(this.invoicePersistence.findByIncomeId(this.income.getId())).thenReturn(null);
 
         Invoice createdInvoice = this.invoiceService.create(this.invoice);
 
@@ -113,6 +115,7 @@ class InvoiceServiceIT {
         this.invoice.setIncomes(List.of());
         when(this.engagementWebClient.readById(this.invoice.getEngagementId())).thenReturn(new Object());
         when(this.expensePersistence.readById(this.expense.getId())).thenReturn(this.expense);
+        when(this.invoicePersistence.findByExpenseId(this.expense.getId())).thenReturn(null);
 
         Invoice createdInvoice = this.invoiceService.create(this.invoice);
 
@@ -130,6 +133,7 @@ class InvoiceServiceIT {
         this.invoice.setExpenses(List.of());
         when(this.engagementWebClient.readById(this.invoice.getEngagementId())).thenReturn(new Object());
         when(this.incomePersistence.readById(this.income.getId())).thenReturn(this.income);
+        when(this.invoicePersistence.findByIncomeId(this.income.getId())).thenReturn(null);
 
         Invoice createdInvoice = this.invoiceService.create(this.invoice);
 
@@ -210,9 +214,27 @@ class InvoiceServiceIT {
     }
 
     @Test
+    void shouldNotPersistInvoiceWhenExpenseAlreadyAssignedToAnotherInvoice() {
+        when(this.engagementWebClient.readById(this.invoice.getEngagementId())).thenReturn(new Object());
+        when(this.expensePersistence.readById(this.expense.getId())).thenReturn(this.expense);
+        when(this.invoicePersistence.findByExpenseId(this.expense.getId())).thenReturn(Invoice.builder().id(UUID.randomUUID()).build());
+
+        BadRequestException thrown = assertThrows(BadRequestException.class,
+                () -> this.invoiceService.create(this.invoice));
+
+        assertEquals("Bad Request Exception. Expense is already assigned to another invoice", thrown.getMessage());
+        verify(this.engagementWebClient).readById(this.invoice.getEngagementId());
+        verify(this.expensePersistence).readById(this.expense.getId());
+        verify(this.invoicePersistence).findByExpenseId(this.expense.getId());
+        verify(this.incomePersistence, never()).readById(any());
+        verify(this.invoicePersistence, never()).create(any());
+    }
+
+    @Test
     void shouldNotPersistInvoiceWhenIncomeDoesNotBelongToEngagement() {
         when(this.engagementWebClient.readById(this.invoice.getEngagementId())).thenReturn(new Object());
         when(this.expensePersistence.readById(this.expense.getId())).thenReturn(this.expense);
+        when(this.invoicePersistence.findByExpenseId(this.expense.getId())).thenReturn(null);
         when(this.incomePersistence.readById(this.income.getId())).thenReturn(
                 Income.builder()
                         .id(this.income.getId())
@@ -230,6 +252,26 @@ class InvoiceServiceIT {
         verify(this.engagementWebClient).readById(this.invoice.getEngagementId());
         verify(this.expensePersistence).readById(this.expense.getId());
         verify(this.incomePersistence).readById(this.income.getId());
+        verify(this.invoicePersistence, never()).create(any());
+    }
+
+    @Test
+    void shouldNotPersistInvoiceWhenIncomeAlreadyAssignedToAnotherInvoice() {
+        when(this.engagementWebClient.readById(this.invoice.getEngagementId())).thenReturn(new Object());
+        when(this.expensePersistence.readById(this.expense.getId())).thenReturn(this.expense);
+        when(this.invoicePersistence.findByExpenseId(this.expense.getId())).thenReturn(null);
+        when(this.incomePersistence.readById(this.income.getId())).thenReturn(this.income);
+        when(this.invoicePersistence.findByIncomeId(this.income.getId())).thenReturn(Invoice.builder().id(UUID.randomUUID()).build());
+
+        BadRequestException thrown = assertThrows(BadRequestException.class,
+                () -> this.invoiceService.create(this.invoice));
+
+        assertEquals("Bad Request Exception. Income is already assigned to another invoice", thrown.getMessage());
+        verify(this.engagementWebClient).readById(this.invoice.getEngagementId());
+        verify(this.expensePersistence).readById(this.expense.getId());
+        verify(this.invoicePersistence).findByExpenseId(this.expense.getId());
+        verify(this.incomePersistence).readById(this.income.getId());
+        verify(this.invoicePersistence).findByIncomeId(this.income.getId());
         verify(this.invoicePersistence, never()).create(any());
     }
 }

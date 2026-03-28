@@ -89,4 +89,48 @@ class InvoicePersistenceMongodbIT {
         assertEquals("Mongo error", thrown.getMessage());
         verify(this.invoiceRepository).save(any(InvoiceEntity.class));
     }
+
+    @Test
+    void shouldFindInvoiceByExpenseId() {
+        UUID expenseId = this.invoice.getExpenses().get(0).getId();
+        when(this.invoiceRepository.findByExpensesId(expenseId)).thenReturn(new InvoiceEntity(this.invoice));
+
+        Invoice foundInvoice = this.invoicePersistenceMongodb.findByExpenseId(expenseId);
+
+        assertEquals(this.invoice, foundInvoice);
+        verify(this.invoiceRepository).findByExpensesId(expenseId);
+    }
+
+    @Test
+    void shouldReturnNullWhenExpenseIsNotAssigned() {
+        UUID expenseId = this.invoice.getExpenses().get(0).getId();
+        when(this.invoiceRepository.findByExpensesId(expenseId)).thenReturn(null);
+
+        Invoice foundInvoice = this.invoicePersistenceMongodb.findByExpenseId(expenseId);
+
+        assertEquals(null, foundInvoice);
+        verify(this.invoiceRepository).findByExpensesId(expenseId);
+    }
+
+    @Test
+    void shouldFindInvoiceByIncomeId() {
+        UUID incomeId = this.invoice.getIncomes().get(0).getId();
+        when(this.invoiceRepository.findByIncomesId(incomeId)).thenReturn(new InvoiceEntity(this.invoice));
+
+        Invoice foundInvoice = this.invoicePersistenceMongodb.findByIncomeId(incomeId);
+
+        assertEquals(this.invoice, foundInvoice);
+        verify(this.invoiceRepository).findByIncomesId(incomeId);
+    }
+
+    @Test
+    void shouldReturnNullWhenIncomeIsNotAssigned() {
+        UUID incomeId = this.invoice.getIncomes().get(0).getId();
+        when(this.invoiceRepository.findByIncomesId(incomeId)).thenReturn(null);
+
+        Invoice foundInvoice = this.invoicePersistenceMongodb.findByIncomeId(incomeId);
+
+        assertEquals(null, foundInvoice);
+        verify(this.invoiceRepository).findByIncomesId(incomeId);
+    }
 }

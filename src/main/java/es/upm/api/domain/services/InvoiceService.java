@@ -54,6 +54,9 @@ public class InvoiceService {
             if (!invoice.getEngagementId().equals(existingExpense.getEngagementId())) {
                 throw new BadRequestException("Expense does not belong to the invoice engagement");
             }
+            if (this.invoicePersistence.findByExpenseId(expense.getId()) != null) {
+                throw new BadRequestException("Expense is already assigned to another invoice");
+            }
         }
     }
 
@@ -62,6 +65,9 @@ public class InvoiceService {
             Income existingIncome = this.incomePersistence.readById(income.getId());
             if (!invoice.getEngagementId().equals(existingIncome.getEngagementId())) {
                 throw new BadRequestException("Income does not belong to the invoice engagement");
+            }
+            if (this.invoicePersistence.findByIncomeId(income.getId()) != null) {
+                throw new BadRequestException("Income is already assigned to another invoice");
             }
         }
     }
