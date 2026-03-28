@@ -1,5 +1,6 @@
 package es.upm.api.infrastructure.mongodb.persistence;
 
+import es.upm.api.domain.exceptions.NotFoundException;
 import es.upm.api.domain.model.Income;
 import es.upm.api.domain.persistence.IncomePersistence;
 import es.upm.api.infrastructure.mongodb.entities.IncomeEntity;
@@ -26,6 +27,13 @@ public class IncomePersistenceMongodb implements IncomePersistence {
     }
 
     @Override
+    public Income readById(UUID id) {
+        return this.incomeRepository.findById(id)
+                .map(IncomeEntity::toIncome)
+                .orElseThrow(() -> new NotFoundException("Income id: " + id));
+    }
+
+    @Override
     public Stream<Income> findAll() {
         return this.incomeRepository.findAll(DATE)
                 .stream()
@@ -42,7 +50,7 @@ public class IncomePersistenceMongodb implements IncomePersistence {
     @Override
     public void update(java.util.UUID id, Income income) {
         IncomeEntity entity = this.incomeRepository.findById(id)
-                .orElseThrow(() -> new es.upm.api.domain.exceptions.NotFoundException("Income not found: " + id));
+                .orElseThrow(() -> new NotFoundException("Income id: " + id));
         // Only update allowed fields
         entity.setEngagementId(income.getEngagementId());
         entity.setUserId(income.getUserId());
