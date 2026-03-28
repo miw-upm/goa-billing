@@ -1,0 +1,84 @@
+package es.upm.api.infrastructure.mongodb.repositories;
+
+import es.upm.api.domain.model.Expense;
+import es.upm.api.domain.model.Income;
+import es.upm.api.domain.model.Invoice;
+import es.upm.api.infrastructure.mongodb.entities.InvoiceEntity;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.data.mongo.DataMongoTest;
+import org.springframework.test.context.ActiveProfiles;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+@DataMongoTest
+@ActiveProfiles("test")
+class InvoiceRepositoryTest {
+
+    @Autowired
+    private InvoiceRepository invoiceRepository;
+
+    private Invoice invoice;
+
+    @BeforeEach
+    void setUp() {
+        this.invoiceRepository.deleteAll();
+        UUID engagementId = UUID.randomUUID();
+        this.invoice = Invoice.builder()
+                .id(UUID.randomUUID())
+                .engagementId(engagementId)
+                .date(LocalDate.of(2026, 3, 21))
+                .expenses(List.of(Expense.builder()
+                        .id(UUID.randomUUID())
+                        .engagementId(engagementId)
+                        .amount(BigDecimal.valueOf(25))
+                        .date(LocalDate.of(2026, 3, 20))
+                        .description("Taxi")
+                        .build()))
+                .incomes(List.of(Income.builder()
+                        .id(UUID.randomUUID())
+                        .engagementId(engagementId)
+                        .userId(UUID.randomUUID())
+                        .amount(BigDecimal.valueOf(250))
+                        .date(LocalDate.of(2026, 3, 20))
+                        .build()))
+                .build();
+    }
+
+    @Test
+    void shouldSaveInvoice() {
+        InvoiceEntity savedInvoiceEntity = this.invoiceRepository.save(new InvoiceEntity(this.invoice));
+
+        assertNotNull(savedInvoiceEntity);
+        assertNotNull(savedInvoiceEntity.getId());
+        assertEquals(this.invoice.getId(), savedInvoiceEntity.getId());
+        assertEquals(this.invoice.getEngagementId(), savedInvoiceEntity.getEngagementId());
+        assertEquals(this.invoice.getDate(), savedInvoiceEntity.getDate());
+        assertEquals(this.invoice.getExpenses(), savedInvoiceEntity.getExpenses());
+        assertEquals(this.invoice.getIncomes(), savedInvoiceEntity.getIncomes());
+    }
+
+    @Test
+    void shouldFindInvoiceById() {
+        InvoiceEntity savedInvoiceEntity = this.invoiceRepository.save(new InvoiceEntity(this.invoice));
+
+        Optional<InvoiceEntity> optionalInvoiceEntity = this.invoiceRepository.findById(savedInvoiceEntity.getId());
+
+        assertTrue(optionalInvoiceEntity.isPresent());
+        InvoiceEntity foundInvoiceEntity = optionalInvoiceEntity.get();
+        assertEquals(savedInvoiceEntity.getId(), foundInvoiceEntity.getId());
+        assertEquals(savedInvoiceEntity.getEngagementId(), foundInvoiceEntity.getEngagementId());
+        assertEquals(savedInvoiceEntity.getDate(), foundInvoiceEntity.getDate());
+        assertEquals(savedInvoiceEntity.getExpenses(), foundInvoiceEntity.getExpenses());
+        assertEquals(savedInvoiceEntity.getIncomes(), foundInvoiceEntity.getIncomes());
+    }
+}

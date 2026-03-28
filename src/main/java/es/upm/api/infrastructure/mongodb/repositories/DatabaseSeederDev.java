@@ -12,10 +12,12 @@ public class DatabaseSeederDev {
 
     private final ExpenseSeeder expenseSeeder;
     private final IncomeSeeder incomeSeeder;
+    private final InvoiceSeeder invoiceSeeder;
 
-    public DatabaseSeederDev(ExpenseSeeder expenseSeeder, IncomeSeeder incomeSeeder) {
+    public DatabaseSeederDev(ExpenseSeeder expenseSeeder, IncomeSeeder incomeSeeder, InvoiceSeeder invoiceSeeder) {
         this.expenseSeeder = expenseSeeder;
         this.incomeSeeder = incomeSeeder;
+        this.invoiceSeeder = invoiceSeeder;
     }
 
     @PostConstruct
@@ -25,6 +27,7 @@ public class DatabaseSeederDev {
     }
 
     private void deleteAllAndInitialize() {
+        this.invoiceSeeder.deleteAll();
         this.expenseSeeder.deleteAll();
         this.incomeSeeder.deleteAll();
         log.warn("------- Delete All -----------");
@@ -33,6 +36,7 @@ public class DatabaseSeederDev {
     private void seedDataBaseJava() {
         this.expenseSeeder.seedDatabase();
         this.incomeSeeder.seedDatabase();
+        this.invoiceSeeder.seedDatabase();
         log.warn("------- Initial Load from JAVA ---------------------------------------------------------------");
     }
 

@@ -1,0 +1,92 @@
+package es.upm.api.infrastructure.mongodb.persistence;
+
+import es.upm.api.domain.model.Expense;
+import es.upm.api.domain.model.Income;
+import es.upm.api.domain.model.Invoice;
+import es.upm.api.infrastructure.mongodb.entities.InvoiceEntity;
+import es.upm.api.infrastructure.mongodb.repositories.InvoiceRepository;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.UUID;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+@SpringBootTest
+@ActiveProfiles("test")
+class InvoicePersistenceMongodbIT {
+
+    @Autowired
+    private InvoicePersistenceMongodb invoicePersistenceMongodb;
+
+    @MockitoBean
+    private InvoiceRepository invoiceRepository;
+
+    private Invoice invoice;
+
+    @BeforeEach
+    void setUp() {
+        UUID engagementId = UUID.randomUUID();
+        this.invoice = Invoice.builder()
+                .id(UUID.randomUUID())
+                .engagementId(engagementId)
+                .date(LocalDate.of(2026, 3, 21))
+                .expenses(List.of(Expense.builder()
+                        .id(UUID.randomUUID())
+                        .engagementId(engagementId)
+                        .amount(BigDecimal.valueOf(25))
+                        .date(LocalDate.of(2026, 3, 20))
+                        .description("Taxi")
+                        .build()))
+                .incomes(List.of(Income.builder()
+                        .id(UUID.randomUUID())
+                        .engagementId(engagementId)
+                        .userId(UUID.randomUUID())
+                        .amount(BigDecimal.valueOf(250))
+                        .date(LocalDate.of(2026, 3, 20))
+                        .build()))
+                .build();
+    }
+
+    @Test
+    void shouldCreateInvoice() {
+        when(this.invoiceRepository.save(any(InvoiceEntity.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        this.invoicePersistenceMongodb.create(this.invoice);
+
+        ArgumentCaptor<InvoiceEntity> invoiceEntityCaptor = ArgumentCaptor.forClass(InvoiceEntity.class);
+        verify(this.invoiceRepository).save(invoiceEntityCaptor.capture());
+
+        InvoiceEntity persistedInvoiceEntity = invoiceEntityCaptor.getValue();
+        assertEquals(this.invoice.getId(), persistedInvoiceEntity.getId());
+        assertEquals(this.invoice.getEngagementId(), persistedInvoiceEntity.getEngagementId());
+        assertEquals(this.invoice.getDate(), persistedInvoiceEntity.getDate());
+        assertEquals(this.invoice.getExpenses(), persistedInvoiceEntity.getExpenses());
+        assertEquals(this.invoice.getIncomes(), persistedInvoiceEntity.getIncomes());
+    }
+
+    @Test
+    void shouldPropagateExceptionWhenRepositoryFails() {
+        RuntimeException exception = new RuntimeException("Mongo error");
+        when(this.invoiceRepository.save(any(InvoiceEntity.class))).thenThrow(exception);
+
+        RuntimeException thrown = assertThrows(RuntimeException.class,
+                () -> this.invoicePersistenceMongodb.create(this.invoice));
+
+        assertEquals("Mongo error", thrown.getMessage());
+        verify(this.invoiceRepository).save(any(InvoiceEntity.class));
+    }
+}
