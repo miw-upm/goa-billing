@@ -85,20 +85,13 @@ class ExpenseServiceIT {
 
     @Test
     void shouldReadExpenseById() {
-        UUID id = UUID.randomUUID();
-        Expense persistedExpense = Expense.builder()
-                .id(id)
-                .engagementId(UUID.randomUUID())
-                .amount(BigDecimal.valueOf(35))
-                .date(LocalDate.of(2026, 3, 21))
-                .description("Meal")
-                .build();
-        when(this.expensePersistence.readById(id)).thenReturn(persistedExpense);
+        this.expense.setId(UUID.randomUUID());
+        when(this.expensePersistence.readById(this.expense.getId())).thenReturn(this.expense);
 
-        Expense readExpense = this.expenseService.readById(id);
+        Expense readExpense = this.expenseService.readById(this.expense.getId());
 
-        assertEquals(persistedExpense, readExpense);
-        verify(this.expensePersistence).readById(id);
+        assertEquals(this.expense, readExpense);
+        verify(this.expensePersistence).readById(this.expense.getId());
         verifyNoInteractions(this.engagementWebClient);
     }
 
