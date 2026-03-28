@@ -1,6 +1,7 @@
 package es.upm.api.infrastructure.resources;
 
 import es.upm.api.domain.model.Expense;
+import es.upm.api.domain.model.ExpenseFindCriteria;
 import es.upm.api.domain.services.ExpenseService;
 import es.upm.api.infrastructure.resources.dtos.ExpenseCreateRequest;
 import es.upm.api.infrastructure.resources.dtos.ExpenseUpdateRequest;
@@ -56,7 +57,7 @@ public class ExpenseResource {
     }
 
     @GetMapping
-    public Stream<Expense> findAll() {
-        return this.expenseService.findAll();
+    public Stream<Expense> findAll(@ModelAttribute ExpenseFindCriteria criteria) {
+        return this.expenseService.findAll(criteria);
     }
 }

@@ -1,6 +1,7 @@
 package es.upm.api.domain.persistence;
 
 import es.upm.api.domain.model.Expense;
+import es.upm.api.domain.model.ExpenseFindCriteria;
 import org.springframework.stereotype.Repository;
 
 import java.util.UUID;
@@ -14,5 +15,5 @@ public interface ExpensePersistence {
 
     Expense readById(UUID id);
 
-    Stream<Expense> findAll();
+    Stream<Expense> findAll(ExpenseFindCriteria criteria);
 }
