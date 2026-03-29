@@ -19,11 +19,13 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Stream;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -239,5 +241,33 @@ class InvoiceResourceIT {
                 .andExpect(status().isBadRequest());
 
         verify(this.invoiceService).create(any());
+    }
+
+    @Test
+    @WithMockUser(roles = "admin")
+    void shouldFindAllInvoices() throws Exception {
+        Invoice invoiceA = Invoice.builder()
+                .id(UUID.randomUUID())
+                .engagementId(UUID.randomUUID())
+                .date(LocalDate.of(2026, 3, 20))
+                .expenses(List.of())
+                .incomes(List.of())
+                .build();
+        Invoice invoiceB = Invoice.builder()
+                .id(UUID.randomUUID())
+                .engagementId(UUID.randomUUID())
+                .date(LocalDate.of(2026, 3, 21))
+                .expenses(List.of())
+                .incomes(List.of())
+                .build();
+
+        when(this.invoiceService.findAll()).thenReturn(Stream.of(invoiceA, invoiceB));
+
+        this.mockMvc.perform(get("/invoices"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].id").value(invoiceA.getId().toString()))
+                .andExpect(jsonPath("$[1].id").value(invoiceB.getId().toString()));
+
+        verify(this.invoiceService).findAll();
     }
 }

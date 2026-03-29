@@ -11,6 +11,7 @@ import jakarta.validation.Valid;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.stream.Stream;
 import java.util.stream.Collectors;
 
 @RestController
@@ -42,5 +43,13 @@ public class InvoiceResource {
                                 .collect(Collectors.toList()))
                         .build()
         );
+    }
+
+    @GetMapping
+    @Operation(summary = "List invoices")
+    @SecurityRequirement(name = "bearerAuth")
+    @PreAuthorize(Security.ADMIN_MANAGER_OPERATOR)
+    public Stream<Invoice> findAll() {
+        return this.invoiceService.findAll();
     }
 }
