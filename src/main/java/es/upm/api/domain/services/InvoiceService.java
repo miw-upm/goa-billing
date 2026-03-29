@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Stream;
 
 @Service
 public class InvoiceService {
@@ -46,6 +47,10 @@ public class InvoiceService {
         this.validateIncomes(invoice);
         this.invoicePersistence.create(invoice);
         return invoice;
+    }
+
+    public Stream<Invoice> findAll() {
+        return this.invoicePersistence.findAll();
     }
 
     private void validateExpenses(Invoice invoice) {

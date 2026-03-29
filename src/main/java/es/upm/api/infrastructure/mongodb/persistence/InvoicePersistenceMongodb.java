@@ -7,6 +7,7 @@ import es.upm.api.infrastructure.mongodb.repositories.InvoiceRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.UUID;
+import java.util.stream.Stream;
 
 @Repository
 public class InvoicePersistenceMongodb implements InvoicePersistence {
@@ -20,6 +21,12 @@ public class InvoicePersistenceMongodb implements InvoicePersistence {
     @Override
     public void create(Invoice invoice) {
         this.invoiceRepository.save(new InvoiceEntity(invoice));
+    }
+
+    @Override
+    public Stream<Invoice> findAll() {
+        return this.invoiceRepository.findAll().stream()
+                .map(InvoiceEntity::toInvoice);
     }
 
     @Override
