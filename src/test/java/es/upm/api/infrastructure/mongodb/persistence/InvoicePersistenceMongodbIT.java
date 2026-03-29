@@ -91,6 +91,17 @@ class InvoicePersistenceMongodbIT {
     }
 
     @Test
+    void shouldFindAllInvoices() {
+        when(this.invoiceRepository.findAll()).thenReturn(List.of(new InvoiceEntity(this.invoice)));
+
+        List<Invoice> invoices = this.invoicePersistenceMongodb.findAll().toList();
+
+        assertEquals(1, invoices.size());
+        assertEquals(this.invoice, invoices.get(0));
+        verify(this.invoiceRepository).findAll();
+    }
+
+    @Test
     void shouldFindInvoiceByExpenseId() {
         UUID expenseId = this.invoice.getExpenses().get(0).getId();
         when(this.invoiceRepository.findByExpensesId(expenseId)).thenReturn(new InvoiceEntity(this.invoice));
