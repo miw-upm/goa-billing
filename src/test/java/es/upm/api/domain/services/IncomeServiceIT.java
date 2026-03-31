@@ -26,6 +26,31 @@ import static org.mockito.Mockito.*;
 @ActiveProfiles("test")
 class IncomeServiceIT {
 
+    @Test
+    void shouldReadIncomeById() {
+        UUID id = UUID.randomUUID();
+        Income expected = buildIncome(id, UUID.randomUUID(), UUID.randomUUID(), BigDecimal.valueOf(100), LocalDate.of(2026, 3, 20));
+        when(this.incomePersistence.readById(id)).thenReturn(expected);
+
+        Income result = this.incomeService.readById(id);
+
+        assertEquals(expected, result);
+        verify(this.incomePersistence).readById(id);
+    }
+
+    @Test
+    void shouldThrowNotFoundWhenIncomeDoesNotExist() {
+        UUID id = UUID.randomUUID();
+        String expectedDetail = "Income id: " + id;
+        String expectedMessage = "Not Found Exception. " + expectedDetail;
+        when(this.incomePersistence.readById(id)).thenThrow(new es.upm.api.domain.exceptions.NotFoundException(expectedDetail));
+
+        es.upm.api.domain.exceptions.NotFoundException thrown = assertThrows(es.upm.api.domain.exceptions.NotFoundException.class,
+                () -> this.incomeService.readById(id));
+        assertEquals(expectedMessage, thrown.getMessage());
+        verify(this.incomePersistence).readById(id);
+    }
+
     @Autowired
     private IncomeService incomeService;
 
