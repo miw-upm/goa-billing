@@ -16,6 +16,13 @@ import java.util.stream.Stream;
 @RestController
 @RequestMapping(IncomeResource.INCOMES)
 public class IncomeResource {
+    @GetMapping("/{id}")
+    @Operation(summary = "Read income by id")
+    @SecurityRequirement(name = "bearerAuth")
+    @PreAuthorize(Security.ADMIN_MANAGER_OPERATOR)
+    public Income readById(@PathVariable UUID id) {
+        return this.incomeService.readById(id);
+    }
 
     public static final String INCOMES = "/incomes";
 

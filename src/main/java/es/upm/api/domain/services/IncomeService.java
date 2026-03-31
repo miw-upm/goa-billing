@@ -14,6 +14,10 @@ import java.util.stream.Stream;
 @Service
 public class IncomeService {
 
+    public Income readById(UUID id) {
+        return this.incomePersistence.readById(id);
+    }
+
     private final IncomePersistence incomePersistence;
     private final EngagementWebClient engagementWebClient;
     private final UserWebClient userWebClient;

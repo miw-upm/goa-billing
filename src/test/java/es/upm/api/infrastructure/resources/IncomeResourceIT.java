@@ -34,6 +34,46 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ActiveProfiles("test")
 class IncomeResourceIT {
 
+    @Test
+    @WithMockUser(roles = "admin")
+    void shouldReadIncomeById() throws Exception {
+        UUID incomeId = UUID.randomUUID();
+        UUID engagementId = UUID.randomUUID();
+        UUID userId = UUID.randomUUID();
+        Income response = Income.builder()
+                .id(incomeId)
+                .engagementId(engagementId)
+                .userId(userId)
+                .amount(BigDecimal.valueOf(350))
+                .date(LocalDate.of(2026, 3, 20))
+                .build();
+
+        when(this.incomeService.readById(incomeId)).thenReturn(response);
+
+        this.mockMvc.perform(get("/incomes/{id}", incomeId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(incomeId.toString()))
+                .andExpect(jsonPath("$.engagementId").value(engagementId.toString()))
+                .andExpect(jsonPath("$.userId").value(userId.toString()))
+                .andExpect(jsonPath("$.amount").value(350))
+                .andExpect(jsonPath("$.date").value("2026-03-20"));
+
+        verify(this.incomeService).readById(incomeId);
+    }
+
+    @Test
+    @WithMockUser(roles = "admin")
+    void shouldReturnNotFoundWhenIncomeDoesNotExist() throws Exception {
+        UUID incomeId = UUID.randomUUID();
+        when(this.incomeService.readById(incomeId))
+                .thenThrow(new NotFoundException("Income id: " + incomeId));
+
+        this.mockMvc.perform(get("/incomes/{id}", incomeId))
+                .andExpect(status().isNotFound());
+
+        verify(this.incomeService).readById(incomeId);
+    }
+
     @Autowired
     private MockMvc mockMvc;
 
