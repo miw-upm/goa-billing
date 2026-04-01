@@ -25,7 +25,6 @@ import java.util.stream.Stream;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -296,11 +295,56 @@ class InvoiceServiceIT {
 
         when(this.invoicePersistence.findAll()).thenReturn(Stream.of(invoiceA, invoiceB));
 
-        List<Invoice> invoices = this.invoiceService.findAll().toList();
+        List<Invoice> invoices = this.invoiceService.findAll(null).toList();
 
         assertEquals(2, invoices.size());
         assertEquals(List.of(invoiceA, invoiceB), invoices);
         verify(this.invoicePersistence).findAll();
         verifyNoInteractions(this.engagementWebClient);
+    }
+
+    @Test
+    void shouldFindInvoicesByEngagementId() {
+        UUID engagementId = UUID.randomUUID();
+        Invoice invoiceA = Invoice.builder()
+                .id(UUID.randomUUID())
+                .engagementId(engagementId)
+                .date(LocalDate.of(2026, 3, 20))
+                .expenses(List.of())
+                .incomes(List.of(this.income))
+                .build();
+        Invoice invoiceB = Invoice.builder()
+                .id(UUID.randomUUID())
+                .engagementId(engagementId)
+                .date(LocalDate.of(2026, 3, 21))
+                .expenses(List.of(this.expense))
+                .incomes(List.of())
+                .build();
+
+        when(this.engagementWebClient.readById(engagementId)).thenReturn(new Object());
+        when(this.invoicePersistence.findByEngagementId(engagementId)).thenReturn(Stream.of(invoiceA, invoiceB));
+
+        List<Invoice> invoices = this.invoiceService.findAll(engagementId).toList();
+
+        assertEquals(2, invoices.size());
+        assertEquals(List.of(invoiceA, invoiceB), invoices);
+        verify(this.engagementWebClient).readById(engagementId);
+        verify(this.invoicePersistence).findByEngagementId(engagementId);
+        verify(this.invoicePersistence, never()).findAll();
+    }
+
+    @Test
+    void shouldFailFindInvoicesByInvalidEngagementId() {
+        UUID engagementId = UUID.randomUUID();
+        RuntimeException exception = new RuntimeException("Engagement not found");
+        when(this.engagementWebClient.readById(engagementId)).thenThrow(exception);
+
+        RuntimeException thrown = assertThrows(RuntimeException.class,
+                () -> this.invoiceService.findAll(engagementId));
+
+        assertEquals("Engagement not found", thrown.getMessage());
+        verify(this.engagementWebClient).readById(engagementId);
+        verify(this.invoicePersistence, never()).findByEngagementId(any());
+        verify(this.invoicePersistence, never()).findAll();
     }
 }

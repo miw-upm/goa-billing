@@ -102,6 +102,29 @@ class InvoicePersistenceMongodbIT {
     }
 
     @Test
+    void shouldFindInvoicesByEngagementId() {
+        UUID engagementId = this.invoice.getEngagementId();
+        when(this.invoiceRepository.findByEngagementId(engagementId)).thenReturn(List.of(new InvoiceEntity(this.invoice)));
+
+        List<Invoice> invoices = this.invoicePersistenceMongodb.findByEngagementId(engagementId).toList();
+
+        assertEquals(1, invoices.size());
+        assertEquals(this.invoice, invoices.get(0));
+        verify(this.invoiceRepository).findByEngagementId(engagementId);
+    }
+
+    @Test
+    void shouldReturnEmptyWhenNoInvoicesFoundByEngagementId() {
+        UUID engagementId = UUID.randomUUID();
+        when(this.invoiceRepository.findByEngagementId(engagementId)).thenReturn(List.of());
+
+        List<Invoice> invoices = this.invoicePersistenceMongodb.findByEngagementId(engagementId).toList();
+
+        assertEquals(0, invoices.size());
+        verify(this.invoiceRepository).findByEngagementId(engagementId);
+    }
+
+    @Test
     void shouldFindInvoiceByExpenseId() {
         UUID expenseId = this.invoice.getExpenses().get(0).getId();
         when(this.invoiceRepository.findByExpensesId(expenseId)).thenReturn(new InvoiceEntity(this.invoice));

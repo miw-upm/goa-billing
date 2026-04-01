@@ -261,13 +261,44 @@ class InvoiceResourceIT {
                 .incomes(List.of())
                 .build();
 
-        when(this.invoiceService.findAll()).thenReturn(Stream.of(invoiceA, invoiceB));
+        when(this.invoiceService.findAll(null)).thenReturn(Stream.of(invoiceA, invoiceB));
 
         this.mockMvc.perform(get("/invoices"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].id").value(invoiceA.getId().toString()))
                 .andExpect(jsonPath("$[1].id").value(invoiceB.getId().toString()));
 
-        verify(this.invoiceService).findAll();
+        verify(this.invoiceService).findAll(null);
+    }
+
+    @Test
+    @WithMockUser(roles = "admin")
+    void shouldFindInvoicesByEngagementId() throws Exception {
+        UUID engagementId = UUID.randomUUID();
+        Invoice invoiceA = Invoice.builder()
+                .id(UUID.randomUUID())
+                .engagementId(engagementId)
+                .date(LocalDate.of(2026, 3, 20))
+                .expenses(List.of())
+                .incomes(List.of())
+                .build();
+        Invoice invoiceB = Invoice.builder()
+                .id(UUID.randomUUID())
+                .engagementId(engagementId)
+                .date(LocalDate.of(2026, 3, 21))
+                .expenses(List.of())
+                .incomes(List.of())
+                .build();
+
+        when(this.invoiceService.findAll(engagementId)).thenReturn(Stream.of(invoiceA, invoiceB));
+
+        this.mockMvc.perform(get("/invoices").param("engagementId", engagementId.toString()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].id").value(invoiceA.getId().toString()))
+                .andExpect(jsonPath("$[0].engagementId").value(engagementId.toString()))
+                .andExpect(jsonPath("$[1].id").value(invoiceB.getId().toString()))
+                .andExpect(jsonPath("$[1].engagementId").value(engagementId.toString()));
+
+        verify(this.invoiceService).findAll(engagementId);
     }
 }
