@@ -84,6 +84,25 @@ class InvoiceRepositoryTest {
     }
 
     @Test
+    void shouldFindInvoicesByEngagementId() {
+        InvoiceEntity savedInvoiceEntity = this.invoiceRepository.save(new InvoiceEntity(this.invoice));
+
+        List<InvoiceEntity> foundInvoices = this.invoiceRepository.findByEngagementId(this.invoice.getEngagementId());
+
+        assertEquals(1, foundInvoices.size());
+        assertEquals(savedInvoiceEntity.getId(), foundInvoices.get(0).getId());
+    }
+
+    @Test
+    void shouldReturnEmptyWhenEngagementIdDoesNotMatchAnyInvoice() {
+        this.invoiceRepository.save(new InvoiceEntity(this.invoice));
+
+        List<InvoiceEntity> foundInvoices = this.invoiceRepository.findByEngagementId(UUID.randomUUID());
+
+        assertTrue(foundInvoices.isEmpty());
+    }
+
+    @Test
     void shouldFindInvoiceByExpenseId() {
         InvoiceEntity savedInvoiceEntity = this.invoiceRepository.save(new InvoiceEntity(this.invoice));
         UUID expenseId = this.invoice.getExpenses().get(0).getId();

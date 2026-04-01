@@ -49,8 +49,12 @@ public class InvoiceService {
         return invoice;
     }
 
-    public Stream<Invoice> findAll() {
-        return this.invoicePersistence.findAll();
+    public Stream<Invoice> findAll(UUID engagementId) {
+        if (engagementId == null) {
+            return this.invoicePersistence.findAll();
+        }
+        this.engagementWebClient.readById(engagementId);
+        return this.invoicePersistence.findByEngagementId(engagementId);
     }
 
     private void validateExpenses(Invoice invoice) {
