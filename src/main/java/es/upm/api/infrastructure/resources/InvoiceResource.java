@@ -11,8 +11,8 @@ import jakarta.validation.Valid;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.UUID;
 import java.util.stream.Stream;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping(InvoiceResource.INVOICES)
@@ -37,10 +37,10 @@ public class InvoiceResource {
                         .date(request.getDate())
                         .expenses(request.getExpenseIds().stream()
                                 .map(expenseId -> Expense.builder().id(expenseId).build())
-                                .collect(Collectors.toList()))
+                                .toList())
                         .incomes(request.getIncomeIds().stream()
                                 .map(incomeId -> Income.builder().id(incomeId).build())
-                                .collect(Collectors.toList()))
+                                .toList())
                         .build()
         );
     }
@@ -49,7 +49,7 @@ public class InvoiceResource {
     @Operation(summary = "List invoices")
     @SecurityRequirement(name = "bearerAuth")
     @PreAuthorize(Security.ADMIN_MANAGER_OPERATOR)
-    public Stream<Invoice> findAll() {
-        return this.invoiceService.findAll();
+    public Stream<Invoice> findAll(@RequestParam(required = false) UUID engagementId) {
+        return this.invoiceService.findAll(engagementId);
     }
 }

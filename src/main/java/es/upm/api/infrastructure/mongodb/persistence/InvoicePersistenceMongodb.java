@@ -30,6 +30,12 @@ public class InvoicePersistenceMongodb implements InvoicePersistence {
     }
 
     @Override
+    public Stream<Invoice> findByEngagementId(UUID engagementId) {
+        return this.invoiceRepository.findByEngagementId(engagementId).stream()
+                .map(InvoiceEntity::toInvoice);
+    }
+
+    @Override
     public Invoice findByExpenseId(UUID expenseId) {
         InvoiceEntity invoiceEntity = this.invoiceRepository.findByExpensesId(expenseId);
         return invoiceEntity == null ? null : invoiceEntity.toInvoice();
