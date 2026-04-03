@@ -1,6 +1,7 @@
 package es.upm.api.infrastructure.resources;
 
 import es.upm.api.domain.model.Income;
+import es.upm.api.domain.model.IncomeFindCriteria;
 import es.upm.api.domain.services.IncomeService;
 import es.upm.api.infrastructure.resources.dtos.IncomeCreateRequest;
 import es.upm.api.infrastructure.resources.dtos.IncomeUpdateRequest;
@@ -51,8 +52,8 @@ public class IncomeResource {
     @Operation(summary = "List incomes")
     @SecurityRequirement(name = "bearerAuth")
     @PreAuthorize(Security.ADMIN_MANAGER_OPERATOR)
-    public Stream<Income> findAll(@RequestParam(required = false) UUID engagementId) {
-        return this.incomeService.findAll(engagementId);
+    public Stream<Income> findAll(@ModelAttribute IncomeFindCriteria criteria) {
+        return this.incomeService.findAll(criteria);
     }
 
     @PutMapping("/{id}")
