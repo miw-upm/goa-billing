@@ -2,17 +2,20 @@ package es.upm.api.infrastructure.mongodb.persistence;
 
 import es.upm.api.domain.exceptions.NotFoundException;
 import es.upm.api.domain.model.Income;
+import es.upm.api.domain.model.IncomeFindCriteria;
 import es.upm.api.domain.persistence.IncomePersistence;
 import es.upm.api.infrastructure.mongodb.entities.IncomeEntity;
 import es.upm.api.infrastructure.mongodb.repositories.IncomeRepository;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.UUID;
 import java.util.stream.Stream;
 
 @Repository
 public class IncomePersistenceMongodb implements IncomePersistence {
+
     public static final Sort DATE = Sort.by(Sort.Direction.DESC, "date");
 
     private final IncomeRepository incomeRepository;
@@ -34,9 +37,24 @@ public class IncomePersistenceMongodb implements IncomePersistence {
     }
 
     @Override
-    public Stream<Income> findAll() {
-        return this.incomeRepository.findAll(DATE)
-                .stream()
+    public Stream<Income> findAll(IncomeFindCriteria criteria) {
+        List<IncomeEntity> result;
+
+        if (criteria.isEmpty()) {
+            result = this.incomeRepository.findAll(DATE);
+        } else if (criteria.getEngagementId() != null && criteria.getDate() != null) {
+            result = this.incomeRepository.findByEngagementIdAndDate(
+                    criteria.getEngagementId(),
+                    criteria.getDate(),
+                    DATE
+            );
+        } else if (criteria.getEngagementId() != null) {
+            result = this.incomeRepository.findByEngagementId(criteria.getEngagementId(), DATE);
+        } else {
+            result = this.incomeRepository.findByDate(criteria.getDate(), DATE);
+        }
+
+        return result.stream()
                 .map(IncomeEntity::toIncome);
     }
 
