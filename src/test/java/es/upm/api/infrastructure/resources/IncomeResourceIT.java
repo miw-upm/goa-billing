@@ -20,9 +20,8 @@ import java.time.LocalDate;
 import java.util.UUID;
 import java.util.stream.Stream;
 
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.never;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -255,13 +254,14 @@ class IncomeResourceIT {
     @Test
     @WithMockUser(roles = "admin")
     void shouldReturnEmptyArrayWhenNoIncomesExist() throws Exception {
-        when(this.incomeService.findAll(null)).thenReturn(Stream.empty());
-
+       when(this.incomeService.findAll(any(IncomeFindCriteria.class))).thenReturn(Stream.empty());
         this.mockMvc.perform(get("/incomes"))
                 .andExpect(status().isOk())
                 .andExpect(content().json("[]"));
 
-        verify(this.incomeService).findAll(null);
+        verify(this.incomeService).findAll(argThat(criteria ->
+                criteria.getEngagementId() == null && criteria.getDate() == null
+        ));
     }
 
     @Test
