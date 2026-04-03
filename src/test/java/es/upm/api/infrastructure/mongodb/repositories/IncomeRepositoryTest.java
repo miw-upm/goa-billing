@@ -130,4 +130,74 @@ class IncomeRepositoryTest {
         assertEquals(newestIncome.getId(), incomes.get(0).getId());
         assertEquals(oldestIncome.getId(), incomes.get(1).getId());
     }
+
+    @Test
+    void shouldFindIncomesByDateOrderedByDateDesc() {
+        LocalDate date = LocalDate.of(2026, 3, 20);
+
+        IncomeEntity firstIncome = this.incomeRepository.save(new IncomeEntity(Income.builder()
+                .id(UUID.randomUUID())
+                .engagementId(UUID.randomUUID())
+                .userId(UUID.randomUUID())
+                .amount(BigDecimal.valueOf(100))
+                .date(date)
+                .build()));
+
+        IncomeEntity secondIncome = this.incomeRepository.save(new IncomeEntity(Income.builder()
+                .id(UUID.randomUUID())
+                .engagementId(UUID.randomUUID())
+                .userId(UUID.randomUUID())
+                .amount(BigDecimal.valueOf(200))
+                .date(date)
+                .build()));
+
+        List<IncomeEntity> incomes = this.incomeRepository.findByDate(
+                date,
+                Sort.by(Sort.Direction.DESC, "date")
+        );
+
+        assertEquals(2, incomes.size());
+        assertTrue(incomes.stream().allMatch(income -> income.getDate().equals(date)));
+    }
+
+    @Test
+    void shouldFindIncomesByEngagementIdAndDateOrderedByDateDesc() {
+        UUID engagementId = UUID.randomUUID();
+        LocalDate date = LocalDate.of(2026, 3, 20);
+
+        this.incomeRepository.save(new IncomeEntity(Income.builder()
+                .id(UUID.randomUUID())
+                .engagementId(engagementId)
+                .userId(UUID.randomUUID())
+                .amount(BigDecimal.valueOf(100))
+                .date(date)
+                .build()));
+
+        this.incomeRepository.save(new IncomeEntity(Income.builder()
+                .id(UUID.randomUUID())
+                .engagementId(engagementId)
+                .userId(UUID.randomUUID())
+                .amount(BigDecimal.valueOf(200))
+                .date(date)
+                .build()));
+
+        this.incomeRepository.save(new IncomeEntity(Income.builder()
+                .id(UUID.randomUUID())
+                .engagementId(UUID.randomUUID())
+                .userId(UUID.randomUUID())
+                .amount(BigDecimal.valueOf(999))
+                .date(date)
+                .build()));
+
+        List<IncomeEntity> incomes = this.incomeRepository.findByEngagementIdAndDate(
+                engagementId,
+                date,
+                Sort.by(Sort.Direction.DESC, "date")
+        );
+
+        assertEquals(2, incomes.size());
+        assertTrue(incomes.stream().allMatch(income ->
+                income.getEngagementId().equals(engagementId) && income.getDate().equals(date)
+        ));
+    }
 }

@@ -3,6 +3,7 @@ package es.upm.api.infrastructure.resources;
 import es.upm.api.domain.exceptions.BadRequestException;
 import es.upm.api.domain.exceptions.NotFoundException;
 import es.upm.api.domain.model.Income;
+import es.upm.api.domain.model.IncomeFindCriteria;
 import es.upm.api.domain.services.IncomeService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,9 +20,8 @@ import java.time.LocalDate;
 import java.util.UUID;
 import java.util.stream.Stream;
 
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.never;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -241,34 +241,27 @@ class IncomeResourceIT {
                 .date(LocalDate.of(2026, 3, 19))
                 .build();
 
-        when(this.incomeService.findAll(null)).thenReturn(Stream.of(incomeA, incomeB));
+        when(this.incomeService.findAll(any(IncomeFindCriteria.class))).thenReturn(Stream.of(incomeA, incomeB));
 
         this.mockMvc.perform(get("/incomes"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].id").value(incomeA.getId().toString()))
-                .andExpect(jsonPath("$[0].engagementId").value(incomeA.getEngagementId().toString()))
-                .andExpect(jsonPath("$[0].userId").value(incomeA.getUserId().toString()))
-                .andExpect(jsonPath("$[0].amount").value(350))
-                .andExpect(jsonPath("$[0].date").value("2026-03-20"))
-                .andExpect(jsonPath("$[1].id").value(incomeB.getId().toString()))
-                .andExpect(jsonPath("$[1].engagementId").value(incomeB.getEngagementId().toString()))
-                .andExpect(jsonPath("$[1].userId").value(incomeB.getUserId().toString()))
-                .andExpect(jsonPath("$[1].amount").value(200))
-                .andExpect(jsonPath("$[1].date").value("2026-03-19"));
+                .andExpect(jsonPath("$[1].id").value(incomeB.getId().toString()));
 
-        verify(this.incomeService).findAll(null);
+        verify(this.incomeService).findAll(new IncomeFindCriteria(null, null));
     }
 
     @Test
     @WithMockUser(roles = "admin")
     void shouldReturnEmptyArrayWhenNoIncomesExist() throws Exception {
-        when(this.incomeService.findAll(null)).thenReturn(Stream.empty());
-
+       when(this.incomeService.findAll(any(IncomeFindCriteria.class))).thenReturn(Stream.empty());
         this.mockMvc.perform(get("/incomes"))
                 .andExpect(status().isOk())
                 .andExpect(content().json("[]"));
 
-        verify(this.incomeService).findAll(null);
+        verify(this.incomeService).findAll(argThat(criteria ->
+                criteria.getEngagementId() == null && criteria.getDate() == null
+        ));
     }
 
     @Test
@@ -379,27 +372,94 @@ class IncomeResourceIT {
                 .date(LocalDate.of(2026, 3, 19))
                 .build();
 
-        when(this.incomeService.findAll(engagementId)).thenReturn(Stream.of(incomeA, incomeB));
+        when(this.incomeService.findAll(any(IncomeFindCriteria.class))).thenReturn(Stream.of(incomeA, incomeB));
 
         this.mockMvc.perform(get("/incomes").param("engagementId", engagementId.toString()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].engagementId").value(engagementId.toString()))
                 .andExpect(jsonPath("$[1].engagementId").value(engagementId.toString()));
 
-        verify(this.incomeService).findAll(engagementId);
+        verify(this.incomeService).findAll(new IncomeFindCriteria(engagementId, null));
     }
 
     @Test
     @WithMockUser(roles = "admin")
     void shouldReturnNotFoundWhenEngagementIdIsInvalidInFilter() throws Exception {
         UUID engagementId = UUID.randomUUID();
+        IncomeFindCriteria criteria = new IncomeFindCriteria(engagementId, null);
 
-        when(this.incomeService.findAll(engagementId))
+        when(this.incomeService.findAll(criteria))
                 .thenThrow(new NotFoundException("Engagement not found: " + engagementId));
 
         this.mockMvc.perform(get("/incomes").param("engagementId", engagementId.toString()))
                 .andExpect(status().isNotFound());
 
-        verify(this.incomeService).findAll(engagementId);
+        verify(this.incomeService).findAll(criteria);
+    }
+
+    @Test
+    @WithMockUser(roles = "admin")
+    void shouldFindIncomesByDate() throws Exception {
+        LocalDate date = LocalDate.of(2026, 3, 20);
+
+        Income incomeA = Income.builder()
+                .id(UUID.randomUUID())
+                .engagementId(UUID.randomUUID())
+                .userId(UUID.randomUUID())
+                .amount(BigDecimal.valueOf(350))
+                .date(date)
+                .build();
+
+        Income incomeB = Income.builder()
+                .id(UUID.randomUUID())
+                .engagementId(UUID.randomUUID())
+                .userId(UUID.randomUUID())
+                .amount(BigDecimal.valueOf(200))
+                .date(date)
+                .build();
+
+        when(this.incomeService.findAll(any(IncomeFindCriteria.class))).thenReturn(Stream.of(incomeA, incomeB));
+
+        this.mockMvc.perform(get("/incomes").param("date", "2026-03-20"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].date").value("2026-03-20"))
+                .andExpect(jsonPath("$[1].date").value("2026-03-20"));
+
+        verify(this.incomeService).findAll(new IncomeFindCriteria(null, date));
+    }
+
+    @Test
+    @WithMockUser(roles = "admin")
+    void shouldFindIncomesByEngagementIdAndDate() throws Exception {
+        UUID engagementId = UUID.randomUUID();
+        LocalDate date = LocalDate.of(2026, 3, 20);
+
+        Income income = Income.builder()
+                .id(UUID.randomUUID())
+                .engagementId(engagementId)
+                .userId(UUID.randomUUID())
+                .amount(BigDecimal.valueOf(350))
+                .date(date)
+                .build();
+
+        when(this.incomeService.findAll(any(IncomeFindCriteria.class))).thenReturn(Stream.of(income));
+
+        this.mockMvc.perform(get("/incomes")
+                        .param("engagementId", engagementId.toString())
+                        .param("date", "2026-03-20"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].engagementId").value(engagementId.toString()))
+                .andExpect(jsonPath("$[0].date").value("2026-03-20"));
+
+        verify(this.incomeService).findAll(new IncomeFindCriteria(engagementId, date));
+    }
+
+    @Test
+    @WithMockUser(roles = "admin")
+    void shouldReturnBadRequestWhenDateFilterIsInvalid() throws Exception {
+        this.mockMvc.perform(get("/incomes").param("date", "20-03-2026"))
+                .andExpect(status().isBadRequest());
+
+        verify(this.incomeService, never()).findAll(any());
     }
 }

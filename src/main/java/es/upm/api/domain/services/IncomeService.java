@@ -2,6 +2,7 @@ package es.upm.api.domain.services;
 
 import es.upm.api.domain.exceptions.BadRequestException;
 import es.upm.api.domain.model.Income;
+import es.upm.api.domain.model.IncomeFindCriteria;
 import es.upm.api.domain.persistence.IncomePersistence;
 import es.upm.api.domain.webclients.EngagementWebClient;
 import es.upm.api.domain.webclients.UserWebClient;
@@ -41,12 +42,11 @@ public class IncomeService {
         return income;
     }
 
-    public Stream<Income> findAll(UUID engagementId) {
-        if (engagementId == null) {
-            return this.incomePersistence.findAll();
+    public Stream<Income> findAll(IncomeFindCriteria criteria) {
+        if (criteria.getEngagementId() != null) {
+            this.engagementWebClient.readById(criteria.getEngagementId());
         }
-        this.engagementWebClient.readById(engagementId);
-        return this.incomePersistence.findByEngagementId(engagementId);
+        return this.incomePersistence.findAll(criteria);
     }
 
     public Income update(UUID id, Income income) {
