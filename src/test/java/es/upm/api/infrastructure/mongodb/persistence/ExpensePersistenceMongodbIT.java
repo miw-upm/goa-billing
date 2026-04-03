@@ -38,16 +38,16 @@ class ExpensePersistenceMongodbIT {
 
     private Expense expense;
     private final ExpenseFindCriteria criteria = new ExpenseFindCriteria();
-    private final UUID ENGAGEMENT_ID = UUID.fromString("aaaaaaaa-bbbb-cccc-dddd-eeeeee000000");
-    private final LocalDate DATE = LocalDate.of(2026, 3, 20);
+    private final UUID engagementUuid = UUID.fromString("aaaaaaaa-bbbb-cccc-dddd-eeeeee000000");
+    private final LocalDate date = LocalDate.of(2026, 3, 20);
 
     @BeforeEach
     void setUp() {
         this.expense = Expense.builder()
                 .id(UUID.randomUUID())
-                .engagementId(ENGAGEMENT_ID)
+                .engagementId(engagementUuid)
                 .amount(BigDecimal.valueOf(25))
-                .date(DATE)
+                .date(date)
                 .description("Taxi")
                 .build();
     }
@@ -119,40 +119,40 @@ class ExpensePersistenceMongodbIT {
 
     @Test
     void shouldFindAllWithDate() {
-        this.criteria.setDate(DATE);
-        when(this.expenseRepository.findByDate(DATE))
+        this.criteria.setDate(date);
+        when(this.expenseRepository.findByDate(date))
                 .thenReturn(List.of(new ExpenseEntity(this.expense)));
 
         Stream<Expense> expenseStream = this.expensePersistenceMongodb.findAll(this.criteria);
 
-        verify(this.expenseRepository).findByDate(DATE);
+        verify(this.expenseRepository).findByDate(date);
 
         assertEquals(this.expense, expenseStream.findFirst().orElse(null));
     }
 
     @Test
     void shouldFindAllWithEngagementId() {
-        this.criteria.setEngagementId(ENGAGEMENT_ID);
-        when(this.expenseRepository.findByEngagementId(ENGAGEMENT_ID))
+        this.criteria.setEngagementId(engagementUuid);
+        when(this.expenseRepository.findByEngagementId(engagementUuid))
                 .thenReturn(List.of(new ExpenseEntity(this.expense)));
 
         Stream<Expense> expenseStream = this.expensePersistenceMongodb.findAll(this.criteria);
 
-        verify(this.expenseRepository).findByEngagementId(ENGAGEMENT_ID);
+        verify(this.expenseRepository).findByEngagementId(engagementUuid);
 
         assertEquals(this.expense, expenseStream.findFirst().orElse(null));
     }
 
     @Test
     void shouldFindAllWithEngagementIdAndDate() {
-        this.criteria.setEngagementId(ENGAGEMENT_ID);
-        this.criteria.setDate(DATE);
-        when(this.expenseRepository.findByEngagementId(ENGAGEMENT_ID))
+        this.criteria.setEngagementId(engagementUuid);
+        this.criteria.setDate(date);
+        when(this.expenseRepository.findByEngagementId(engagementUuid))
                 .thenReturn(List.of(new ExpenseEntity(this.expense)));
 
         Stream<Expense> expenseStream = this.expensePersistenceMongodb.findAll(this.criteria);
 
-        verify(this.expenseRepository).findByEngagementId(ENGAGEMENT_ID);
+        verify(this.expenseRepository).findByEngagementId(engagementUuid);
 
         assertEquals(this.expense, expenseStream.findFirst().orElse(null));
     }
