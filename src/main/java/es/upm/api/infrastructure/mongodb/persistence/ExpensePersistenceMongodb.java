@@ -51,7 +51,14 @@ public class ExpensePersistenceMongodb implements ExpensePersistence {
     public Stream<Expense> findAll(ExpenseFindCriteria criteria) {
         List<ExpenseEntity> result;
 
-        if (criteria.getDate() != null) {
+        if (criteria.getEngagementId() != null) {
+            result = this.expenseRepository.findByEngagementId(criteria.getEngagementId());
+            if (criteria.getDate() != null) {
+                result = result.stream()
+                        .filter(expenseEntity -> expenseEntity.getDate().equals(criteria.getDate()))
+                        .toList();
+            }
+        } else if (criteria.getDate() != null) {
             result = this.expenseRepository.findByDate(criteria.getDate());
         } else {
             result = this.expenseRepository.findAll(DATE);

@@ -11,4 +11,7 @@ import java.util.UUID;
 public interface ExpenseRepository extends MongoRepository<ExpenseEntity, UUID> {
     @Query("{'date': ?0}")
     List<ExpenseEntity> findByDate(LocalDate date);
+
+    @Query("{'engagementId': ?0}")
+    List<ExpenseEntity> findByEngagementId(UUID engagementId);
 }
