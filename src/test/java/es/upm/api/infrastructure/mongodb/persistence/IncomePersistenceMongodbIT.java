@@ -1,6 +1,7 @@
 package es.upm.api.infrastructure.mongodb.persistence;
 
 import es.upm.api.domain.model.Income;
+import es.upm.api.domain.model.IncomeFindCriteria;
 import es.upm.api.infrastructure.mongodb.entities.IncomeEntity;
 import es.upm.api.infrastructure.mongodb.repositories.IncomeRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -19,6 +20,7 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -78,40 +80,46 @@ class IncomePersistenceMongodbIT {
 
     @Test
     void shouldFindAllIncomes() {
-        IncomeEntity newestIncome = new IncomeEntity(Income.builder()
+        IncomeEntity firstIncome = new IncomeEntity(Income.builder()
                 .id(UUID.randomUUID())
                 .engagementId(UUID.randomUUID())
                 .userId(UUID.randomUUID())
                 .amount(BigDecimal.valueOf(300))
-                .date(LocalDate.of(2026, 3, 21))
+                .date(LocalDate.of(2026, 3, 20))
                 .build());
 
-        IncomeEntity oldestIncome = new IncomeEntity(Income.builder()
+        IncomeEntity secondIncome = new IncomeEntity(Income.builder()
                 .id(UUID.randomUUID())
                 .engagementId(UUID.randomUUID())
                 .userId(UUID.randomUUID())
                 .amount(BigDecimal.valueOf(150))
-                .date(LocalDate.of(2026, 3, 20))
+                .date(LocalDate.of(2026, 3, 19))
                 .build());
 
-        when(this.incomeRepository.findAll(Sort.by(Sort.Direction.DESC, "date")))
-                .thenReturn(List.of(newestIncome, oldestIncome));
+        IncomeFindCriteria criteria = new IncomeFindCriteria(null, null);
 
-        List<Income> incomes = this.incomePersistenceMongodb.findAll().toList();
+        when(this.incomeRepository.findAll(Sort.by(Sort.Direction.DESC, "date")))
+                .thenReturn(List.of(firstIncome, secondIncome));
+
+        List<Income> incomes = this.incomePersistenceMongodb.findAll(criteria).toList();
 
         assertEquals(2, incomes.size());
-        assertEquals(newestIncome.toIncome(), incomes.get(0));
-        assertEquals(oldestIncome.toIncome(), incomes.get(1));
+        assertEquals(firstIncome.toIncome(), incomes.get(0));
+        assertEquals(secondIncome.toIncome(), incomes.get(1));
+        verify(this.incomeRepository).findAll(Sort.by(Sort.Direction.DESC, "date"));
     }
 
     @Test
     void shouldReturnEmptyWhenNoIncomesExist() {
-        when(this.incomeRepository.findAll(Sort.by(Sort.Direction.DESC, "date")))
+        IncomeFindCriteria criteria = new IncomeFindCriteria(null, null);
+
+        when(this.incomeRepository.findAll(any(Sort.class)))
                 .thenReturn(List.of());
 
-        List<Income> incomes = this.incomePersistenceMongodb.findAll().toList();
+        List<Income> incomes = this.incomePersistenceMongodb.findAll(criteria).toList();
 
-        assertEquals(0, incomes.size());
+        assertTrue(incomes.isEmpty());
+        verify(this.incomeRepository).findAll(any(Sort.class));
     }
 
     @Test
@@ -142,5 +150,73 @@ class IncomePersistenceMongodbIT {
         assertEquals(2, incomes.size());
         assertEquals(newestIncome.toIncome(), incomes.get(0));
         assertEquals(oldestIncome.toIncome(), incomes.get(1));
+    }
+
+    @Test
+    void shouldFindIncomesByDate() {
+        LocalDate date = LocalDate.of(2026, 3, 20);
+
+        IncomeEntity firstIncome = new IncomeEntity(Income.builder()
+                .id(UUID.randomUUID())
+                .engagementId(UUID.randomUUID())
+                .userId(UUID.randomUUID())
+                .amount(BigDecimal.valueOf(300))
+                .date(date)
+                .build());
+
+        IncomeEntity secondIncome = new IncomeEntity(Income.builder()
+                .id(UUID.randomUUID())
+                .engagementId(UUID.randomUUID())
+                .userId(UUID.randomUUID())
+                .amount(BigDecimal.valueOf(150))
+                .date(date)
+                .build());
+
+        IncomeFindCriteria criteria = new IncomeFindCriteria(null, date);
+
+        when(this.incomeRepository.findByDate(date, Sort.by(Sort.Direction.DESC, "date")))
+                .thenReturn(List.of(firstIncome, secondIncome));
+
+        List<Income> incomes = this.incomePersistenceMongodb.findAll(criteria).toList();
+
+        assertEquals(2, incomes.size());
+        assertEquals(firstIncome.toIncome(), incomes.get(0));
+        assertEquals(secondIncome.toIncome(), incomes.get(1));
+    }
+
+    @Test
+    void shouldFindIncomesByEngagementIdAndDate() {
+        UUID engagementId = UUID.randomUUID();
+        LocalDate date = LocalDate.of(2026, 3, 20);
+
+        IncomeEntity firstIncome = new IncomeEntity(Income.builder()
+                .id(UUID.randomUUID())
+                .engagementId(engagementId)
+                .userId(UUID.randomUUID())
+                .amount(BigDecimal.valueOf(300))
+                .date(date)
+                .build());
+
+        IncomeEntity secondIncome = new IncomeEntity(Income.builder()
+                .id(UUID.randomUUID())
+                .engagementId(engagementId)
+                .userId(UUID.randomUUID())
+                .amount(BigDecimal.valueOf(150))
+                .date(date)
+                .build());
+
+        IncomeFindCriteria criteria = new IncomeFindCriteria(engagementId, date);
+
+        when(this.incomeRepository.findByEngagementIdAndDate(
+                engagementId,
+                date,
+                Sort.by(Sort.Direction.DESC, "date")
+        )).thenReturn(List.of(firstIncome, secondIncome));
+
+        List<Income> incomes = this.incomePersistenceMongodb.findAll(criteria).toList();
+
+        assertEquals(2, incomes.size());
+        assertEquals(firstIncome.toIncome(), incomes.get(0));
+        assertEquals(secondIncome.toIncome(), incomes.get(1));
     }
 }
