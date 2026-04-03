@@ -35,6 +35,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ExpenseFindCriteriaTest {
+    private final UUID ENGAGEMENT_UUID = UUID.fromString("aaaaaaaa-bbbb-cccc-dddd-eeeeeeee0000");
 
     private final ListNotEmptyValidator listNotEmptyValidator = new ListNotEmptyValidator();
     private final PositiveBigDecimalValidator positiveBigDecimalValidator = new PositiveBigDecimalValidator();
@@ -47,8 +48,8 @@ class ExpenseFindCriteriaTest {
     }
 
     @Test
-    void testAllWhenDateIsNotNull() {
-        ExpenseFindCriteria criteria = new ExpenseFindCriteria(LocalDate.now());
+    void testAllWhenDateAndEngagementIdIsNotNull() {
+        ExpenseFindCriteria criteria = new ExpenseFindCriteria(ENGAGEMENT_UUID, LocalDate.now());
         assertFalse(criteria.all());
     }
 
@@ -63,7 +64,7 @@ class ExpenseFindCriteriaTest {
     @Test
     void testAllArgsConstructor() {
         LocalDate date = LocalDate.of(2026, 1, 1);
-        ExpenseFindCriteria criteria = new ExpenseFindCriteria(date);
+        ExpenseFindCriteria criteria = new ExpenseFindCriteria(ENGAGEMENT_UUID, date);
         assertEquals(date, criteria.getDate());
     }
 

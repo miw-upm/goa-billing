@@ -38,14 +38,16 @@ class ExpensePersistenceMongodbIT {
 
     private Expense expense;
     private final ExpenseFindCriteria criteria = new ExpenseFindCriteria();
+    private final UUID ENGAGEMENT_ID = UUID.fromString("aaaaaaaa-bbbb-cccc-dddd-eeeeee000000");
+    private final LocalDate DATE = LocalDate.of(2026, 3, 20);
 
     @BeforeEach
     void setUp() {
         this.expense = Expense.builder()
                 .id(UUID.randomUUID())
-                .engagementId(UUID.randomUUID())
+                .engagementId(ENGAGEMENT_ID)
                 .amount(BigDecimal.valueOf(25))
-                .date(LocalDate.of(2026, 3, 20))
+                .date(DATE)
                 .description("Taxi")
                 .build();
     }
@@ -117,13 +119,40 @@ class ExpensePersistenceMongodbIT {
 
     @Test
     void shouldFindAllWithDate() {
-        this.criteria.setDate(LocalDate.now());
-        when(this.expenseRepository.findByDate(LocalDate.now()))
+        this.criteria.setDate(DATE);
+        when(this.expenseRepository.findByDate(DATE))
                 .thenReturn(List.of(new ExpenseEntity(this.expense)));
 
         Stream<Expense> expenseStream = this.expensePersistenceMongodb.findAll(this.criteria);
 
-        verify(this.expenseRepository).findByDate(LocalDate.now());
+        verify(this.expenseRepository).findByDate(DATE);
+
+        assertEquals(this.expense, expenseStream.findFirst().orElse(null));
+    }
+
+    @Test
+    void shouldFindAllWithEngagementId() {
+        this.criteria.setEngagementId(ENGAGEMENT_ID);
+        when(this.expenseRepository.findByEngagementId(ENGAGEMENT_ID))
+                .thenReturn(List.of(new ExpenseEntity(this.expense)));
+
+        Stream<Expense> expenseStream = this.expensePersistenceMongodb.findAll(this.criteria);
+
+        verify(this.expenseRepository).findByEngagementId(ENGAGEMENT_ID);
+
+        assertEquals(this.expense, expenseStream.findFirst().orElse(null));
+    }
+
+    @Test
+    void shouldFindAllWithEngagementIdAndDate() {
+        this.criteria.setEngagementId(ENGAGEMENT_ID);
+        this.criteria.setDate(DATE);
+        when(this.expenseRepository.findByEngagementId(ENGAGEMENT_ID))
+                .thenReturn(List.of(new ExpenseEntity(this.expense)));
+
+        Stream<Expense> expenseStream = this.expensePersistenceMongodb.findAll(this.criteria);
+
+        verify(this.expenseRepository).findByEngagementId(ENGAGEMENT_ID);
 
         assertEquals(this.expense, expenseStream.findFirst().orElse(null));
     }
