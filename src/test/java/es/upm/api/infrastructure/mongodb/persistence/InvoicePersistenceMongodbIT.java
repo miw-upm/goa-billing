@@ -1,5 +1,6 @@
 package es.upm.api.infrastructure.mongodb.persistence;
 
+import es.upm.api.domain.exceptions.NotFoundException;
 import es.upm.api.domain.model.Expense;
 import es.upm.api.domain.model.Income;
 import es.upm.api.domain.model.Invoice;
@@ -16,6 +17,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -76,6 +78,28 @@ class InvoicePersistenceMongodbIT {
         assertEquals(this.invoice.getDate(), persistedInvoiceEntity.getDate());
         assertEquals(this.invoice.getExpenses(), persistedInvoiceEntity.getExpenses());
         assertEquals(this.invoice.getIncomes(), persistedInvoiceEntity.getIncomes());
+    }
+
+    @Test
+    void shouldReadInvoiceById() {
+        when(this.invoiceRepository.findById(this.invoice.getId())).thenReturn(Optional.of(new InvoiceEntity(this.invoice)));
+
+        Invoice readInvoice = this.invoicePersistenceMongodb.readById(this.invoice.getId());
+
+        assertEquals(this.invoice, readInvoice);
+        verify(this.invoiceRepository).findById(this.invoice.getId());
+    }
+
+    @Test
+    void shouldFailReadInvoiceByIdWhenInvoiceDoesNotExist() {
+        UUID invoiceId = UUID.randomUUID();
+        when(this.invoiceRepository.findById(invoiceId)).thenReturn(Optional.empty());
+
+        NotFoundException thrown = assertThrows(NotFoundException.class,
+                () -> this.invoicePersistenceMongodb.readById(invoiceId));
+
+        assertEquals("Not Found Exception. Invoice id: " + invoiceId, thrown.getMessage());
+        verify(this.invoiceRepository).findById(invoiceId);
     }
 
     @Test
