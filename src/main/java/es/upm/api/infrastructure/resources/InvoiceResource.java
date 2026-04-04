@@ -52,4 +52,12 @@ public class InvoiceResource {
     public Stream<Invoice> findAll(@RequestParam(required = false) UUID engagementId) {
         return this.invoiceService.findAll(engagementId);
     }
+
+    @GetMapping("/{id}")
+    @Operation(summary = "Read invoice by id")
+    @SecurityRequirement(name = "bearerAuth")
+    @PreAuthorize(Security.ADMIN_MANAGER_OPERATOR)
+    public Invoice readById(@PathVariable UUID id) {
+        return this.invoiceService.readById(id);
+    }
 }

@@ -1,5 +1,6 @@
 package es.upm.api.infrastructure.mongodb.persistence;
 
+import es.upm.api.domain.exceptions.NotFoundException;
 import es.upm.api.domain.model.Invoice;
 import es.upm.api.domain.persistence.InvoicePersistence;
 import es.upm.api.infrastructure.mongodb.entities.InvoiceEntity;
@@ -21,6 +22,13 @@ public class InvoicePersistenceMongodb implements InvoicePersistence {
     @Override
     public void create(Invoice invoice) {
         this.invoiceRepository.save(new InvoiceEntity(invoice));
+    }
+
+    @Override
+    public Invoice readById(UUID id) {
+        return this.invoiceRepository.findById(id)
+                .map(InvoiceEntity::toInvoice)
+                .orElseThrow(() -> new NotFoundException("Invoice id: " + id));
     }
 
     @Override

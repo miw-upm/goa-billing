@@ -1,6 +1,7 @@
 package es.upm.api.infrastructure.resources;
 
 import es.upm.api.domain.exceptions.BadRequestException;
+import es.upm.api.domain.exceptions.NotFoundException;
 import es.upm.api.domain.model.Expense;
 import es.upm.api.domain.model.Income;
 import es.upm.api.domain.model.Invoice;
@@ -269,6 +270,64 @@ class InvoiceResourceIT {
                 .andExpect(jsonPath("$[1].id").value(invoiceB.getId().toString()));
 
         verify(this.invoiceService).findAll(null);
+    }
+
+    @Test
+    @WithMockUser(roles = "admin")
+    void shouldReadInvoiceById() throws Exception {
+        UUID invoiceId = UUID.randomUUID();
+        UUID engagementId = UUID.randomUUID();
+        UUID expenseId = UUID.randomUUID();
+        UUID incomeId = UUID.randomUUID();
+        UUID userId = UUID.randomUUID();
+
+        Invoice invoice = Invoice.builder()
+                .id(invoiceId)
+                .engagementId(engagementId)
+                .date(LocalDate.of(2026, 3, 21))
+                .expenses(List.of(Expense.builder()
+                        .id(expenseId)
+                        .engagementId(engagementId)
+                        .amount(BigDecimal.valueOf(25))
+                        .date(LocalDate.of(2026, 3, 20))
+                        .description("Taxi")
+                        .build()))
+                .incomes(List.of(Income.builder()
+                        .id(incomeId)
+                        .engagementId(engagementId)
+                        .userId(userId)
+                        .amount(BigDecimal.valueOf(250))
+                        .date(LocalDate.of(2026, 3, 20))
+                        .build()))
+                .build();
+
+        when(this.invoiceService.readById(invoiceId)).thenReturn(invoice);
+
+        this.mockMvc.perform(get("/invoices/{id}", invoiceId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(invoiceId.toString()))
+                .andExpect(jsonPath("$.engagementId").value(engagementId.toString()))
+                .andExpect(jsonPath("$.date").value("2026-03-21"))
+                .andExpect(jsonPath("$.expenses[0].id").value(expenseId.toString()))
+                .andExpect(jsonPath("$.expenses[0].description").value("Taxi"))
+                .andExpect(jsonPath("$.incomes[0].id").value(incomeId.toString()))
+                .andExpect(jsonPath("$.incomes[0].userId").value(userId.toString()));
+
+        verify(this.invoiceService).readById(invoiceId);
+    }
+
+    @Test
+    @WithMockUser(roles = "admin")
+    void shouldReturnNotFoundWhenInvoiceDoesNotExist() throws Exception {
+        UUID invoiceId = UUID.randomUUID();
+        when(this.invoiceService.readById(invoiceId))
+                .thenThrow(new NotFoundException("Invoice id: " + invoiceId));
+
+        this.mockMvc.perform(get("/invoices/{id}", invoiceId))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.message").value("Not Found Exception. Invoice id: " + invoiceId));
+
+        verify(this.invoiceService).readById(invoiceId);
     }
 
     @Test

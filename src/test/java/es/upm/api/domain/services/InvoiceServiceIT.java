@@ -1,6 +1,7 @@
 package es.upm.api.domain.services;
 
 import es.upm.api.domain.exceptions.BadRequestException;
+import es.upm.api.domain.exceptions.NotFoundException;
 import es.upm.api.domain.model.Expense;
 import es.upm.api.domain.model.Income;
 import es.upm.api.domain.model.Invoice;
@@ -300,6 +301,32 @@ class InvoiceServiceIT {
         assertEquals(2, invoices.size());
         assertEquals(List.of(invoiceA, invoiceB), invoices);
         verify(this.invoicePersistence).findAll();
+        verifyNoInteractions(this.engagementWebClient);
+    }
+
+    @Test
+    void shouldReadInvoiceById() {
+        this.invoice.setId(UUID.randomUUID());
+        when(this.invoicePersistence.readById(this.invoice.getId())).thenReturn(this.invoice);
+
+        Invoice readInvoice = this.invoiceService.readById(this.invoice.getId());
+
+        assertEquals(this.invoice, readInvoice);
+        verify(this.invoicePersistence).readById(this.invoice.getId());
+        verifyNoInteractions(this.engagementWebClient);
+    }
+
+    @Test
+    void shouldFailReadInvoiceByIdWhenInvoiceDoesNotExist() {
+        UUID invoiceId = UUID.randomUUID();
+        when(this.invoicePersistence.readById(invoiceId))
+                .thenThrow(new NotFoundException("Invoice id: " + invoiceId));
+
+        NotFoundException thrown = assertThrows(NotFoundException.class,
+                () -> this.invoiceService.readById(invoiceId));
+
+        assertEquals("Not Found Exception. Invoice id: " + invoiceId, thrown.getMessage());
+        verify(this.invoicePersistence).readById(invoiceId);
         verifyNoInteractions(this.engagementWebClient);
     }
 
