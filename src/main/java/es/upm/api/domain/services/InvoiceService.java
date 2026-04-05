@@ -34,19 +34,17 @@ public class InvoiceService {
     }
 
     public Invoice create(Invoice invoice) {
-        if (invoice.getDate().isAfter(LocalDate.now())) {
-            throw new BadRequestException("Invoice date cannot be in the future");
-        }
-        if (this.isNullOrEmpty(invoice.getExpenses()) && this.isNullOrEmpty(invoice.getIncomes())) {
-            throw new BadRequestException("Invoice must contain at least one expense or one income");
-        }
-
         invoice.setId(UUID.randomUUID());
-        this.engagementWebClient.readById(invoice.getEngagementId());
-        this.validateExpenses(invoice);
-        this.validateIncomes(invoice);
+        this.validateInvoice(invoice);
         this.invoicePersistence.create(invoice);
         return invoice;
+    }
+
+    public Invoice update(UUID id, Invoice invoice) {
+        this.invoicePersistence.readById(id);
+        invoice.setId(id);
+        this.validateInvoice(invoice);
+        return this.invoicePersistence.update(id, invoice);
     }
 
     public Invoice readById(UUID id) {
@@ -61,28 +59,45 @@ public class InvoiceService {
         return this.invoicePersistence.findByEngagementId(engagementId);
     }
 
-    private void validateExpenses(Invoice invoice) {
-        for (Expense expense : invoice.getExpenses()) {
+    private void validateInvoice(Invoice invoice) {
+        if (invoice.getDate().isAfter(LocalDate.now())) {
+            throw new BadRequestException("Invoice date cannot be in the future");
+        }
+        if (this.isNullOrEmpty(invoice.getExpenses()) && this.isNullOrEmpty(invoice.getIncomes())) {
+            throw new BadRequestException("Invoice must contain at least one expense or one income");
+        }
+
+        this.engagementWebClient.readById(invoice.getEngagementId());
+        invoice.setExpenses(this.validateExpenses(invoice));
+        invoice.setIncomes(this.validateIncomes(invoice));
+    }
+
+    private List<Expense> validateExpenses(Invoice invoice) {
+        return invoice.getExpenses().stream().map(expense -> {
             Expense existingExpense = this.expensePersistence.readById(expense.getId());
             if (!invoice.getEngagementId().equals(existingExpense.getEngagementId())) {
                 throw new BadRequestException("Expense does not belong to the invoice engagement");
             }
-            if (this.invoicePersistence.findByExpenseId(expense.getId()) != null) {
+            Invoice assignedInvoice = this.invoicePersistence.findByExpenseId(expense.getId());
+            if (assignedInvoice != null && !invoice.getId().equals(assignedInvoice.getId())) {
                 throw new BadRequestException("Expense is already assigned to another invoice");
             }
-        }
+            return existingExpense;
+        }).toList();
     }
 
-    private void validateIncomes(Invoice invoice) {
-        for (Income income : invoice.getIncomes()) {
+    private List<Income> validateIncomes(Invoice invoice) {
+        return invoice.getIncomes().stream().map(income -> {
             Income existingIncome = this.incomePersistence.readById(income.getId());
             if (!invoice.getEngagementId().equals(existingIncome.getEngagementId())) {
                 throw new BadRequestException("Income does not belong to the invoice engagement");
             }
-            if (this.invoicePersistence.findByIncomeId(income.getId()) != null) {
+            Invoice assignedInvoice = this.invoicePersistence.findByIncomeId(income.getId());
+            if (assignedInvoice != null && !invoice.getId().equals(assignedInvoice.getId())) {
                 throw new BadRequestException("Income is already assigned to another invoice");
             }
-        }
+            return existingIncome;
+        }).toList();
     }
 
     private boolean isNullOrEmpty(List<?> items) {
