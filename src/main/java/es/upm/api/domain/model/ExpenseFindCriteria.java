@@ -14,7 +14,7 @@ public class ExpenseFindCriteria {
     private UUID engagementId;
     private LocalDate date;
 
-    public boolean all() {
+    public boolean isEmpty() {
         return engagementId == null && date == null;
     }
 }
