@@ -44,6 +44,20 @@ public class IncomeSeeder {
                         "aaaaaaaa-bbbb-cccc-dddd-eeeeffff0000",
                         "200.00",
                         LocalDate.of(2026, 3, 22)
+                ),
+                this.buildIncome(
+                        "bbbbbbbb-cccc-dddd-eeee-ffffaaaab004",
+                        "aaaaaaa0-bbbb-cccc-dddd-eeeeffff0001",
+                        "aaaaaaaa-bbbb-cccc-dddd-eeeeffff0001",
+                        "875.00",
+                        LocalDate.of(2026, 3, 23)
+                ),
+                this.buildIncome(
+                        "bbbbbbbb-cccc-dddd-eeee-ffffaaaab005",
+                        "aaaaaaa0-bbbb-cccc-dddd-eeeeffff0001",
+                        "aaaaaaaa-bbbb-cccc-dddd-eeeeffff0000",
+                        "325.00",
+                        LocalDate.of(2026, 3, 24)
                 )
         );
         this.incomeRepository.saveAll(incomes);
