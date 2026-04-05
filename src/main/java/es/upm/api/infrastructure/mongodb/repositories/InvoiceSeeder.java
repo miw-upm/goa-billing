@@ -82,14 +82,14 @@ public class InvoiceSeeder {
                 this.buildInvoice(
                         "cccccccc-dddd-eeee-ffff-aaaabbbb0003",
                         "aaaaaaa0-bbbb-cccc-dddd-eeeeffff0001",
-                        LocalDate.of(2026, 3, 24),
+                        LocalDate.of(2026, 3, 25),
                         List.of(
                                 this.buildExpense(
                                         "aaaaaaaa-bbbb-cccc-dddd-eeeeffff1004",
                                         "aaaaaaa0-bbbb-cccc-dddd-eeeeffff0001",
-                                        "120.00",
-                                        LocalDate.of(2026, 3, 16),
-                                        "Hotel accommodation"
+                                        "64.80",
+                                        LocalDate.of(2026, 3, 18),
+                                        "Client dinner"
                                 )
                         ),
                         List.of(
@@ -97,15 +97,15 @@ public class InvoiceSeeder {
                                         "bbbbbbbb-cccc-dddd-eeee-ffffaaaab004",
                                         "aaaaaaa0-bbbb-cccc-dddd-eeeeffff0001",
                                         "aaaaaaaa-bbbb-cccc-dddd-eeeeffff0001",
-                                        "1200.00",
-                                        LocalDate.of(2026, 3, 21)
+                                        "875.00",
+                                        LocalDate.of(2026, 3, 23)
                                 ),
                                 this.buildIncome(
                                         "bbbbbbbb-cccc-dddd-eeee-ffffaaaab005",
                                         "aaaaaaa0-bbbb-cccc-dddd-eeeeffff0001",
                                         "aaaaaaaa-bbbb-cccc-dddd-eeeeffff0000",
-                                        "200.00",
-                                        LocalDate.of(2026, 3, 22)
+                                        "325.00",
+                                        LocalDate.of(2026, 3, 24)
                                 )
                         )
                 )

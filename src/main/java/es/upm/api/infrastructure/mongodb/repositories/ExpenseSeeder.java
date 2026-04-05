@@ -44,6 +44,13 @@ public class ExpenseSeeder {
                         "18.90",
                         LocalDate.of(2026, 3, 17),
                         "Team lunch"
+                ),
+                this.buildExpense(
+                        "aaaaaaaa-bbbb-cccc-dddd-eeeeffff1004",
+                        "aaaaaaa0-bbbb-cccc-dddd-eeeeffff0001",
+                        "64.80",
+                        LocalDate.of(2026, 3, 18),
+                        "Client dinner"
                 )
         );
         this.expenseRepository.saveAll(expenses);
