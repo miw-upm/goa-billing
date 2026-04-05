@@ -16,11 +16,11 @@ import java.util.stream.Stream;
 
 @RestController
 @RequestMapping(IncomeResource.INCOMES)
+@SecurityRequirement(name = "bearerAuth")
+@PreAuthorize(Security.ADMIN_MANAGER_OPERATOR)
 public class IncomeResource {
     @GetMapping("/{id}")
     @Operation(summary = "Read income by id")
-    @SecurityRequirement(name = "bearerAuth")
-    @PreAuthorize(Security.ADMIN_MANAGER_OPERATOR)
     public Income readById(@PathVariable UUID id) {
         return this.incomeService.readById(id);
     }
@@ -35,8 +35,6 @@ public class IncomeResource {
 
     @PostMapping
     @Operation(summary = "Create income")
-    @SecurityRequirement(name = "bearerAuth")
-    @PreAuthorize(Security.ADMIN_MANAGER_OPERATOR)
     public Income create(@Valid @RequestBody IncomeCreateRequest request) {
         return this.incomeService.create(
                 Income.builder()
@@ -50,16 +48,12 @@ public class IncomeResource {
 
     @GetMapping
     @Operation(summary = "List incomes")
-    @SecurityRequirement(name = "bearerAuth")
-    @PreAuthorize(Security.ADMIN_MANAGER_OPERATOR)
     public Stream<Income> findAll(@ModelAttribute IncomeFindCriteria criteria) {
         return this.incomeService.findAll(criteria);
     }
 
     @PutMapping("/{id}")
     @Operation(summary = "Update income")
-    @SecurityRequirement(name = "bearerAuth")
-    @PreAuthorize(Security.ADMIN_MANAGER_OPERATOR)
     public Income update(
             @PathVariable("id") java.util.UUID id,
             @Valid @RequestBody IncomeUpdateRequest request) {
