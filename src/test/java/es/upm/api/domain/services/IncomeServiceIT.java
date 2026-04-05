@@ -26,32 +26,6 @@ import static org.mockito.Mockito.*;
 @SpringBootTest
 @ActiveProfiles("test")
 class IncomeServiceIT {
-
-    @Test
-    void shouldReadIncomeById() {
-        UUID id = UUID.randomUUID();
-        Income expected = buildIncome(id, UUID.randomUUID(), UUID.randomUUID(), BigDecimal.valueOf(100), LocalDate.of(2026, 3, 20));
-        when(this.incomePersistence.readById(id)).thenReturn(expected);
-
-        Income result = this.incomeService.readById(id);
-
-        assertEquals(expected, result);
-        verify(this.incomePersistence).readById(id);
-    }
-
-    @Test
-    void shouldThrowNotFoundWhenIncomeDoesNotExist() {
-        UUID id = UUID.randomUUID();
-        String expectedDetail = "Income id: " + id;
-        String expectedMessage = "Not Found Exception. " + expectedDetail;
-        when(this.incomePersistence.readById(id)).thenThrow(new es.upm.api.domain.exceptions.NotFoundException(expectedDetail));
-
-        es.upm.api.domain.exceptions.NotFoundException thrown = assertThrows(es.upm.api.domain.exceptions.NotFoundException.class,
-                () -> this.incomeService.readById(id));
-        assertEquals(expectedMessage, thrown.getMessage());
-        verify(this.incomePersistence).readById(id);
-    }
-
     @Autowired
     private IncomeService incomeService;
 
@@ -65,6 +39,7 @@ class IncomeServiceIT {
     private UserWebClient userWebClient;
 
     private Income income;
+    private final IncomeFindCriteria criteria = new IncomeFindCriteria();
 
     @BeforeEach
     void setUp() {
@@ -74,6 +49,35 @@ class IncomeServiceIT {
                 .amount(BigDecimal.valueOf(250))
                 .date(LocalDate.of(2026, 3, 20))
                 .build();
+    }
+
+    @Test
+    void shouldReadIncomeById() {
+        this.income.setId(UUID.randomUUID());
+        when(this.incomePersistence.readById(this.income.getId())).thenReturn(this.income);
+
+        Income result = this.incomeService.readById(this.income.getId());
+
+        assertEquals(this.income, result);
+        verify(this.incomePersistence).readById(this.income.getId());
+        verifyNoInteractions(this.engagementWebClient);
+        verifyNoInteractions(this.userWebClient);
+    }
+
+    @Test
+    void shouldThrowNotFoundWhenIncomeDoesNotExist() {
+        UUID id = UUID.randomUUID();
+        String expectedDetail = "Income id: " + id;
+        String expectedMessage = "Not Found Exception. " + expectedDetail;
+        when(this.incomePersistence.readById(id)).thenThrow(new es.upm.api.domain.exceptions.NotFoundException(expectedDetail));
+
+        es.upm.api.domain.exceptions.NotFoundException thrown = assertThrows(es.upm.api.domain.exceptions.NotFoundException.class,
+                () -> this.incomeService.readById(id));
+
+        assertEquals(expectedMessage, thrown.getMessage());
+        verify(this.incomePersistence).readById(id);
+        verifyNoInteractions(this.engagementWebClient);
+        verifyNoInteractions(this.userWebClient);
     }
 
     @Test
@@ -160,41 +164,47 @@ class IncomeServiceIT {
     @Test
     void shouldUpdateIncome() {
         UUID id = UUID.randomUUID();
-        UUID engagementId = UUID.randomUUID();
-        UUID userId = UUID.randomUUID();
-        Income updateData = buildIncome(null, engagementId, userId, BigDecimal.valueOf(500), LocalDate.of(2026, 3, 25));
-        Income updatedIncome = buildIncome(id, engagementId, userId, BigDecimal.valueOf(500), LocalDate.of(2026, 3, 25));
+        Income updateData = Income.builder()
+                .engagementId(this.income.getEngagementId())
+                .userId(this.income.getUserId())
+                .amount(BigDecimal.valueOf(500))
+                .date(LocalDate.of(2026, 3, 25))
+                .build();
 
-        when(this.engagementWebClient.readById(engagementId)).thenReturn(new Object());
-        when(this.userWebClient.readUserById(userId)).thenReturn(es.upm.api.domain.model.UserDto.builder().id(userId).build());
-        // Simula persistencia
+        when(this.engagementWebClient.readById(updateData.getEngagementId())).thenReturn(new Object());
+        when(this.userWebClient.readUserById(updateData.getUserId()))
+                .thenReturn(es.upm.api.domain.model.UserDto.builder().id(updateData.getUserId()).build());
         doNothing().when(this.incomePersistence).update(id, updateData);
 
         Income response = this.incomeService.update(id, updateData);
 
-        assertEquals(updatedIncome.getEngagementId(), response.getEngagementId());
-        assertEquals(updatedIncome.getUserId(), response.getUserId());
-        assertEquals(updatedIncome.getAmount(), response.getAmount());
-        assertEquals(updatedIncome.getDate(), response.getDate());
+        assertEquals(updateData.getEngagementId(), response.getEngagementId());
+        assertEquals(updateData.getUserId(), response.getUserId());
+        assertEquals(updateData.getAmount(), response.getAmount());
+        assertEquals(updateData.getDate(), response.getDate());
         assertEquals(id, response.getId());
-        verify(this.engagementWebClient).readById(engagementId);
-        verify(this.userWebClient).readUserById(userId);
+        verify(this.engagementWebClient).readById(updateData.getEngagementId());
+        verify(this.userWebClient).readUserById(updateData.getUserId());
         verify(this.incomePersistence).update(id, updateData);
     }
 
     @Test
     void shouldNotUpdateIncomeWhenEngagementDoesNotExist() {
         UUID id = UUID.randomUUID();
-        UUID engagementId = UUID.randomUUID();
-        Income updateData = buildIncome(null, engagementId, UUID.randomUUID(), BigDecimal.valueOf(500), LocalDate.of(2026, 3, 25));
+        Income updateData = Income.builder()
+                .engagementId(this.income.getEngagementId())
+                .userId(this.income.getUserId())
+                .amount(BigDecimal.valueOf(500))
+                .date(LocalDate.of(2026, 3, 25))
+                .build();
         RuntimeException exception = new RuntimeException("Engagement not found");
-        when(this.engagementWebClient.readById(engagementId)).thenThrow(exception);
+        when(this.engagementWebClient.readById(updateData.getEngagementId())).thenThrow(exception);
 
         RuntimeException thrown = assertThrows(RuntimeException.class,
                 () -> this.incomeService.update(id, updateData));
 
         assertEquals("Engagement not found", thrown.getMessage());
-        verify(this.engagementWebClient).readById(engagementId);
+        verify(this.engagementWebClient).readById(updateData.getEngagementId());
         verify(this.userWebClient, never()).readUserById(any());
         verify(this.incomePersistence, never()).update(any(), any());
     }
@@ -202,28 +212,34 @@ class IncomeServiceIT {
     @Test
     void shouldNotUpdateIncomeWhenUserDoesNotExist() {
         UUID id = UUID.randomUUID();
-        UUID engagementId = UUID.randomUUID();
-        UUID userId = UUID.randomUUID();
-        Income updateData = buildIncome(null, engagementId, userId, BigDecimal.valueOf(500), LocalDate.of(2026, 3, 25));
-        when(this.engagementWebClient.readById(engagementId)).thenReturn(new Object());
+        Income updateData = Income.builder()
+                .engagementId(this.income.getEngagementId())
+                .userId(this.income.getUserId())
+                .amount(BigDecimal.valueOf(500))
+                .date(LocalDate.of(2026, 3, 25))
+                .build();
+        when(this.engagementWebClient.readById(updateData.getEngagementId())).thenReturn(new Object());
         RuntimeException exception = new RuntimeException("User not found");
-        when(this.userWebClient.readUserById(userId)).thenThrow(exception);
+        when(this.userWebClient.readUserById(updateData.getUserId())).thenThrow(exception);
 
         RuntimeException thrown = assertThrows(RuntimeException.class,
                 () -> this.incomeService.update(id, updateData));
 
         assertEquals("User not found", thrown.getMessage());
-        verify(this.engagementWebClient).readById(engagementId);
-        verify(this.userWebClient).readUserById(userId);
+        verify(this.engagementWebClient).readById(updateData.getEngagementId());
+        verify(this.userWebClient).readUserById(updateData.getUserId());
         verify(this.incomePersistence, never()).update(any(), any());
     }
 
     @Test
     void shouldNotUpdateIncomeWhenDateIsFuture() {
         UUID id = UUID.randomUUID();
-        UUID engagementId = UUID.randomUUID();
-        UUID userId = UUID.randomUUID();
-        Income updateData = buildIncome(null, engagementId, userId, BigDecimal.valueOf(500), LocalDate.now().plusDays(1));
+        Income updateData = Income.builder()
+                .engagementId(this.income.getEngagementId())
+                .userId(this.income.getUserId())
+                .amount(BigDecimal.valueOf(500))
+                .date(LocalDate.now().plusDays(1))
+                .build();
 
         BadRequestException thrown = assertThrows(BadRequestException.class,
                 () -> this.incomeService.update(id, updateData));
@@ -236,10 +252,10 @@ class IncomeServiceIT {
 
     @Test
     void shouldFindAllIncomes() {
-        Income incomeA = buildIncome(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), BigDecimal.valueOf(120), LocalDate.of(2026, 3, 21));
-        Income incomeB = buildIncome(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), BigDecimal.valueOf(90), LocalDate.of(2026, 3, 20));
-
-        IncomeFindCriteria criteria = new IncomeFindCriteria(null, null);
+        Income incomeA = buildIncome(UUID.randomUUID(), this.income.getEngagementId(), this.income.getUserId(),
+                BigDecimal.valueOf(120), LocalDate.of(2026, 3, 21));
+        Income incomeB = buildIncome(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(),
+                BigDecimal.valueOf(90), this.income.getDate());
 
         when(this.incomePersistence.findAll(criteria)).thenReturn(Stream.of(incomeA, incomeB));
 
@@ -253,60 +269,58 @@ class IncomeServiceIT {
 
     @Test
     void shouldReturnEmptyWhenNoIncomesExist() {
-        IncomeFindCriteria criteria = new IncomeFindCriteria(null, null);
+        when(this.incomePersistence.findAll(this.criteria)).thenReturn(Stream.empty());
 
-        when(this.incomePersistence.findAll(criteria)).thenReturn(Stream.empty());
-
-        List<Income> incomes = this.incomeService.findAll(criteria).toList();
+        List<Income> incomes = this.incomeService.findAll(this.criteria).toList();
 
         assertTrue(incomes.isEmpty());
-        verify(this.incomePersistence).findAll(criteria);
+        verify(this.incomePersistence).findAll(this.criteria);
         verifyNoInteractions(this.engagementWebClient);
     }
 
     @Test
     void shouldFindIncomesByEngagementId() {
-        UUID engagementId = UUID.randomUUID();
-        Income incomeA = buildIncome(UUID.randomUUID(), engagementId, UUID.randomUUID(), BigDecimal.valueOf(120), LocalDate.of(2026, 3, 21));
-        Income incomeB = buildIncome(UUID.randomUUID(), engagementId, UUID.randomUUID(), BigDecimal.valueOf(90), LocalDate.of(2026, 3, 20));
+        Income incomeA = buildIncome(UUID.randomUUID(), this.income.getEngagementId(), UUID.randomUUID(),
+                BigDecimal.valueOf(120), LocalDate.of(2026, 3, 21));
+        Income incomeB = buildIncome(UUID.randomUUID(), this.income.getEngagementId(), UUID.randomUUID(),
+                BigDecimal.valueOf(90), this.income.getDate());
 
-        IncomeFindCriteria criteria = new IncomeFindCriteria(engagementId, null);
+        IncomeFindCriteria criteria = new IncomeFindCriteria(this.income.getEngagementId(), null);
 
-        when(this.engagementWebClient.readById(engagementId)).thenReturn(new Object());
+        when(this.engagementWebClient.readById(this.income.getEngagementId())).thenReturn(new Object());
         when(this.incomePersistence.findAll(criteria)).thenReturn(Stream.of(incomeA, incomeB));
 
         List<Income> incomes = this.incomeService.findAll(criteria).toList();
 
         assertEquals(2, incomes.size());
         assertEquals(List.of(incomeA, incomeB), incomes);
-        verify(this.engagementWebClient).readById(engagementId);
+        verify(this.engagementWebClient).readById(this.income.getEngagementId());
         verify(this.incomePersistence).findAll(criteria);
     }
 
     @Test
     void shouldFailFindIncomesByInvalidEngagementId() {
-        UUID engagementId = UUID.randomUUID();
-        IncomeFindCriteria criteria = new IncomeFindCriteria(engagementId, null);
+        IncomeFindCriteria criteria = new IncomeFindCriteria(this.income.getEngagementId(), null);
 
         RuntimeException exception = new RuntimeException("Engagement not found");
-        when(this.engagementWebClient.readById(engagementId)).thenThrow(exception);
+        when(this.engagementWebClient.readById(this.income.getEngagementId())).thenThrow(exception);
 
         RuntimeException thrown = assertThrows(RuntimeException.class,
                 () -> this.incomeService.findAll(criteria).toList());
 
         assertEquals("Engagement not found", thrown.getMessage());
-        verify(this.engagementWebClient).readById(engagementId);
+        verify(this.engagementWebClient).readById(this.income.getEngagementId());
         verify(this.incomePersistence, never()).findAll(any());
     }
 
     @Test
     void shouldFindIncomesByDate() {
-        LocalDate date = LocalDate.of(2026, 3, 20);
+        Income incomeA = buildIncome(UUID.randomUUID(), this.income.getEngagementId(), this.income.getUserId(),
+                BigDecimal.valueOf(120), this.income.getDate());
+        Income incomeB = buildIncome(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(),
+                BigDecimal.valueOf(90), this.income.getDate());
 
-        Income incomeA = buildIncome(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), BigDecimal.valueOf(120), date);
-        Income incomeB = buildIncome(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), BigDecimal.valueOf(90), date);
-
-        IncomeFindCriteria criteria = new IncomeFindCriteria(null, date);
+        IncomeFindCriteria criteria = new IncomeFindCriteria(null, this.income.getDate());
 
         when(this.incomePersistence.findAll(criteria)).thenReturn(Stream.of(incomeA, incomeB));
 

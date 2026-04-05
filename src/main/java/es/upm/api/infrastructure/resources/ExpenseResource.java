@@ -6,6 +6,7 @@ import es.upm.api.domain.services.ExpenseService;
 import es.upm.api.infrastructure.resources.dtos.ExpenseCreateRequest;
 import es.upm.api.infrastructure.resources.dtos.ExpenseUpdateRequest;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -15,6 +16,7 @@ import java.util.stream.Stream;
 
 @RestController
 @RequestMapping(ExpenseResource.EXPENSES)
+@SecurityRequirement(name = "bearerAuth")
 @PreAuthorize(Security.ADMIN_MANAGER_OPERATOR)
 public class ExpenseResource {
 
@@ -57,6 +59,7 @@ public class ExpenseResource {
     }
 
     @GetMapping
+    @Operation(summary = "List Expenses")
     public Stream<Expense> findAll(@ModelAttribute ExpenseFindCriteria criteria) {
         return this.expenseService.findAll(criteria);
     }

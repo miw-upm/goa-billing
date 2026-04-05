@@ -17,6 +17,8 @@ import java.util.stream.Stream;
 
 @RestController
 @RequestMapping(InvoiceResource.INVOICES)
+@SecurityRequirement(name = "bearerAuth")
+@PreAuthorize(Security.ADMIN_MANAGER_OPERATOR)
 public class InvoiceResource {
 
     public static final String INVOICES = "/invoices";
@@ -29,8 +31,6 @@ public class InvoiceResource {
 
     @PostMapping
     @Operation(summary = "Create invoice")
-    @SecurityRequirement(name = "bearerAuth")
-    @PreAuthorize(Security.ADMIN_MANAGER_OPERATOR)
     public Invoice create(@Valid @RequestBody InvoiceCreateRequest request) {
         return this.invoiceService.create(
                 Invoice.builder()
@@ -48,8 +48,6 @@ public class InvoiceResource {
 
     @PutMapping("/{id}")
     @Operation(summary = "Update invoice")
-    @SecurityRequirement(name = "bearerAuth")
-    @PreAuthorize(Security.ADMIN_MANAGER_OPERATOR)
     public Invoice update(@PathVariable UUID id, @Valid @RequestBody InvoiceUpdateRequest request) {
         return this.invoiceService.update(
                 id,
@@ -68,16 +66,12 @@ public class InvoiceResource {
 
     @GetMapping
     @Operation(summary = "List invoices")
-    @SecurityRequirement(name = "bearerAuth")
-    @PreAuthorize(Security.ADMIN_MANAGER_OPERATOR)
     public Stream<Invoice> findAll(@RequestParam(required = false) UUID engagementId) {
         return this.invoiceService.findAll(engagementId);
     }
 
     @GetMapping("/{id}")
     @Operation(summary = "Read invoice by id")
-    @SecurityRequirement(name = "bearerAuth")
-    @PreAuthorize(Security.ADMIN_MANAGER_OPERATOR)
     public Invoice readById(@PathVariable UUID id) {
         return this.invoiceService.readById(id);
     }
