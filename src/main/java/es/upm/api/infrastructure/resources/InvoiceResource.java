@@ -5,6 +5,7 @@ import es.upm.api.domain.model.Income;
 import es.upm.api.domain.model.Invoice;
 import es.upm.api.domain.services.InvoiceService;
 import es.upm.api.infrastructure.resources.dtos.InvoiceCreateRequest;
+import es.upm.api.infrastructure.resources.dtos.InvoiceUpdateRequest;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
@@ -32,6 +33,26 @@ public class InvoiceResource {
     @PreAuthorize(Security.ADMIN_MANAGER_OPERATOR)
     public Invoice create(@Valid @RequestBody InvoiceCreateRequest request) {
         return this.invoiceService.create(
+                Invoice.builder()
+                        .engagementId(request.getEngagementId())
+                        .date(request.getDate())
+                        .expenses(request.getExpenseIds().stream()
+                                .map(expenseId -> Expense.builder().id(expenseId).build())
+                                .toList())
+                        .incomes(request.getIncomeIds().stream()
+                                .map(incomeId -> Income.builder().id(incomeId).build())
+                                .toList())
+                        .build()
+        );
+    }
+
+    @PutMapping("/{id}")
+    @Operation(summary = "Update invoice")
+    @SecurityRequirement(name = "bearerAuth")
+    @PreAuthorize(Security.ADMIN_MANAGER_OPERATOR)
+    public Invoice update(@PathVariable UUID id, @Valid @RequestBody InvoiceUpdateRequest request) {
+        return this.invoiceService.update(
+                id,
                 Invoice.builder()
                         .engagementId(request.getEngagementId())
                         .date(request.getDate())

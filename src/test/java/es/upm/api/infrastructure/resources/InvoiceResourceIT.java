@@ -28,6 +28,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -242,6 +243,142 @@ class InvoiceResourceIT {
                 .andExpect(status().isBadRequest());
 
         verify(this.invoiceService).create(any());
+    }
+
+    @Test
+    @WithMockUser(roles = "admin")
+    void shouldUpdateInvoice() throws Exception {
+        UUID invoiceId = UUID.randomUUID();
+        UUID engagementId = UUID.randomUUID();
+        UUID incomeId = UUID.randomUUID();
+        UUID userId = UUID.randomUUID();
+
+        String requestBody = """
+                {
+                  "engagementId": "%s",
+                  "date": "2026-03-25",
+                  "expenseIds": [],
+                  "incomeIds": ["%s"]
+                }
+                """.formatted(engagementId, incomeId);
+
+        Invoice response = Invoice.builder()
+                .id(invoiceId)
+                .engagementId(engagementId)
+                .date(LocalDate.of(2026, 3, 25))
+                .expenses(List.of())
+                .incomes(List.of(Income.builder()
+                        .id(incomeId)
+                        .engagementId(engagementId)
+                        .userId(userId)
+                        .amount(BigDecimal.valueOf(300))
+                        .date(LocalDate.of(2026, 3, 24))
+                        .build()))
+                .build();
+
+        when(this.invoiceService.update(any(), any())).thenReturn(response);
+
+        this.mockMvc.perform(put("/invoices/{id}", invoiceId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestBody))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(invoiceId.toString()))
+                .andExpect(jsonPath("$.engagementId").value(engagementId.toString()))
+                .andExpect(jsonPath("$.date").value("2026-03-25"))
+                .andExpect(jsonPath("$.expenses").isArray())
+                .andExpect(jsonPath("$.expenses").isEmpty())
+                .andExpect(jsonPath("$.incomes[0].id").value(incomeId.toString()));
+
+        verify(this.invoiceService).update(any(), any());
+    }
+
+    @Test
+    @WithMockUser(roles = "admin")
+    void shouldReturnBadRequestWhenUpdatingInvoiceWithEmptyItems() throws Exception {
+        UUID invoiceId = UUID.randomUUID();
+        String requestBody = """
+                {
+                  "engagementId": "%s",
+                  "date": "2026-03-25",
+                  "expenseIds": [],
+                  "incomeIds": []
+                }
+                """.formatted(UUID.randomUUID());
+
+        this.mockMvc.perform(put("/invoices/{id}", invoiceId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestBody))
+                .andExpect(status().isBadRequest());
+
+        verify(this.invoiceService, never()).update(any(), any());
+    }
+
+    @Test
+    @WithMockUser(roles = "admin")
+    void shouldReturnBadRequestWhenUpdatingInvoiceWithMissingEngagementId() throws Exception {
+        UUID invoiceId = UUID.randomUUID();
+        String requestBody = """
+                {
+                  "date": "2026-03-25",
+                  "expenseIds": ["%s"],
+                  "incomeIds": []
+                }
+                """.formatted(UUID.randomUUID());
+
+        this.mockMvc.perform(put("/invoices/{id}", invoiceId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestBody))
+                .andExpect(status().isBadRequest());
+
+        verify(this.invoiceService, never()).update(any(), any());
+    }
+
+    @Test
+    @WithMockUser(roles = "admin")
+    void shouldReturnBadRequestWhenUpdatingInvoiceWithFutureDate() throws Exception {
+        UUID invoiceId = UUID.randomUUID();
+        String requestBody = """
+                {
+                  "engagementId": "%s",
+                  "date": "2029-03-21",
+                  "expenseIds": ["%s"],
+                  "incomeIds": []
+                }
+                """.formatted(UUID.randomUUID(), UUID.randomUUID());
+
+        when(this.invoiceService.update(any(), any()))
+                .thenThrow(new BadRequestException("Invoice date cannot be in the future"));
+
+        this.mockMvc.perform(put("/invoices/{id}", invoiceId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestBody))
+                .andExpect(status().isBadRequest());
+
+        verify(this.invoiceService).update(any(), any());
+    }
+
+    @Test
+    @WithMockUser(roles = "admin")
+    void shouldReturnNotFoundWhenUpdatingMissingInvoice() throws Exception {
+        UUID invoiceId = UUID.randomUUID();
+        String requestBody = """
+                {
+                  "engagementId": "%s",
+                  "date": "2026-03-25",
+                  "expenseIds": ["%s"],
+                  "incomeIds": []
+                }
+                """.formatted(UUID.randomUUID(), UUID.randomUUID());
+        when(this.invoiceService.update(any(), any()))
+                .thenThrow(new NotFoundException("Invoice id: " + invoiceId));
+
+        this.mockMvc.perform(put("/invoices/{id}", invoiceId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestBody))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.message").value("Not Found Exception. Invoice id: " + invoiceId));
+
+        verify(this.invoiceService).update(any(), any());
     }
 
     @Test

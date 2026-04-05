@@ -25,6 +25,19 @@ public class InvoicePersistenceMongodb implements InvoicePersistence {
     }
 
     @Override
+    public Invoice update(UUID id, Invoice invoice) {
+        InvoiceEntity invoiceEntity = this.invoiceRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Invoice id: " + id));
+
+        invoiceEntity.setEngagementId(invoice.getEngagementId());
+        invoiceEntity.setDate(invoice.getDate());
+        invoiceEntity.setExpenses(invoice.getExpenses());
+        invoiceEntity.setIncomes(invoice.getIncomes());
+
+        return this.invoiceRepository.save(invoiceEntity).toInvoice();
+    }
+
+    @Override
     public Invoice readById(UUID id) {
         return this.invoiceRepository.findById(id)
                 .map(InvoiceEntity::toInvoice)

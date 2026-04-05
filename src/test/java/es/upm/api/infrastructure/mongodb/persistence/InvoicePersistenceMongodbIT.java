@@ -91,6 +91,26 @@ class InvoicePersistenceMongodbIT {
     }
 
     @Test
+    void shouldUpdateInvoice() {
+        Invoice updatedInvoice = Invoice.builder()
+                .id(this.invoice.getId())
+                .engagementId(UUID.randomUUID())
+                .date(LocalDate.of(2026, 3, 25))
+                .expenses(List.of())
+                .incomes(this.invoice.getIncomes())
+                .build();
+        when(this.invoiceRepository.findById(this.invoice.getId())).thenReturn(Optional.of(new InvoiceEntity(this.invoice)));
+        when(this.invoiceRepository.save(any(InvoiceEntity.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        Invoice persistedInvoice = this.invoicePersistenceMongodb.update(this.invoice.getId(), updatedInvoice);
+
+        assertEquals(updatedInvoice, persistedInvoice);
+        verify(this.invoiceRepository).findById(this.invoice.getId());
+        verify(this.invoiceRepository).save(any(InvoiceEntity.class));
+    }
+
+    @Test
     void shouldFailReadInvoiceByIdWhenInvoiceDoesNotExist() {
         UUID invoiceId = UUID.randomUUID();
         when(this.invoiceRepository.findById(invoiceId)).thenReturn(Optional.empty());
@@ -112,6 +132,18 @@ class InvoicePersistenceMongodbIT {
 
         assertEquals("Mongo error", thrown.getMessage());
         verify(this.invoiceRepository).save(any(InvoiceEntity.class));
+    }
+
+    @Test
+    void shouldFailUpdateInvoiceWhenInvoiceDoesNotExist() {
+        UUID invoiceId = UUID.randomUUID();
+        when(this.invoiceRepository.findById(invoiceId)).thenReturn(Optional.empty());
+
+        NotFoundException thrown = assertThrows(NotFoundException.class,
+                () -> this.invoicePersistenceMongodb.update(invoiceId, this.invoice));
+
+        assertEquals("Not Found Exception. Invoice id: " + invoiceId, thrown.getMessage());
+        verify(this.invoiceRepository).findById(invoiceId);
     }
 
     @Test
