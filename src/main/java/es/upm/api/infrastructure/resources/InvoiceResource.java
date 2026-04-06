@@ -3,6 +3,7 @@ package es.upm.api.infrastructure.resources;
 import es.upm.api.domain.model.Expense;
 import es.upm.api.domain.model.Income;
 import es.upm.api.domain.model.Invoice;
+import es.upm.api.domain.model.InvoiceFindCriteria;
 import es.upm.api.domain.services.InvoiceService;
 import es.upm.api.infrastructure.resources.dtos.InvoiceCreateRequest;
 import es.upm.api.infrastructure.resources.dtos.InvoiceUpdateRequest;
@@ -66,8 +67,8 @@ public class InvoiceResource {
 
     @GetMapping
     @Operation(summary = "List invoices")
-    public Stream<Invoice> findAll(@RequestParam(required = false) UUID engagementId) {
-        return this.invoiceService.findAll(engagementId);
+    public Stream<Invoice> findAll(@ModelAttribute InvoiceFindCriteria criteria) {
+        return this.invoiceService.findAll(criteria);
     }
 
     @GetMapping("/{id}")
