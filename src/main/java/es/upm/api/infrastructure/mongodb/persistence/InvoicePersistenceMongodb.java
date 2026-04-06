@@ -2,16 +2,21 @@ package es.upm.api.infrastructure.mongodb.persistence;
 
 import es.upm.api.domain.exceptions.NotFoundException;
 import es.upm.api.domain.model.Invoice;
+import es.upm.api.domain.model.InvoiceFindCriteria;
 import es.upm.api.domain.persistence.InvoicePersistence;
 import es.upm.api.infrastructure.mongodb.entities.InvoiceEntity;
 import es.upm.api.infrastructure.mongodb.repositories.InvoiceRepository;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.UUID;
 import java.util.stream.Stream;
 
 @Repository
 public class InvoicePersistenceMongodb implements InvoicePersistence {
+
+    public static final Sort DATE = Sort.by(Sort.Direction.DESC, "date");
 
     private final InvoiceRepository invoiceRepository;
 
@@ -45,14 +50,24 @@ public class InvoicePersistenceMongodb implements InvoicePersistence {
     }
 
     @Override
-    public Stream<Invoice> findAll() {
-        return this.invoiceRepository.findAll().stream()
-                .map(InvoiceEntity::toInvoice);
-    }
+    public Stream<Invoice> findAll(InvoiceFindCriteria criteria) {
+        List<InvoiceEntity> result;
 
-    @Override
-    public Stream<Invoice> findByEngagementId(UUID engagementId) {
-        return this.invoiceRepository.findByEngagementId(engagementId).stream()
+        if (criteria.isEmpty()) {
+            result = this.invoiceRepository.findAll(DATE);
+        } else if (criteria.getEngagementId() != null && criteria.getDate() != null) {
+            result = this.invoiceRepository.findByEngagementIdAndDate(
+                    criteria.getEngagementId(),
+                    criteria.getDate(),
+                    DATE
+            );
+        } else if (criteria.getEngagementId() != null) {
+            result = this.invoiceRepository.findByEngagementId(criteria.getEngagementId(), DATE);
+        } else {
+            result = this.invoiceRepository.findByDate(criteria.getDate(), DATE);
+        }
+
+        return result.stream()
                 .map(InvoiceEntity::toInvoice);
     }
 

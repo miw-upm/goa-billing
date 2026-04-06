@@ -4,6 +4,7 @@ import es.upm.api.domain.model.Expense;
 import es.upm.api.domain.model.Income;
 import es.upm.api.domain.model.Invoice;
 import es.upm.api.infrastructure.mongodb.entities.InvoiceEntity;
+import org.springframework.data.domain.Sort;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,6 +25,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @DataMongoTest
 @ActiveProfiles("test")
 class InvoiceRepositoryTest {
+
+    private static final Sort DATE = Sort.by(Sort.Direction.DESC, "date");
 
     @Autowired
     private InvoiceRepository invoiceRepository;
@@ -87,7 +90,7 @@ class InvoiceRepositoryTest {
     void shouldFindInvoicesByEngagementId() {
         InvoiceEntity savedInvoiceEntity = this.invoiceRepository.save(new InvoiceEntity(this.invoice));
 
-        List<InvoiceEntity> foundInvoices = this.invoiceRepository.findByEngagementId(this.invoice.getEngagementId());
+        List<InvoiceEntity> foundInvoices = this.invoiceRepository.findByEngagementId(this.invoice.getEngagementId(), DATE);
 
         assertEquals(1, foundInvoices.size());
         assertEquals(savedInvoiceEntity.getId(), foundInvoices.get(0).getId());
@@ -97,9 +100,31 @@ class InvoiceRepositoryTest {
     void shouldReturnEmptyWhenEngagementIdDoesNotMatchAnyInvoice() {
         this.invoiceRepository.save(new InvoiceEntity(this.invoice));
 
-        List<InvoiceEntity> foundInvoices = this.invoiceRepository.findByEngagementId(UUID.randomUUID());
+        List<InvoiceEntity> foundInvoices = this.invoiceRepository.findByEngagementId(UUID.randomUUID(), DATE);
 
         assertTrue(foundInvoices.isEmpty());
+    }
+
+    @Test
+    void shouldFindInvoicesByDate() {
+        InvoiceEntity savedInvoiceEntity = this.invoiceRepository.save(new InvoiceEntity(this.invoice));
+
+        List<InvoiceEntity> foundInvoices = this.invoiceRepository.findByDate(this.invoice.getDate(), DATE);
+
+        assertEquals(1, foundInvoices.size());
+        assertEquals(savedInvoiceEntity.getId(), foundInvoices.get(0).getId());
+    }
+
+    @Test
+    void shouldFindInvoicesByEngagementIdAndDate() {
+        InvoiceEntity savedInvoiceEntity = this.invoiceRepository.save(new InvoiceEntity(this.invoice));
+
+        List<InvoiceEntity> foundInvoices = this.invoiceRepository.findByEngagementIdAndDate(
+                this.invoice.getEngagementId(), this.invoice.getDate(), DATE
+        );
+
+        assertEquals(1, foundInvoices.size());
+        assertEquals(savedInvoiceEntity.getId(), foundInvoices.get(0).getId());
     }
 
     @Test

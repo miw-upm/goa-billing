@@ -4,6 +4,7 @@ import es.upm.api.domain.exceptions.BadRequestException;
 import es.upm.api.domain.model.Expense;
 import es.upm.api.domain.model.Income;
 import es.upm.api.domain.model.Invoice;
+import es.upm.api.domain.model.InvoiceFindCriteria;
 import es.upm.api.domain.persistence.ExpensePersistence;
 import es.upm.api.domain.persistence.IncomePersistence;
 import es.upm.api.domain.persistence.InvoicePersistence;
@@ -51,12 +52,11 @@ public class InvoiceService {
         return this.invoicePersistence.readById(id);
     }
 
-    public Stream<Invoice> findAll(UUID engagementId) {
-        if (engagementId == null) {
-            return this.invoicePersistence.findAll();
+    public Stream<Invoice> findAll(InvoiceFindCriteria criteria) {
+        if (criteria.getEngagementId() != null) {
+            this.engagementWebClient.readById(criteria.getEngagementId());
         }
-        this.engagementWebClient.readById(engagementId);
-        return this.invoicePersistence.findByEngagementId(engagementId);
+        return this.invoicePersistence.findAll(criteria);
     }
 
     private void validateInvoice(Invoice invoice) {

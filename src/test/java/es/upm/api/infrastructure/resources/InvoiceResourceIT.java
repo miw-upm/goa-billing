@@ -5,7 +5,9 @@ import es.upm.api.domain.exceptions.NotFoundException;
 import es.upm.api.domain.model.Expense;
 import es.upm.api.domain.model.Income;
 import es.upm.api.domain.model.Invoice;
+import es.upm.api.domain.model.InvoiceFindCriteria;
 import es.upm.api.domain.services.InvoiceService;
+import org.mockito.ArgumentCaptor;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -22,6 +24,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Stream;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -399,14 +402,16 @@ class InvoiceResourceIT {
                 .incomes(List.of())
                 .build();
 
-        when(this.invoiceService.findAll(null)).thenReturn(Stream.of(invoiceA, invoiceB));
+        when(this.invoiceService.findAll(any(InvoiceFindCriteria.class))).thenReturn(Stream.of(invoiceA, invoiceB));
 
         this.mockMvc.perform(get("/invoices"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].id").value(invoiceA.getId().toString()))
                 .andExpect(jsonPath("$[1].id").value(invoiceB.getId().toString()));
 
-        verify(this.invoiceService).findAll(null);
+        ArgumentCaptor<InvoiceFindCriteria> criteriaCaptor = ArgumentCaptor.forClass(InvoiceFindCriteria.class);
+        verify(this.invoiceService).findAll(criteriaCaptor.capture());
+        assertEquals(new InvoiceFindCriteria(null, null), criteriaCaptor.getValue());
     }
 
     @Test
@@ -486,7 +491,7 @@ class InvoiceResourceIT {
                 .incomes(List.of())
                 .build();
 
-        when(this.invoiceService.findAll(engagementId)).thenReturn(Stream.of(invoiceA, invoiceB));
+        when(this.invoiceService.findAll(any(InvoiceFindCriteria.class))).thenReturn(Stream.of(invoiceA, invoiceB));
 
         this.mockMvc.perform(get("/invoices").param("engagementId", engagementId.toString()))
                 .andExpect(status().isOk())
@@ -495,6 +500,50 @@ class InvoiceResourceIT {
                 .andExpect(jsonPath("$[1].id").value(invoiceB.getId().toString()))
                 .andExpect(jsonPath("$[1].engagementId").value(engagementId.toString()));
 
-        verify(this.invoiceService).findAll(engagementId);
+        ArgumentCaptor<InvoiceFindCriteria> criteriaCaptor = ArgumentCaptor.forClass(InvoiceFindCriteria.class);
+        verify(this.invoiceService).findAll(criteriaCaptor.capture());
+        assertEquals(new InvoiceFindCriteria(engagementId, null), criteriaCaptor.getValue());
+    }
+
+    @Test
+    @WithMockUser(roles = "admin")
+    void shouldFindInvoicesByDate() throws Exception {
+        LocalDate date = LocalDate.of(2026, 3, 21);
+        Invoice invoiceA = Invoice.builder()
+                .id(UUID.randomUUID())
+                .engagementId(UUID.randomUUID())
+                .date(date)
+                .expenses(List.of())
+                .incomes(List.of())
+                .build();
+        Invoice invoiceB = Invoice.builder()
+                .id(UUID.randomUUID())
+                .engagementId(UUID.randomUUID())
+                .date(date)
+                .expenses(List.of())
+                .incomes(List.of())
+                .build();
+
+        when(this.invoiceService.findAll(any(InvoiceFindCriteria.class))).thenReturn(Stream.of(invoiceA, invoiceB));
+
+        this.mockMvc.perform(get("/invoices").param("date", date.toString()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].id").value(invoiceA.getId().toString()))
+                .andExpect(jsonPath("$[0].date").value(date.toString()))
+                .andExpect(jsonPath("$[1].id").value(invoiceB.getId().toString()))
+                .andExpect(jsonPath("$[1].date").value(date.toString()));
+
+        ArgumentCaptor<InvoiceFindCriteria> criteriaCaptor = ArgumentCaptor.forClass(InvoiceFindCriteria.class);
+        verify(this.invoiceService).findAll(criteriaCaptor.capture());
+        assertEquals(new InvoiceFindCriteria(null, date), criteriaCaptor.getValue());
+    }
+
+    @Test
+    @WithMockUser(roles = "admin")
+    void shouldReturnBadRequestWhenDateFilterIsInvalid() throws Exception {
+        this.mockMvc.perform(get("/invoices").param("date", "2026/03/21"))
+                .andExpect(status().isBadRequest());
+
+        verify(this.invoiceService, never()).findAll(any(InvoiceFindCriteria.class));
     }
 }
