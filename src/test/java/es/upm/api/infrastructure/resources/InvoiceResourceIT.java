@@ -6,6 +6,8 @@ import es.upm.api.domain.model.Expense;
 import es.upm.api.domain.model.Income;
 import es.upm.api.domain.model.Invoice;
 import es.upm.api.domain.model.InvoiceFindCriteria;
+import es.upm.api.domain.model.InvoiceBreakdown;
+import es.upm.api.domain.model.BreakdownItem;
 import es.upm.api.domain.services.InvoiceService;
 import org.mockito.ArgumentCaptor;
 import org.junit.jupiter.api.Test;
@@ -545,5 +547,51 @@ class InvoiceResourceIT {
                 .andExpect(status().isBadRequest());
 
         verify(this.invoiceService, never()).findAll(any(InvoiceFindCriteria.class));
+    }
+
+    @Test
+    @WithMockUser(roles = "admin")
+    void shouldGetInvoiceBreakdown() throws Exception {
+        UUID invoiceId = UUID.randomUUID();
+        UUID incomeId = UUID.randomUUID();
+        UUID expenseId = UUID.randomUUID();
+
+        InvoiceBreakdown breakdown = InvoiceBreakdown.builder()
+                .taxableBase(new BigDecimal("178.14"))
+                .vatAmount(new BigDecimal("47.35"))
+                .totalAmount(new BigDecimal("225.49"))
+                .incomes(List.of(
+                        BreakdownItem.builder()
+                                .id(incomeId)
+                                .amountWithVat(new BigDecimal("250.99"))
+                                .taxableBase(new BigDecimal("198.28"))
+                                .vatAmount(new BigDecimal("52.71"))
+                                .build()))
+                .expenses(List.of(
+                        BreakdownItem.builder()
+                                .id(expenseId)
+                                .amountWithVat(new BigDecimal("25.51"))
+                                .taxableBase(new BigDecimal("20.15"))
+                                .vatAmount(new BigDecimal("5.35"))
+                                .build()))
+                .build();
+
+        when(this.invoiceService.getInvoiceBreakdown(invoiceId)).thenReturn(breakdown);
+
+        this.mockMvc.perform(get("/invoices/" + invoiceId + "/breakdown"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.taxableBase").value("178.14"))
+                .andExpect(jsonPath("$.vatAmount").value("47.35"))
+                .andExpect(jsonPath("$.totalAmount").value("225.49"))
+                .andExpect(jsonPath("$.incomes[0].id").value(incomeId.toString()))
+                .andExpect(jsonPath("$.incomes[0].amountWithVat").value("250.99"))
+                .andExpect(jsonPath("$.incomes[0].taxableBase").value("198.28"))
+                .andExpect(jsonPath("$.incomes[0].vatAmount").value("52.71"))
+                .andExpect(jsonPath("$.expenses[0].id").value(expenseId.toString()))
+                .andExpect(jsonPath("$.expenses[0].amountWithVat").value("25.51"))
+                .andExpect(jsonPath("$.expenses[0].taxableBase").value("20.15"))
+                .andExpect(jsonPath("$.expenses[0].vatAmount").value("5.35"));
+
+        verify(this.invoiceService).getInvoiceBreakdown(invoiceId);
     }
 }
