@@ -6,6 +6,8 @@ import es.upm.api.domain.model.Expense;
 import es.upm.api.domain.model.Income;
 import es.upm.api.domain.model.Invoice;
 import es.upm.api.domain.model.InvoiceFindCriteria;
+import es.upm.api.domain.model.InvoiceBreakdown;
+import es.upm.api.domain.model.BreakdownItem;
 import es.upm.api.domain.persistence.ExpensePersistence;
 import es.upm.api.domain.persistence.IncomePersistence;
 import es.upm.api.domain.persistence.InvoicePersistence;
@@ -19,6 +21,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
@@ -79,6 +82,65 @@ class InvoiceServiceIT {
                 .expenses(List.of(Expense.builder().id(this.expense.getId()).build()))
                 .incomes(List.of(Income.builder().id(this.income.getId()).build()))
                 .build();
+    }
+
+    @Test
+    void shouldGetInvoiceBreakdown() {
+        UUID invoiceId = UUID.randomUUID();
+        this.invoice.setId(invoiceId);
+        this.invoice.setExpenses(List.of(this.expense));
+        this.invoice.setIncomes(List.of(this.income));
+
+        when(this.invoicePersistence.readById(invoiceId)).thenReturn(this.invoice);
+
+        InvoiceBreakdown breakdown = this.invoiceService.getInvoiceBreakdown(invoiceId);
+
+        assertNotNull(breakdown);
+
+        assertEquals(new BigDecimal("185.95"), breakdown.getTaxableBase().setScale(2));
+        assertEquals(new BigDecimal("39.05"), breakdown.getVatAmount().setScale(2));
+        assertEquals(new BigDecimal("225.00"), breakdown.getTotalAmount().setScale(2));
+
+        assertEquals(1, breakdown.getIncomes().size());
+        assertEquals(this.income.getId(), breakdown.getIncomes().get(0).getId());
+        assertEquals(this.income.getAmount(), breakdown.getIncomes().get(0).getAmountWithVat());
+        assertEquals(new BigDecimal("206.61"), breakdown.getIncomes().get(0).getTaxableBase().setScale(2));
+        assertEquals(new BigDecimal("43.39"), breakdown.getIncomes().get(0).getVatAmount().setScale(2));
+
+        assertEquals(1, breakdown.getExpenses().size());
+        assertEquals(this.expense.getId(), breakdown.getExpenses().get(0).getId());
+        assertEquals(this.expense.getAmount(), breakdown.getExpenses().get(0).getAmountWithVat());
+        assertEquals(new BigDecimal("20.66"), breakdown.getExpenses().get(0).getTaxableBase().setScale(2));
+        assertEquals(new BigDecimal("4.34"), breakdown.getExpenses().get(0).getVatAmount().setScale(2));
+
+        verify(this.invoicePersistence).readById(invoiceId);
+    }
+
+    @Test
+    void whenGetInvoiceBreakdownOfNull_shouldThrowBadRequestException() {
+        BadRequestException thrown = assertThrows(BadRequestException.class,
+                () -> this.invoiceService.getInvoiceBreakdown(null));
+
+        assertEquals("Bad Request Exception. Invoice not found", thrown.getMessage());
+        verify(this.invoicePersistence).readById(null);
+    }
+
+    @Test
+    void testCalculateIncomeBreakdown() {
+        BreakdownItem result = invoiceService.calculateIncomeBreakdown(income);
+        assertEquals(income.getId(), result.getId());
+        assertEquals(new BigDecimal("250.00"), result.getAmountWithVat().setScale(2));
+        assertEquals(new BigDecimal("206.61"), result.getTaxableBase());
+        assertEquals(new BigDecimal("43.39"), result.getVatAmount());
+    }
+
+    @Test
+    void testCalculateExpenseBreakdown() {
+        BreakdownItem result = invoiceService.calculateExpenseBreakdown(expense);
+        assertEquals(expense.getId(), result.getId());
+        assertEquals(new BigDecimal("25.00"), result.getAmountWithVat().setScale(2));
+        assertEquals(new BigDecimal("20.66"), result.getTaxableBase());
+        assertEquals(new BigDecimal("4.34"), result.getVatAmount());
     }
 
     @Test
