@@ -4,6 +4,7 @@ import es.upm.api.domain.model.Expense;
 import es.upm.api.domain.model.Income;
 import es.upm.api.domain.model.Invoice;
 import es.upm.api.domain.model.InvoiceFindCriteria;
+import es.upm.api.domain.model.InvoiceBreakdown;
 import es.upm.api.domain.services.InvoiceService;
 import es.upm.api.infrastructure.resources.dtos.InvoiceCreateRequest;
 import es.upm.api.infrastructure.resources.dtos.InvoiceUpdateRequest;
@@ -75,5 +76,11 @@ public class InvoiceResource {
     @Operation(summary = "Read invoice by id")
     public Invoice readById(@PathVariable UUID id) {
         return this.invoiceService.readById(id);
+    }
+
+    @GetMapping("/{id}/breakdown")
+    @Operation(summary = "Get invoice breakdown")
+    public InvoiceBreakdown getInvoiceBreakdown(@PathVariable UUID id) {
+        return this.invoiceService.getInvoiceBreakdown(id);
     }
 }
