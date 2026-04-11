@@ -9,6 +9,7 @@ import es.upm.api.infrastructure.mongodb.repositories.ExpenseRepository;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Repository;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Stream;
@@ -49,7 +50,7 @@ public class ExpensePersistenceMongodb implements ExpensePersistence {
     }
 
     public Stream<Expense> findAll(ExpenseFindCriteria criteria) {
-        List<ExpenseEntity> result = List.of();
+        List<ExpenseEntity> result;
 
         if (criteria.isEmpty()) {
             result = this.expenseRepository.findAll(DATE);
