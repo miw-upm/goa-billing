@@ -1,6 +1,6 @@
 package es.upm.api.adapter.out.billing.mongo.persistence;
 
-import es.upm.api.adapter.out.billing.mongo.income.IncomeGatewayMongodb;
+import es.upm.api.adapter.out.billing.mongo.income.IncomeAdapter;
 import es.upm.api.domain.model.Income;
 import es.upm.api.domain.model.criteria.IncomeFindCriteria;
 import es.upm.api.adapter.out.billing.mongo.income.IncomeEntity;
@@ -28,10 +28,10 @@ import static org.mockito.Mockito.when;
 
 @SpringBootTest
 @ActiveProfiles("test")
-class IncomeGatewayMongodbIT {
+class IncomeAdapterIT {
 
     @Autowired
-    private IncomeGatewayMongodb incomePersistenceMongodb;
+    private IncomeAdapter incomePersistenceMongodb;
 
     @MockitoBean
     private IncomeRepository incomeRepository;
@@ -105,8 +105,8 @@ class IncomeGatewayMongodbIT {
         List<Income> incomes = this.incomePersistenceMongodb.findAll(criteria).toList();
 
         assertEquals(2, incomes.size());
-        assertEquals(firstIncome.toIncome(), incomes.get(0));
-        assertEquals(secondIncome.toIncome(), incomes.get(1));
+        assertEquals(firstIncome.toDomain(), incomes.get(0));
+        assertEquals(secondIncome.toDomain(), incomes.get(1));
         verify(this.incomeRepository).findAll(Sort.by(Sort.Direction.DESC, "date"));
     }
 
@@ -149,8 +149,8 @@ class IncomeGatewayMongodbIT {
         List<Income> incomes = this.incomePersistenceMongodb.findByEngagementId(engagementId).toList();
 
         assertEquals(2, incomes.size());
-        assertEquals(newestIncome.toIncome(), incomes.get(0));
-        assertEquals(oldestIncome.toIncome(), incomes.get(1));
+        assertEquals(newestIncome.toDomain(), incomes.get(0));
+        assertEquals(oldestIncome.toDomain(), incomes.get(1));
     }
 
     @Test
@@ -181,8 +181,8 @@ class IncomeGatewayMongodbIT {
         List<Income> incomes = this.incomePersistenceMongodb.findAll(criteria).toList();
 
         assertEquals(2, incomes.size());
-        assertEquals(firstIncome.toIncome(), incomes.get(0));
-        assertEquals(secondIncome.toIncome(), incomes.get(1));
+        assertEquals(firstIncome.toDomain(), incomes.get(0));
+        assertEquals(secondIncome.toDomain(), incomes.get(1));
     }
 
     @Test
@@ -217,7 +217,7 @@ class IncomeGatewayMongodbIT {
         List<Income> incomes = this.incomePersistenceMongodb.findAll(criteria).toList();
 
         assertEquals(2, incomes.size());
-        assertEquals(firstIncome.toIncome(), incomes.get(0));
-        assertEquals(secondIncome.toIncome(), incomes.get(1));
+        assertEquals(firstIncome.toDomain(), incomes.get(0));
+        assertEquals(secondIncome.toDomain(), incomes.get(1));
     }
 }

@@ -9,6 +9,8 @@ import java.util.UUID;
 
 public interface IncomeRepository extends MongoRepository<IncomeEntity, UUID> {
     List<IncomeEntity> findByEngagementId(UUID engagementId, Sort sort);
+
     List<IncomeEntity> findByDate(LocalDate date, Sort sort);
+
     List<IncomeEntity> findByEngagementIdAndDate(UUID engagementId, LocalDate date, Sort sort);
 }

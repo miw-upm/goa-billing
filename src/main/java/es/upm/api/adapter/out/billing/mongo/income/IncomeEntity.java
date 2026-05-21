@@ -30,7 +30,7 @@ public class IncomeEntity {
         BeanUtils.copyProperties(income, this);
     }
 
-    public Income toIncome() {
+    public Income toDomain() {
         Income income = new Income();
         BeanUtils.copyProperties(this, income);
         return income;

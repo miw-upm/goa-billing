@@ -54,7 +54,7 @@ class InvoiceEntityTest {
     }
 
     @Test
-    void shouldConvertInvoiceEntityToInvoice() {
+    void shouldConvertInvoiceEntityToDomain() {
         InvoiceEntity invoiceEntity = new InvoiceEntity();
         invoiceEntity.setId(this.invoice.getId());
         invoiceEntity.setEngagementId(this.invoice.getEngagementId());
@@ -62,7 +62,7 @@ class InvoiceEntityTest {
         invoiceEntity.setExpenses(this.invoice.getExpenses());
         invoiceEntity.setIncomes(this.invoice.getIncomes());
 
-        Invoice mappedInvoice = invoiceEntity.toInvoice();
+        Invoice mappedInvoice = invoiceEntity.toDomain();
 
         assertEquals(invoiceEntity.getId(), mappedInvoice.getId());
         assertEquals(invoiceEntity.getEngagementId(), mappedInvoice.getEngagementId());

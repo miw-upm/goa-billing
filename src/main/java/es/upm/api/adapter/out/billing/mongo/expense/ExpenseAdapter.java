@@ -12,12 +12,12 @@ import java.util.UUID;
 import java.util.stream.Stream;
 
 @Repository
-public class ExpenseGatewayMongodb implements ExpenseGateway {
+public class ExpenseAdapter implements ExpenseGateway {
     public static final Sort DATE = Sort.by(Sort.Direction.DESC, "date");
 
     private final ExpenseRepository expenseRepository;
 
-    public ExpenseGatewayMongodb(ExpenseRepository expenseRepository) {
+    public ExpenseAdapter(ExpenseRepository expenseRepository) {
         this.expenseRepository = expenseRepository;
     }
 
@@ -36,13 +36,13 @@ public class ExpenseGatewayMongodb implements ExpenseGateway {
         expenseEntity.setDate(expense.getDate());
         expenseEntity.setDescription(expense.getDescription());
 
-        return this.expenseRepository.save(expenseEntity).toExpense();
+        return this.expenseRepository.save(expenseEntity).toDomain();
     }
 
     @Override
     public Expense readById(UUID id) {
         return this.expenseRepository.findById(id)
-                .map(ExpenseEntity::toExpense)
+                .map(ExpenseEntity::toDomain)
                 .orElseThrow(() -> new NotFoundException("Expense id: " + id));
     }
 
@@ -63,6 +63,6 @@ public class ExpenseGatewayMongodb implements ExpenseGateway {
         }
 
         return result.stream()
-                .map(ExpenseEntity::toExpense);
+                .map(ExpenseEntity::toDomain);
     }
 }

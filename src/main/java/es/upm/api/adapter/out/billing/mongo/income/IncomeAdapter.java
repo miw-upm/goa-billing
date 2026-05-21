@@ -12,13 +12,13 @@ import java.util.UUID;
 import java.util.stream.Stream;
 
 @Repository
-public class IncomeGatewayMongodb implements IncomeGateway {
+public class IncomeAdapter implements IncomeGateway {
 
     public static final Sort DATE = Sort.by(Sort.Direction.DESC, "date");
 
     private final IncomeRepository incomeRepository;
 
-    public IncomeGatewayMongodb(IncomeRepository incomeRepository) {
+    public IncomeAdapter(IncomeRepository incomeRepository) {
         this.incomeRepository = incomeRepository;
     }
 
@@ -30,7 +30,7 @@ public class IncomeGatewayMongodb implements IncomeGateway {
     @Override
     public Income readById(UUID id) {
         return this.incomeRepository.findById(id)
-                .map(IncomeEntity::toIncome)
+                .map(IncomeEntity::toDomain)
                 .orElseThrow(() -> new NotFoundException("Income id: " + id));
     }
 
@@ -53,16 +53,16 @@ public class IncomeGatewayMongodb implements IncomeGateway {
         }
 
         return result.stream()
-                .map(IncomeEntity::toIncome);
+                .map(IncomeEntity::toDomain);
     }
 
     @Override
     public Stream<Income> findByEngagementId(UUID engagementId) {
         return this.incomeRepository.findByEngagementId(engagementId, DATE)
                 .stream()
-                .map(IncomeEntity::toIncome);
+                .map(IncomeEntity::toDomain);
     }
-    
+
     @Override
     public void update(java.util.UUID id, Income income) {
         IncomeEntity entity = this.incomeRepository.findById(id)

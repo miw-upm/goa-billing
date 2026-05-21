@@ -38,7 +38,7 @@ class IncomeEntityTest {
     }
 
     @Test
-    void shouldConvertIncomeEntityToIncome() {
+    void shouldConvertIncomeEntityToDomain() {
         IncomeEntity incomeEntity = new IncomeEntity();
         incomeEntity.setId(this.income.getId());
         incomeEntity.setEngagementId(this.income.getEngagementId());
@@ -46,7 +46,7 @@ class IncomeEntityTest {
         incomeEntity.setAmount(this.income.getAmount());
         incomeEntity.setDate(this.income.getDate());
 
-        Income mappedIncome = incomeEntity.toIncome();
+        Income mappedIncome = incomeEntity.toDomain();
 
         assertEquals(incomeEntity.getId(), mappedIncome.getId());
         assertEquals(incomeEntity.getEngagementId(), mappedIncome.getEngagementId());

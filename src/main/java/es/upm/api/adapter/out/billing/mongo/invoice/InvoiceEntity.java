@@ -32,7 +32,7 @@ public class InvoiceEntity {
         BeanUtils.copyProperties(invoice, this);
     }
 
-    public Invoice toInvoice() {
+    public Invoice toDomain() {
         Invoice invoice = new Invoice();
         BeanUtils.copyProperties(this, invoice);
         return invoice;

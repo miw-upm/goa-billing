@@ -30,7 +30,7 @@ public class ExpenseEntity {
         BeanUtils.copyProperties(expense, this);
     }
 
-    public Expense toExpense() {
+    public Expense toDomain() {
         Expense expense = new Expense();
         BeanUtils.copyProperties(this, expense);
         return expense;

@@ -12,13 +12,13 @@ import java.util.UUID;
 import java.util.stream.Stream;
 
 @Repository
-public class InvoiceGatewayMongodb implements InvoiceGateway {
+public class InvoiceAdapter implements InvoiceGateway {
 
     public static final Sort DATE = Sort.by(Sort.Direction.DESC, "date");
 
     private final InvoiceRepository invoiceRepository;
 
-    public InvoiceGatewayMongodb(InvoiceRepository invoiceRepository) {
+    public InvoiceAdapter(InvoiceRepository invoiceRepository) {
         this.invoiceRepository = invoiceRepository;
     }
 
@@ -37,13 +37,13 @@ public class InvoiceGatewayMongodb implements InvoiceGateway {
         invoiceEntity.setExpenses(invoice.getExpenses());
         invoiceEntity.setIncomes(invoice.getIncomes());
 
-        return this.invoiceRepository.save(invoiceEntity).toInvoice();
+        return this.invoiceRepository.save(invoiceEntity).toDomain();
     }
 
     @Override
     public Invoice readById(UUID id) {
         return this.invoiceRepository.findById(id)
-                .map(InvoiceEntity::toInvoice)
+                .map(InvoiceEntity::toDomain)
                 .orElseThrow(() -> new NotFoundException("Invoice id: " + id));
     }
 
@@ -66,18 +66,18 @@ public class InvoiceGatewayMongodb implements InvoiceGateway {
         }
 
         return result.stream()
-                .map(InvoiceEntity::toInvoice);
+                .map(InvoiceEntity::toDomain);
     }
 
     @Override
     public Invoice findByExpenseId(UUID expenseId) {
         InvoiceEntity invoiceEntity = this.invoiceRepository.findByExpensesId(expenseId);
-        return invoiceEntity == null ? null : invoiceEntity.toInvoice();
+        return invoiceEntity == null ? null : invoiceEntity.toDomain();
     }
 
     @Override
     public Invoice findByIncomeId(UUID incomeId) {
         InvoiceEntity invoiceEntity = this.invoiceRepository.findByIncomesId(incomeId);
-        return invoiceEntity == null ? null : invoiceEntity.toInvoice();
+        return invoiceEntity == null ? null : invoiceEntity.toDomain();
     }
 }

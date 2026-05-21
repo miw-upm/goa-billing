@@ -38,7 +38,7 @@ class ExpenseEntityTest {
     }
 
     @Test
-    void shouldConvertExpenseEntityToExpense() {
+    void shouldConvertExpenseEntityToDomain() {
         ExpenseEntity expenseEntity = new ExpenseEntity();
         expenseEntity.setId(this.expense.getId());
         expenseEntity.setEngagementId(this.expense.getEngagementId());
@@ -46,7 +46,7 @@ class ExpenseEntityTest {
         expenseEntity.setDate(this.expense.getDate());
         expenseEntity.setDescription(this.expense.getDescription());
 
-        Expense mappedExpense = expenseEntity.toExpense();
+        Expense mappedExpense = expenseEntity.toDomain();
 
         assertEquals(expenseEntity.getId(), mappedExpense.getId());
         assertEquals(expenseEntity.getEngagementId(), mappedExpense.getEngagementId());

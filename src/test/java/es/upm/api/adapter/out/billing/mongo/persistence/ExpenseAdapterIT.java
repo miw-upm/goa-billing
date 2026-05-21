@@ -1,6 +1,6 @@
 package es.upm.api.adapter.out.billing.mongo.persistence;
 
-import es.upm.api.adapter.out.billing.mongo.expense.ExpenseGatewayMongodb;
+import es.upm.api.adapter.out.billing.mongo.expense.ExpenseAdapter;
 import es.upm.api.domain.model.Expense;
 import es.upm.api.domain.model.criteria.ExpenseFindCriteria;
 import es.upm.api.adapter.out.billing.mongo.expense.ExpenseEntity;
@@ -29,10 +29,10 @@ import static org.mockito.Mockito.when;
 
 @SpringBootTest
 @ActiveProfiles("test")
-class ExpenseGatewayMongodbIT {
+class ExpenseAdapterIT {
 
     @Autowired
-    private ExpenseGatewayMongodb expensePersistenceMongodb;
+    private ExpenseAdapter expensePersistenceMongodb;
 
     @MockitoBean
     private ExpenseRepository expenseRepository;
@@ -108,12 +108,12 @@ class ExpenseGatewayMongodbIT {
 
     @Test
     void shouldFindAll() {
-        when(this.expenseRepository.findAll(ExpenseGatewayMongodb.DATE))
+        when(this.expenseRepository.findAll(ExpenseAdapter.DATE))
                 .thenReturn(List.of(new ExpenseEntity(this.expense)));
 
         Stream<Expense> expenseStream = this.expensePersistenceMongodb.findAll(this.criteria);
 
-        verify(this.expenseRepository).findAll(ExpenseGatewayMongodb.DATE);
+        verify(this.expenseRepository).findAll(ExpenseAdapter.DATE);
 
         assertEquals(this.expense, expenseStream.findFirst().orElse(null));
     }
