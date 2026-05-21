@@ -5,7 +5,7 @@ import es.upm.api.domain.model.criteria.IncomeFindCriteria;
 import es.upm.api.domain.model.external.UserSnapshot;
 import es.upm.api.domain.ports.out.billing.IncomeGateway;
 import es.upm.api.domain.ports.out.engagement.EngagementWebClient;
-import es.upm.api.domain.ports.out.user.UserWebClient;
+import es.upm.api.domain.ports.out.user.UserFinder;
 import es.upm.miw.exception.BadRequestException;
 import es.upm.miw.exception.NotFoundException;
 import org.junit.jupiter.api.BeforeEach;
@@ -38,7 +38,7 @@ class IncomeServiceIT {
     private EngagementWebClient engagementWebClient;
 
     @MockitoBean
-    private UserWebClient userWebClient;
+    private UserFinder userFinder;
 
     private Income income;
     private final IncomeFindCriteria criteria = new IncomeFindCriteria();
@@ -63,7 +63,7 @@ class IncomeServiceIT {
         assertEquals(this.income, result);
         verify(this.incomeGateway).readById(this.income.getId());
         verifyNoInteractions(this.engagementWebClient);
-        verifyNoInteractions(this.userWebClient);
+        verifyNoInteractions(this.userFinder);
     }
 
     @Test
@@ -79,13 +79,13 @@ class IncomeServiceIT {
         assertEquals(expectedMessage, thrown.getMessage());
         verify(this.incomeGateway).readById(id);
         verifyNoInteractions(this.engagementWebClient);
-        verifyNoInteractions(this.userWebClient);
+        verifyNoInteractions(this.userFinder);
     }
 
     @Test
     void shouldCreateIncome() {
         when(this.engagementWebClient.readById(this.income.getEngagementId())).thenReturn(new Object());
-        when(this.userWebClient.readUserById(this.income.getUserId())).thenReturn(null);
+        when(this.userFinder.readById(this.income.getUserId())).thenReturn(null);
 
         Income createdIncome = this.incomeService.create(this.income);
 
@@ -99,7 +99,7 @@ class IncomeServiceIT {
         ArgumentCaptor<Income> incomeCaptor = ArgumentCaptor.forClass(Income.class);
         verify(this.incomeGateway).create(incomeCaptor.capture());
         verify(this.engagementWebClient).readById(this.income.getEngagementId());
-        verify(this.userWebClient).readUserById(this.income.getUserId());
+        verify(this.userFinder).readById(this.income.getUserId());
 
         Income persistedIncome = incomeCaptor.getValue();
         assertNotNull(persistedIncome.getId());
@@ -120,7 +120,7 @@ class IncomeServiceIT {
 
         assertEquals("Engagement not found", thrown.getMessage());
         verify(this.engagementWebClient).readById(this.income.getEngagementId());
-        verify(this.userWebClient, never()).readUserById(any());
+        verify(this.userFinder, never()).readById(any());
         verify(this.incomeGateway, never()).create(any());
     }
 
@@ -128,14 +128,14 @@ class IncomeServiceIT {
     void shouldNotPersistIncomeWhenUserDoesNotExist() {
         when(this.engagementWebClient.readById(this.income.getEngagementId())).thenReturn(new Object());
         RuntimeException exception = new RuntimeException("User not found");
-        when(this.userWebClient.readUserById(this.income.getUserId())).thenThrow(exception);
+        when(this.userFinder.readById(this.income.getUserId())).thenThrow(exception);
 
         RuntimeException thrown = assertThrows(RuntimeException.class,
                 () -> this.incomeService.create(this.income));
 
         assertEquals("User not found", thrown.getMessage());
         verify(this.engagementWebClient).readById(this.income.getEngagementId());
-        verify(this.userWebClient).readUserById(this.income.getUserId());
+        verify(this.userFinder).readById(this.income.getUserId());
         verify(this.incomeGateway, never()).create(any());
     }
 
@@ -148,7 +148,7 @@ class IncomeServiceIT {
 
         assertEquals("Bad Request Exception. Income date cannot be in the future", thrown.getMessage());
         verifyNoInteractions(this.engagementWebClient);
-        verifyNoInteractions(this.userWebClient);
+        verifyNoInteractions(this.userFinder);
         verify(this.incomeGateway, never()).create(any());
     }
 
@@ -174,7 +174,7 @@ class IncomeServiceIT {
                 .build();
 
         when(this.engagementWebClient.readById(updateData.getEngagementId())).thenReturn(new Object());
-        when(this.userWebClient.readUserById(updateData.getUserId()))
+        when(this.userFinder.readById(updateData.getUserId()))
                 .thenReturn(UserSnapshot.builder().id(updateData.getUserId()).build());
         doNothing().when(this.incomeGateway).update(id, updateData);
 
@@ -186,7 +186,7 @@ class IncomeServiceIT {
         assertEquals(updateData.getDate(), response.getDate());
         assertEquals(id, response.getId());
         verify(this.engagementWebClient).readById(updateData.getEngagementId());
-        verify(this.userWebClient).readUserById(updateData.getUserId());
+        verify(this.userFinder).readById(updateData.getUserId());
         verify(this.incomeGateway).update(id, updateData);
     }
 
@@ -207,7 +207,7 @@ class IncomeServiceIT {
 
         assertEquals("Engagement not found", thrown.getMessage());
         verify(this.engagementWebClient).readById(updateData.getEngagementId());
-        verify(this.userWebClient, never()).readUserById(any());
+        verify(this.userFinder, never()).readById(any());
         verify(this.incomeGateway, never()).update(any(), any());
     }
 
@@ -222,14 +222,14 @@ class IncomeServiceIT {
                 .build();
         when(this.engagementWebClient.readById(updateData.getEngagementId())).thenReturn(new Object());
         RuntimeException exception = new RuntimeException("User not found");
-        when(this.userWebClient.readUserById(updateData.getUserId())).thenThrow(exception);
+        when(this.userFinder.readById(updateData.getUserId())).thenThrow(exception);
 
         RuntimeException thrown = assertThrows(RuntimeException.class,
                 () -> this.incomeService.update(id, updateData));
 
         assertEquals("User not found", thrown.getMessage());
         verify(this.engagementWebClient).readById(updateData.getEngagementId());
-        verify(this.userWebClient).readUserById(updateData.getUserId());
+        verify(this.userFinder).readById(updateData.getUserId());
         verify(this.incomeGateway, never()).update(any(), any());
     }
 
@@ -248,7 +248,7 @@ class IncomeServiceIT {
 
         assertEquals("Bad Request Exception. Income date cannot be in the future", thrown.getMessage());
         verifyNoInteractions(this.engagementWebClient);
-        verifyNoInteractions(this.userWebClient);
+        verifyNoInteractions(this.userFinder);
         verify(this.incomeGateway, never()).update(any(), any());
     }
 

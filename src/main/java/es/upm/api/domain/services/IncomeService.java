@@ -4,7 +4,7 @@ import es.upm.api.domain.model.Income;
 import es.upm.api.domain.model.criteria.IncomeFindCriteria;
 import es.upm.api.domain.ports.out.billing.IncomeGateway;
 import es.upm.api.domain.ports.out.engagement.EngagementWebClient;
-import es.upm.api.domain.ports.out.user.UserWebClient;
+import es.upm.api.domain.ports.out.user.UserFinder;
 import es.upm.miw.exception.BadRequestException;
 import org.springframework.stereotype.Service;
 
@@ -21,14 +21,14 @@ public class IncomeService {
 
     private final IncomeGateway incomeGateway;
     private final EngagementWebClient engagementWebClient;
-    private final UserWebClient userWebClient;
+    private final UserFinder userFinder;
 
     public IncomeService(IncomeGateway incomeGateway,
                          EngagementWebClient engagementWebClient,
-                         UserWebClient userWebClient) {
+                         UserFinder userFinder) {
         this.incomeGateway = incomeGateway;
         this.engagementWebClient = engagementWebClient;
-        this.userWebClient = userWebClient;
+        this.userFinder = userFinder;
     }
 
     public Income create(Income income) {
@@ -37,7 +37,7 @@ public class IncomeService {
         }
         income.setId(UUID.randomUUID());
         this.engagementWebClient.readById(income.getEngagementId());
-        this.userWebClient.readUserById(income.getUserId());
+        this.userFinder.readById(income.getUserId());
         this.incomeGateway.create(income);
         return income;
     }
@@ -54,7 +54,7 @@ public class IncomeService {
             throw new BadRequestException("Income date cannot be in the future");
         }
         this.engagementWebClient.readById(income.getEngagementId());
-        this.userWebClient.readUserById(income.getUserId());
+        this.userFinder.readById(income.getUserId());
         // Ensure the id is not changed
         income.setId(id);
         this.incomeGateway.update(id, income);
