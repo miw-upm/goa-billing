@@ -1,8 +1,8 @@
-name: CD. AWS Lightsail
+name: CD
 on:
   push:
     branches:
-      - master
+      - staging
 
 jobs:
   cd:
@@ -22,6 +22,12 @@ jobs:
           java-version: 21
           cache: maven
 
+      - name: ⚙️ Configure Maven settings for GitHub Packages
+        uses: s4u/maven-settings-action@v3.0.0
+        with:
+          servers: |
+            [{"id": "github", "username": "${{ github.actor }}", "password": "${{ secrets.GITHUB_TOKEN }}"}]
+
       - name: 🏷️ Prepare container image metadata (repository in lowercase, artifact, version...)
         run: |
           echo "REPOSITORY=${GITHUB_REPOSITORY,,}" >> $GITHUB_ENV
@@ -40,6 +46,7 @@ jobs:
         with:
           context: .
           push: true
+          secrets: github_token=${{ secrets.GITHUB_TOKEN }}
           tags: |
             ghcr.io/${{ env.REPOSITORY }}:${{ env.VERSION }}
             ghcr.io/${{ env.REPOSITORY }}:latest
@@ -47,20 +54,42 @@ jobs:
       - name: 🚀 Deploy on AWS Lightsail
         uses: appleboy/ssh-action@v1.2.1
         with:
-          host: ${{ secrets.AWS_LIGHTSAIL_IP }}
-          username: ${{ secrets.AWS_LIGHTSAIL_USER }}
-          key: ${{ secrets.AWS_LIGHTSAIL_SSH_KEY }}
+          host: ${{ secrets.AWS_LIGHTSAIL_IP_STAGING }}
+          username: ${{ secrets.AWS_LIGHTSAIL_USER_STAGING }}
+          key: ${{ secrets.AWS_LIGHTSAIL_SSH_KEY_STAGING }}
           script: |
             echo ${{ secrets.GHCR_PERSONAL_ACCESS_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-            docker rm -f ${{ env.ARTIFACT }} || true
+            
             docker pull ghcr.io/${{ env.REPOSITORY }}:latest
+            docker rm -f ${{ env.ARTIFACT }} || true
             docker run -d \
               --name ${{ env.ARTIFACT }} \
               --restart always \
+              --memory 512m \
+              --memory-swap 1024m \
               --network goa \
-              -e MONGODB_URI="${{ secrets.MONGODB_URI }}" \
+              -e SPRING_PROFILES_ACTIVE=prod \
+              -e MONGODB_URI="${{ secrets.MONGODB_URI_STAGING }}" \
+              -e BASE_URL="https://goa.miwupm.es" \
               -e API_CLIENT_ID="${{ secrets.API_CLIENT_ID }}" \
               -e API_CLIENT_SECRET="${{ secrets.API_CLIENT_SECRET }}" \
+              -e APP_CRYPTO_SALT="${{ secrets.APP_CRYPTO_SALT_STAGING }}" \
+              -e APP_CRYPTO_PASSWORD="${{ secrets.APP_CRYPTO_PASSWORD_STAGING }}" \            
               ghcr.io/${{ env.REPOSITORY }}:latest
-            sleep 20
+            
+            echo "⏳ Esperando a que se levante"      
+            for i in $(seq 1 6); do  # 1 minutos
+              sleep 10
+              STATUS=$(docker inspect --format='{{.State.Health.Status}}' ${{ env.ARTIFACT }} 2>/dev/null)
+              echo "Intento $i: $STATUS"
+              [ "$STATUS" = "healthy" ] && break
+            done
+            
+            if [ "$STATUS" != "healthy" ]; then
+              echo "❌ Deploy fallido"
+              docker logs --tail 50 ${{ env.ARTIFACT }}
+              exit 1
+            fi
+            
+            echo "✅ Deploy exitoso"
             docker image prune --filter "until=12h" -f
