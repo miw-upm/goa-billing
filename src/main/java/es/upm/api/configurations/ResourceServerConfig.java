@@ -1,7 +1,5 @@
 package es.upm.api.configurations;
 
-import es.upm.api.infrastructure.resources.SystemResource;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
@@ -10,46 +8,46 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.oauth2.jwt.JwtDecoder;
-import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
+import org.springframework.security.crypto.factory.PasswordEncoderFactories;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.web.SecurityFilterChain;
 
-import java.util.Collections;
-import java.util.Optional;
-import java.util.stream.Collectors;
-
+import static es.upm.api.infrastructure.resources.SystemResource.SYSTEM;
+import static es.upm.api.infrastructure.resources.SystemResource.VERSION_BADGE;
 import static org.springframework.security.config.http.SessionCreationPolicy.STATELESS;
 
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
 public class ResourceServerConfig {  // validate tokens y security APIs con SCOPE_*.
-    public static final String CLAIM_NAME = "roles";
-    public static final String AWS_CLAIM_NAME = "cognito:groups";
-    private static final String PREFIX = "ROLE_";
+    public static final String ROLES_NAME = "roles";
+    private static final String ROLE_AUTHORITY_PREFIX = "ROLE_";
 
     @Bean
     @Order(1)
-    public SecurityFilterChain systemPublic(HttpSecurity http) throws Exception {
+    public SecurityFilterChain systemEndpointsSecurityConfig(HttpSecurity http) throws Exception {
         return http
-                .securityMatcher(SystemResource.SYSTEM + "/**")
+                .securityMatcher(SYSTEM + "/**")
                 .csrf(AbstractHttpConfigurer::disable)
-                .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authorizeHttpRequests(a -> a.anyRequest().permitAll())
+                .sessionManagement(sessionManager -> sessionManager.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(SYSTEM, SYSTEM + VERSION_BADGE).permitAll()
+                        .anyRequest().denyAll()
+                )
                 .build();
     }
 
     @Bean
-    @Order(2)
-    public SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http) throws Exception {
+    @Order(3)
+    public SecurityFilterChain apiSecurityConfig(HttpSecurity http) throws Exception {
         return http
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/actuator/health").permitAll()
+                        .requestMatchers("/public/engagement-letters/**").permitAll()
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                         .anyRequest().authenticated()
                 )
@@ -61,27 +59,18 @@ public class ResourceServerConfig {  // validate tokens y security APIs con SCOP
 
     @Bean
     public JwtAuthenticationConverter jwtAuthenticationConverter() {
-        JwtGrantedAuthoritiesConverter grantedAuthoritiesConverter = new JwtGrantedAuthoritiesConverter();
-        grantedAuthoritiesConverter.setAuthorityPrefix(PREFIX);
-        grantedAuthoritiesConverter.setAuthoritiesClaimName(CLAIM_NAME);
-
-        JwtAuthenticationConverter jwtAuthenticationConverter = new JwtAuthenticationConverter();
-        jwtAuthenticationConverter.setJwtGrantedAuthoritiesConverter(jwt -> {
-            if (jwt.getClaim(CLAIM_NAME) != null) { // standard Auth2
-                return grantedAuthoritiesConverter.convert(jwt);
-            }
-            return Optional.ofNullable(jwt.getClaimAsStringList(AWS_CLAIM_NAME))// AWS cognito: group as scope
-                    .orElse(Collections.emptyList())
-                    .stream()
-                    .map(group -> new SimpleGrantedAuthority(PREFIX + group))
-                    .collect(Collectors.toList());
-        });
-        return jwtAuthenticationConverter;
+        JwtGrantedAuthoritiesConverter authorities = new JwtGrantedAuthoritiesConverter();
+        authorities.setAuthorityPrefix(ROLE_AUTHORITY_PREFIX);
+        authorities.setAuthoritiesClaimName(ROLES_NAME);
+        JwtAuthenticationConverter authentication = new JwtAuthenticationConverter();
+        authentication.setJwtGrantedAuthoritiesConverter(authorities);
+        return authentication;
     }
 
+
     @Bean
-    public JwtDecoder jwtDecoder(@Value("${spring.security.oauth2.jwk-uri}") String jwkUri) {
-        return NimbusJwtDecoder.withJwkSetUri(jwkUri).build();
+    public PasswordEncoder passwordEncoder() {
+        return PasswordEncoderFactories.createDelegatingPasswordEncoder();
     }
 
 }
