@@ -1,4 +1,4 @@
-package es.upm.api.infrastructure.mongodb.repositories;
+package es.upm.api.configurations.seeder;
 
 import jakarta.annotation.PostConstruct;
 import lombok.extern.log4j.Log4j2;

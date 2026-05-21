@@ -21,14 +21,13 @@ import java.util.stream.Collectors;
 @Log4j2
 @Component
 @Order(Ordered.HIGHEST_PRECEDENCE)
-@Profile({"dev"})
+//@Profile({"dev"})
 public class LoggingFilter extends OncePerRequestFilter {
-
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
-        log.debug(">>>>> {} {}", request.getMethod(), request.getRequestURI());
+        log.debug(">{}>>>>>>> {}", request.getMethod(), request.getRequestURI());
         Map<String, String> headerMap = Collections.list(request.getHeaderNames()).stream()
                 .collect(Collectors.toMap(name -> name, request::getHeader));
         log.debug("     Headers:{}", headerMap);
@@ -46,10 +45,24 @@ public class LoggingFilter extends OncePerRequestFilter {
         byte[] requestArray = wrappedRequest.getContentAsByteArray();
         String requestBody = new String(requestArray, wrappedRequest.getCharacterEncoding());
         log.debug("     Body (request): {}", requestBody);
-        byte[] responseArray = wrappedResponse.getContentAsByteArray();
-        String responseBody = new String(responseArray, response.getCharacterEncoding());
-        log.debug("     Body (response): {}", responseBody);
+        log.debug("     Body (response): {}", formatResponseBody(wrappedResponse));
         wrappedResponse.copyBodyToResponse();
     }
-}
 
+    private String formatResponseBody(ContentCachingResponseWrapper response) throws IOException {
+        String contentType = response.getContentType();
+        if (contentType == null) {
+            return new String(response.getContentAsByteArray(), response.getCharacterEncoding());
+        }
+        String baseType = contentType.split(";")[0].trim().toLowerCase();
+        String label = switch (baseType) {
+            case "application/pdf" -> "PDF";
+            case "text/html" -> "HTML";
+            case "text/css" -> "CSS";
+            default -> baseType.startsWith("image/") ? "Imagen " + baseType.substring(6).toUpperCase() : null;
+        };
+        return label != null
+                ? "[" + label + " - " + response.getContentSize() + " bytes]"
+                : new String(response.getContentAsByteArray(), response.getCharacterEncoding());
+    }
+}

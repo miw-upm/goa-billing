@@ -1,6 +1,5 @@
 package es.upm.api.domain.services;
 
-import es.upm.api.domain.exceptions.BadRequestException;
 import es.upm.api.domain.model.Expense;
 import es.upm.api.domain.model.Income;
 import es.upm.api.domain.model.Invoice;
@@ -11,6 +10,7 @@ import es.upm.api.domain.persistence.ExpensePersistence;
 import es.upm.api.domain.persistence.IncomePersistence;
 import es.upm.api.domain.persistence.InvoicePersistence;
 import es.upm.api.domain.webclients.EngagementWebClient;
+import es.upm.miw.exception.BadRequestException;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;

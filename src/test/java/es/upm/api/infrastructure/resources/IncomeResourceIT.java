@@ -1,10 +1,10 @@
 package es.upm.api.infrastructure.resources;
 
-import es.upm.api.domain.exceptions.BadRequestException;
-import es.upm.api.domain.exceptions.NotFoundException;
 import es.upm.api.domain.model.Income;
 import es.upm.api.domain.model.IncomeFindCriteria;
 import es.upm.api.domain.services.IncomeService;
+import es.upm.miw.exception.BadRequestException;
+import es.upm.miw.exception.NotFoundException;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -341,7 +341,7 @@ class IncomeResourceIT {
                 """.formatted(UUID.randomUUID(), UUID.randomUUID());
 
         when(this.incomeService.update(eq(incomeId), any()))
-                .thenThrow(new es.upm.api.domain.exceptions.NotFoundException("Income not found: " + incomeId));
+                .thenThrow(new NotFoundException("Income not found: " + incomeId));
 
         this.mockMvc.perform(put("/incomes/" + incomeId)
                         .contentType(MediaType.APPLICATION_JSON)

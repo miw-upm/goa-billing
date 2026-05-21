@@ -1,11 +1,11 @@
 package es.upm.api.infrastructure.mongodb.persistence;
 
-import es.upm.api.domain.exceptions.NotFoundException;
 import es.upm.api.domain.model.Income;
 import es.upm.api.domain.model.IncomeFindCriteria;
 import es.upm.api.domain.persistence.IncomePersistence;
 import es.upm.api.infrastructure.mongodb.entities.IncomeEntity;
 import es.upm.api.infrastructure.mongodb.repositories.IncomeRepository;
+import es.upm.miw.exception.NotFoundException;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Repository;
 

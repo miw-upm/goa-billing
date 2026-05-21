@@ -1,12 +1,12 @@
 package es.upm.api.infrastructure.mongodb.persistence;
 
-import es.upm.api.domain.exceptions.NotFoundException;
 import es.upm.api.domain.model.Expense;
 import es.upm.api.domain.model.Income;
 import es.upm.api.domain.model.Invoice;
 import es.upm.api.domain.model.InvoiceFindCriteria;
 import es.upm.api.infrastructure.mongodb.entities.InvoiceEntity;
 import es.upm.api.infrastructure.mongodb.repositories.InvoiceRepository;
+import es.upm.miw.exception.NotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;

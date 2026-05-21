@@ -1,6 +1,7 @@
-package es.upm.api.infrastructure.mongodb.repositories;
+package es.upm.api.configurations.seeder;
 
 import es.upm.api.infrastructure.mongodb.entities.IncomeEntity;
+import es.upm.api.infrastructure.mongodb.repositories.IncomeRepository;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Repository;

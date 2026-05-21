@@ -5,6 +5,7 @@ import es.upm.api.domain.model.IncomeFindCriteria;
 import es.upm.api.domain.services.IncomeService;
 import es.upm.api.infrastructure.resources.dtos.IncomeCreateRequest;
 import es.upm.api.infrastructure.resources.dtos.IncomeUpdateRequest;
+import es.upm.miw.security.Security;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;

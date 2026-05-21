@@ -1,11 +1,11 @@
 package es.upm.api.domain.services;
 
-import es.upm.api.domain.exceptions.BadRequestException;
 import es.upm.api.domain.model.Income;
 import es.upm.api.domain.model.IncomeFindCriteria;
 import es.upm.api.domain.persistence.IncomePersistence;
 import es.upm.api.domain.webclients.EngagementWebClient;
 import es.upm.api.domain.webclients.UserWebClient;
+import es.upm.miw.exception.BadRequestException;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;

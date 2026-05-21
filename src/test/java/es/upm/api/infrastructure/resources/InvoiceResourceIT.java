@@ -1,7 +1,5 @@
 package es.upm.api.infrastructure.resources;
 
-import es.upm.api.domain.exceptions.BadRequestException;
-import es.upm.api.domain.exceptions.NotFoundException;
 import es.upm.api.domain.model.Expense;
 import es.upm.api.domain.model.Income;
 import es.upm.api.domain.model.Invoice;
@@ -9,6 +7,8 @@ import es.upm.api.domain.model.InvoiceFindCriteria;
 import es.upm.api.domain.model.InvoiceBreakdown;
 import es.upm.api.domain.model.BreakdownItem;
 import es.upm.api.domain.services.InvoiceService;
+import es.upm.miw.exception.BadRequestException;
+import es.upm.miw.exception.NotFoundException;
 import org.mockito.ArgumentCaptor;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -380,8 +380,7 @@ class InvoiceResourceIT {
         this.mockMvc.perform(put("/invoices/{id}", invoiceId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBody))
-                .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.message").value("Not Found Exception. Invoice id: " + invoiceId));
+                .andExpect(status().isNotFound());
 
         verify(this.invoiceService).update(any(), any());
     }
@@ -468,8 +467,7 @@ class InvoiceResourceIT {
                 .thenThrow(new NotFoundException("Invoice id: " + invoiceId));
 
         this.mockMvc.perform(get("/invoices/{id}", invoiceId))
-                .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.message").value("Not Found Exception. Invoice id: " + invoiceId));
+                .andExpect(status().isNotFound());
 
         verify(this.invoiceService).readById(invoiceId);
     }

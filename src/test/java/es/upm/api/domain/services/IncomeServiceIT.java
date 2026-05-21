@@ -1,11 +1,12 @@
 package es.upm.api.domain.services;
 
-import es.upm.api.domain.exceptions.BadRequestException;
 import es.upm.api.domain.model.Income;
 import es.upm.api.domain.model.IncomeFindCriteria;
 import es.upm.api.domain.persistence.IncomePersistence;
 import es.upm.api.domain.webclients.EngagementWebClient;
 import es.upm.api.domain.webclients.UserWebClient;
+import es.upm.miw.exception.BadRequestException;
+import es.upm.miw.exception.NotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -69,9 +70,9 @@ class IncomeServiceIT {
         UUID id = UUID.randomUUID();
         String expectedDetail = "Income id: " + id;
         String expectedMessage = "Not Found Exception. " + expectedDetail;
-        when(this.incomePersistence.readById(id)).thenThrow(new es.upm.api.domain.exceptions.NotFoundException(expectedDetail));
+        when(this.incomePersistence.readById(id)).thenThrow(new NotFoundException(expectedDetail));
 
-        es.upm.api.domain.exceptions.NotFoundException thrown = assertThrows(es.upm.api.domain.exceptions.NotFoundException.class,
+        NotFoundException thrown = assertThrows(NotFoundException.class,
                 () -> this.incomeService.readById(id));
 
         assertEquals(expectedMessage, thrown.getMessage());

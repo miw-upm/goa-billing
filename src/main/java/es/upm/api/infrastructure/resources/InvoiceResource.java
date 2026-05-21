@@ -8,6 +8,7 @@ import es.upm.api.domain.model.InvoiceBreakdown;
 import es.upm.api.domain.services.InvoiceService;
 import es.upm.api.infrastructure.resources.dtos.InvoiceCreateRequest;
 import es.upm.api.infrastructure.resources.dtos.InvoiceUpdateRequest;
+import es.upm.miw.security.Security;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;

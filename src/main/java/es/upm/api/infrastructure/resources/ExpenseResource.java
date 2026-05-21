@@ -5,6 +5,7 @@ import es.upm.api.domain.model.ExpenseFindCriteria;
 import es.upm.api.domain.services.ExpenseService;
 import es.upm.api.infrastructure.resources.dtos.ExpenseCreateRequest;
 import es.upm.api.infrastructure.resources.dtos.ExpenseUpdateRequest;
+import es.upm.miw.security.Security;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;

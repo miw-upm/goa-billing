@@ -1,11 +1,11 @@
 package es.upm.api.infrastructure.mongodb.persistence;
 
-import es.upm.api.domain.exceptions.NotFoundException;
 import es.upm.api.domain.model.Invoice;
 import es.upm.api.domain.model.InvoiceFindCriteria;
 import es.upm.api.domain.persistence.InvoicePersistence;
 import es.upm.api.infrastructure.mongodb.entities.InvoiceEntity;
 import es.upm.api.infrastructure.mongodb.repositories.InvoiceRepository;
+import es.upm.miw.exception.NotFoundException;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Repository;
 
