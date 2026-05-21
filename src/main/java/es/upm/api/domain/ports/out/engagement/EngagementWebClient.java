@@ -1,4 +1,4 @@
-package es.upm.api.domain.webclients;
+package es.upm.api.domain.ports.out.engagement;
 
 import es.upm.api.configurations.FeignConfig;
 import org.springframework.cloud.openfeign.FeignClient;

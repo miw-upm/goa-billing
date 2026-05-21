@@ -1,10 +1,10 @@
 package es.upm.api.domain.services;
 
 import es.upm.api.domain.model.Income;
-import es.upm.api.domain.model.IncomeFindCriteria;
-import es.upm.api.domain.persistence.IncomePersistence;
-import es.upm.api.domain.webclients.EngagementWebClient;
-import es.upm.api.domain.webclients.UserWebClient;
+import es.upm.api.domain.model.criteria.IncomeFindCriteria;
+import es.upm.api.domain.ports.out.billing.IncomeGateway;
+import es.upm.api.domain.ports.out.engagement.EngagementWebClient;
+import es.upm.api.domain.ports.out.user.UserWebClient;
 import es.upm.miw.exception.BadRequestException;
 import org.springframework.stereotype.Service;
 
@@ -16,17 +16,17 @@ import java.util.stream.Stream;
 public class IncomeService {
 
     public Income readById(UUID id) {
-        return this.incomePersistence.readById(id);
+        return this.incomeGateway.readById(id);
     }
 
-    private final IncomePersistence incomePersistence;
+    private final IncomeGateway incomeGateway;
     private final EngagementWebClient engagementWebClient;
     private final UserWebClient userWebClient;
 
-    public IncomeService(IncomePersistence incomePersistence,
+    public IncomeService(IncomeGateway incomeGateway,
                          EngagementWebClient engagementWebClient,
                          UserWebClient userWebClient) {
-        this.incomePersistence = incomePersistence;
+        this.incomeGateway = incomeGateway;
         this.engagementWebClient = engagementWebClient;
         this.userWebClient = userWebClient;
     }
@@ -38,7 +38,7 @@ public class IncomeService {
         income.setId(UUID.randomUUID());
         this.engagementWebClient.readById(income.getEngagementId());
         this.userWebClient.readUserById(income.getUserId());
-        this.incomePersistence.create(income);
+        this.incomeGateway.create(income);
         return income;
     }
 
@@ -46,7 +46,7 @@ public class IncomeService {
         if (criteria.getEngagementId() != null) {
             this.engagementWebClient.readById(criteria.getEngagementId());
         }
-        return this.incomePersistence.findAll(criteria);
+        return this.incomeGateway.findAll(criteria);
     }
 
     public Income update(UUID id, Income income) {
@@ -57,7 +57,7 @@ public class IncomeService {
         this.userWebClient.readUserById(income.getUserId());
         // Ensure the id is not changed
         income.setId(id);
-        this.incomePersistence.update(id, income);
+        this.incomeGateway.update(id, income);
         return income;
     }
 }

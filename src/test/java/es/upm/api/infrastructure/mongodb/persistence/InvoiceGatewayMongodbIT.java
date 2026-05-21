@@ -3,7 +3,7 @@ package es.upm.api.infrastructure.mongodb.persistence;
 import es.upm.api.domain.model.Expense;
 import es.upm.api.domain.model.Income;
 import es.upm.api.domain.model.Invoice;
-import es.upm.api.domain.model.InvoiceFindCriteria;
+import es.upm.api.domain.model.criteria.InvoiceFindCriteria;
 import es.upm.api.infrastructure.mongodb.entities.InvoiceEntity;
 import es.upm.api.infrastructure.mongodb.repositories.InvoiceRepository;
 import es.upm.miw.exception.NotFoundException;
@@ -29,10 +29,10 @@ import static org.mockito.Mockito.when;
 
 @SpringBootTest
 @ActiveProfiles("test")
-class InvoicePersistenceMongodbIT {
+class InvoiceGatewayMongodbIT {
 
     @Autowired
-    private InvoicePersistenceMongodb invoicePersistenceMongodb;
+    private InvoiceGatewayMongodb invoicePersistenceMongodb;
 
     @MockitoBean
     private InvoiceRepository invoiceRepository;
@@ -150,53 +150,53 @@ class InvoicePersistenceMongodbIT {
     @Test
     void shouldFindAllInvoices() {
         InvoiceFindCriteria criteria = new InvoiceFindCriteria();
-        when(this.invoiceRepository.findAll(InvoicePersistenceMongodb.DATE)).thenReturn(List.of(new InvoiceEntity(this.invoice)));
+        when(this.invoiceRepository.findAll(InvoiceGatewayMongodb.DATE)).thenReturn(List.of(new InvoiceEntity(this.invoice)));
 
         List<Invoice> invoices = this.invoicePersistenceMongodb.findAll(criteria).toList();
 
         assertEquals(1, invoices.size());
         assertEquals(this.invoice, invoices.get(0));
-        verify(this.invoiceRepository).findAll(InvoicePersistenceMongodb.DATE);
+        verify(this.invoiceRepository).findAll(InvoiceGatewayMongodb.DATE);
     }
 
     @Test
     void shouldFindInvoicesByEngagementId() {
         UUID engagementId = this.invoice.getEngagementId();
         InvoiceFindCriteria criteria = new InvoiceFindCriteria(engagementId, null);
-        when(this.invoiceRepository.findByEngagementId(engagementId, InvoicePersistenceMongodb.DATE))
+        when(this.invoiceRepository.findByEngagementId(engagementId, InvoiceGatewayMongodb.DATE))
                 .thenReturn(List.of(new InvoiceEntity(this.invoice)));
 
         List<Invoice> invoices = this.invoicePersistenceMongodb.findAll(criteria).toList();
 
         assertEquals(1, invoices.size());
         assertEquals(this.invoice, invoices.get(0));
-        verify(this.invoiceRepository).findByEngagementId(engagementId, InvoicePersistenceMongodb.DATE);
+        verify(this.invoiceRepository).findByEngagementId(engagementId, InvoiceGatewayMongodb.DATE);
     }
 
     @Test
     void shouldReturnEmptyWhenNoInvoicesFoundByEngagementId() {
         UUID engagementId = UUID.randomUUID();
         InvoiceFindCriteria criteria = new InvoiceFindCriteria(engagementId, null);
-        when(this.invoiceRepository.findByEngagementId(engagementId, InvoicePersistenceMongodb.DATE)).thenReturn(List.of());
+        when(this.invoiceRepository.findByEngagementId(engagementId, InvoiceGatewayMongodb.DATE)).thenReturn(List.of());
 
         List<Invoice> invoices = this.invoicePersistenceMongodb.findAll(criteria).toList();
 
         assertEquals(0, invoices.size());
-        verify(this.invoiceRepository).findByEngagementId(engagementId, InvoicePersistenceMongodb.DATE);
+        verify(this.invoiceRepository).findByEngagementId(engagementId, InvoiceGatewayMongodb.DATE);
     }
 
     @Test
     void shouldFindInvoicesByDate() {
         LocalDate date = this.invoice.getDate();
         InvoiceFindCriteria criteria = new InvoiceFindCriteria(null, date);
-        when(this.invoiceRepository.findByDate(date, InvoicePersistenceMongodb.DATE))
+        when(this.invoiceRepository.findByDate(date, InvoiceGatewayMongodb.DATE))
                 .thenReturn(List.of(new InvoiceEntity(this.invoice)));
 
         List<Invoice> invoices = this.invoicePersistenceMongodb.findAll(criteria).toList();
 
         assertEquals(1, invoices.size());
         assertEquals(this.invoice, invoices.get(0));
-        verify(this.invoiceRepository).findByDate(date, InvoicePersistenceMongodb.DATE);
+        verify(this.invoiceRepository).findByDate(date, InvoiceGatewayMongodb.DATE);
     }
 
     @Test
@@ -204,14 +204,14 @@ class InvoicePersistenceMongodbIT {
         UUID engagementId = this.invoice.getEngagementId();
         LocalDate date = this.invoice.getDate();
         InvoiceFindCriteria criteria = new InvoiceFindCriteria(engagementId, date);
-        when(this.invoiceRepository.findByEngagementIdAndDate(engagementId, date, InvoicePersistenceMongodb.DATE))
+        when(this.invoiceRepository.findByEngagementIdAndDate(engagementId, date, InvoiceGatewayMongodb.DATE))
                 .thenReturn(List.of(new InvoiceEntity(this.invoice)));
 
         List<Invoice> invoices = this.invoicePersistenceMongodb.findAll(criteria).toList();
 
         assertEquals(1, invoices.size());
         assertEquals(this.invoice, invoices.get(0));
-        verify(this.invoiceRepository).findByEngagementIdAndDate(engagementId, date, InvoicePersistenceMongodb.DATE);
+        verify(this.invoiceRepository).findByEngagementIdAndDate(engagementId, date, InvoiceGatewayMongodb.DATE);
     }
 
     @Test

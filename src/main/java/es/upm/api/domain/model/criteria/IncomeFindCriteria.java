@@ -1,4 +1,4 @@
-package es.upm.api.domain.model;
+package es.upm.api.domain.model.criteria;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

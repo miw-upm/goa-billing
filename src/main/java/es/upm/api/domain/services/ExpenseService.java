@@ -1,9 +1,9 @@
 package es.upm.api.domain.services;
 
 import es.upm.api.domain.model.Expense;
-import es.upm.api.domain.model.ExpenseFindCriteria;
-import es.upm.api.domain.persistence.ExpensePersistence;
-import es.upm.api.domain.webclients.EngagementWebClient;
+import es.upm.api.domain.model.criteria.ExpenseFindCriteria;
+import es.upm.api.domain.ports.out.billing.ExpenseGateway;
+import es.upm.api.domain.ports.out.engagement.EngagementWebClient;
 import org.springframework.stereotype.Service;
 
 import java.util.UUID;
@@ -12,31 +12,31 @@ import java.util.stream.Stream;
 @Service
 public class ExpenseService {
 
-    private final ExpensePersistence expensePersistence;
+    private final ExpenseGateway expenseGateway;
     private final EngagementWebClient engagementWebClient;
 
-    public ExpenseService(ExpensePersistence expensePersistence, EngagementWebClient engagementWebClient) {
-        this.expensePersistence = expensePersistence;
+    public ExpenseService(ExpenseGateway expenseGateway, EngagementWebClient engagementWebClient) {
+        this.expenseGateway = expenseGateway;
         this.engagementWebClient = engagementWebClient;
     }
 
     public Expense create(Expense expense) {
         expense.setId(UUID.randomUUID());
         this.engagementWebClient.readById(expense.getEngagementId());
-        this.expensePersistence.create(expense);
+        this.expenseGateway.create(expense);
         return expense;
     }
 
     public Expense update(UUID id, Expense expense) {
         this.engagementWebClient.readById(expense.getEngagementId());
-        return this.expensePersistence.update(id, expense);
+        return this.expenseGateway.update(id, expense);
     }
 
     public Expense readById(UUID id) {
-        return this.expensePersistence.readById(id);
+        return this.expenseGateway.readById(id);
     }
 
     public Stream<Expense> findAll(ExpenseFindCriteria criteria) {
-        return this.expensePersistence.findAll(criteria);
+        return this.expenseGateway.findAll(criteria);
     }
 }

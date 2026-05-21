@@ -1,7 +1,7 @@
 package es.upm.api.infrastructure.mongodb.persistence;
 
 import es.upm.api.domain.model.Expense;
-import es.upm.api.domain.model.ExpenseFindCriteria;
+import es.upm.api.domain.model.criteria.ExpenseFindCriteria;
 import es.upm.api.infrastructure.mongodb.entities.ExpenseEntity;
 import es.upm.api.infrastructure.mongodb.repositories.ExpenseRepository;
 import es.upm.miw.exception.NotFoundException;
@@ -28,10 +28,10 @@ import static org.mockito.Mockito.when;
 
 @SpringBootTest
 @ActiveProfiles("test")
-class ExpensePersistenceMongodbIT {
+class ExpenseGatewayMongodbIT {
 
     @Autowired
-    private ExpensePersistenceMongodb expensePersistenceMongodb;
+    private ExpenseGatewayMongodb expensePersistenceMongodb;
 
     @MockitoBean
     private ExpenseRepository expenseRepository;
@@ -107,12 +107,12 @@ class ExpensePersistenceMongodbIT {
 
     @Test
     void shouldFindAll() {
-        when(this.expenseRepository.findAll(ExpensePersistenceMongodb.DATE))
+        when(this.expenseRepository.findAll(ExpenseGatewayMongodb.DATE))
                 .thenReturn(List.of(new ExpenseEntity(this.expense)));
 
         Stream<Expense> expenseStream = this.expensePersistenceMongodb.findAll(this.criteria);
 
-        verify(this.expenseRepository).findAll(ExpensePersistenceMongodb.DATE);
+        verify(this.expenseRepository).findAll(ExpenseGatewayMongodb.DATE);
 
         assertEquals(this.expense, expenseStream.findFirst().orElse(null));
     }

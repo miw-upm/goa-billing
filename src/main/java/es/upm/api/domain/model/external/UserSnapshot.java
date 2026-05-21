@@ -1,4 +1,4 @@
-package es.upm.api.domain.model;
+package es.upm.api.domain.model.external;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -11,7 +11,7 @@ import java.util.UUID;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class UserDto {
+public class UserSnapshot {
     private UUID id;
     private String mobile;
     private String firstName;

@@ -3,7 +3,7 @@ package es.upm.api.infrastructure.resources;
 import es.upm.api.domain.model.Expense;
 import es.upm.api.domain.model.Income;
 import es.upm.api.domain.model.Invoice;
-import es.upm.api.domain.model.InvoiceFindCriteria;
+import es.upm.api.domain.model.criteria.InvoiceFindCriteria;
 import es.upm.api.domain.model.InvoiceBreakdown;
 import es.upm.api.domain.services.InvoiceService;
 import es.upm.api.infrastructure.resources.dtos.InvoiceCreateRequest;

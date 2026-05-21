@@ -1,9 +1,9 @@
 package es.upm.api.domain.services;
 
 import es.upm.api.domain.model.Expense;
-import es.upm.api.domain.model.ExpenseFindCriteria;
-import es.upm.api.domain.persistence.ExpensePersistence;
-import es.upm.api.domain.webclients.EngagementWebClient;
+import es.upm.api.domain.model.criteria.ExpenseFindCriteria;
+import es.upm.api.domain.ports.out.billing.ExpenseGateway;
+import es.upm.api.domain.ports.out.engagement.EngagementWebClient;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -28,7 +28,7 @@ class ExpenseServiceIT {
     private ExpenseService expenseService;
 
     @MockitoBean
-    private ExpensePersistence expensePersistence;
+    private ExpenseGateway expenseGateway;
 
     @MockitoBean
     private EngagementWebClient engagementWebClient;
@@ -60,7 +60,7 @@ class ExpenseServiceIT {
         assertEquals(this.expense.getDescription(), createdExpense.getDescription());
 
         ArgumentCaptor<Expense> expenseCaptor = ArgumentCaptor.forClass(Expense.class);
-        verify(this.expensePersistence).create(expenseCaptor.capture());
+        verify(this.expenseGateway).create(expenseCaptor.capture());
         verify(this.engagementWebClient).readById(this.expense.getEngagementId());
 
         Expense persistedExpense = expenseCaptor.getValue();
@@ -82,29 +82,29 @@ class ExpenseServiceIT {
 
         assertEquals("Engagement not found", thrown.getMessage());
         verify(this.engagementWebClient).readById(this.expense.getEngagementId());
-        verify(this.expensePersistence, never()).create(any());
+        verify(this.expenseGateway, never()).create(any());
     }
 
     @Test
     void shouldReadExpenseById() {
         this.expense.setId(UUID.randomUUID());
-        when(this.expensePersistence.readById(this.expense.getId())).thenReturn(this.expense);
+        when(this.expenseGateway.readById(this.expense.getId())).thenReturn(this.expense);
 
         Expense readExpense = this.expenseService.readById(this.expense.getId());
 
         assertEquals(this.expense, readExpense);
-        verify(this.expensePersistence).readById(this.expense.getId());
+        verify(this.expenseGateway).readById(this.expense.getId());
         verifyNoInteractions(this.engagementWebClient);
     }
 
     @Test
     void shouldFindAll() {
         Stream<Expense> expenseStream = Stream.of(this.expense);
-        when(this.expensePersistence.findAll(this.criteria)).thenReturn(expenseStream);
+        when(this.expenseGateway.findAll(this.criteria)).thenReturn(expenseStream);
 
         Stream<Expense> allExpenses = this.expenseService.findAll(this.criteria);
 
-        verify(this.expensePersistence).findAll(this.criteria);
+        verify(this.expenseGateway).findAll(this.criteria);
         assertEquals(this.expense, allExpenses.findFirst().orElse(null));
     }
 
@@ -126,13 +126,13 @@ class ExpenseServiceIT {
                 .build();
 
         when(this.engagementWebClient.readById(updateData.getEngagementId())).thenReturn(new Object());
-        when(this.expensePersistence.update(id, updateData)).thenReturn(updatedExpense);
+        when(this.expenseGateway.update(id, updateData)).thenReturn(updatedExpense);
 
         Expense response = this.expenseService.update(id, updateData);
 
         assertEquals(updatedExpense, response);
         verify(this.engagementWebClient).readById(updateData.getEngagementId());
-        verify(this.expensePersistence).update(id, updateData);
+        verify(this.expenseGateway).update(id, updateData);
     }
 
     @Test
@@ -151,6 +151,6 @@ class ExpenseServiceIT {
 
         assertEquals("Engagement not found", thrown.getMessage());
         verify(this.engagementWebClient).readById(updateData.getEngagementId());
-        verify(this.expensePersistence, never()).update(any(), any());
+        verify(this.expenseGateway, never()).update(any(), any());
     }
 }

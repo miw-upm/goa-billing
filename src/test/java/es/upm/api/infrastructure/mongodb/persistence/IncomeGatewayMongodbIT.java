@@ -1,7 +1,7 @@
 package es.upm.api.infrastructure.mongodb.persistence;
 
 import es.upm.api.domain.model.Income;
-import es.upm.api.domain.model.IncomeFindCriteria;
+import es.upm.api.domain.model.criteria.IncomeFindCriteria;
 import es.upm.api.infrastructure.mongodb.entities.IncomeEntity;
 import es.upm.api.infrastructure.mongodb.repositories.IncomeRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -27,10 +27,10 @@ import static org.mockito.Mockito.when;
 
 @SpringBootTest
 @ActiveProfiles("test")
-class IncomePersistenceMongodbIT {
+class IncomeGatewayMongodbIT {
 
     @Autowired
-    private IncomePersistenceMongodb incomePersistenceMongodb;
+    private IncomeGatewayMongodb incomePersistenceMongodb;
 
     @MockitoBean
     private IncomeRepository incomeRepository;

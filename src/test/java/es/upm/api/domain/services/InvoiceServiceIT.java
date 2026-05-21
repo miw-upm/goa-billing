@@ -3,13 +3,13 @@ package es.upm.api.domain.services;
 import es.upm.api.domain.model.Expense;
 import es.upm.api.domain.model.Income;
 import es.upm.api.domain.model.Invoice;
-import es.upm.api.domain.model.InvoiceFindCriteria;
+import es.upm.api.domain.model.criteria.InvoiceFindCriteria;
 import es.upm.api.domain.model.InvoiceBreakdown;
 import es.upm.api.domain.model.BreakdownItem;
-import es.upm.api.domain.persistence.ExpensePersistence;
-import es.upm.api.domain.persistence.IncomePersistence;
-import es.upm.api.domain.persistence.InvoicePersistence;
-import es.upm.api.domain.webclients.EngagementWebClient;
+import es.upm.api.domain.ports.out.billing.ExpenseGateway;
+import es.upm.api.domain.ports.out.billing.IncomeGateway;
+import es.upm.api.domain.ports.out.billing.InvoiceGateway;
+import es.upm.api.domain.ports.out.engagement.EngagementWebClient;
 import es.upm.miw.exception.BadRequestException;
 import es.upm.miw.exception.NotFoundException;
 import org.junit.jupiter.api.BeforeEach;
@@ -43,13 +43,13 @@ class InvoiceServiceIT {
     private InvoiceService invoiceService;
 
     @MockitoBean
-    private InvoicePersistence invoicePersistence;
+    private InvoiceGateway invoiceGateway;
 
     @MockitoBean
-    private ExpensePersistence expensePersistence;
+    private ExpenseGateway expenseGateway;
 
     @MockitoBean
-    private IncomePersistence incomePersistence;
+    private IncomeGateway incomeGateway;
 
     @MockitoBean
     private EngagementWebClient engagementWebClient;
@@ -90,7 +90,7 @@ class InvoiceServiceIT {
         this.invoice.setExpenses(List.of(this.expense));
         this.invoice.setIncomes(List.of(this.income));
 
-        when(this.invoicePersistence.readById(invoiceId)).thenReturn(this.invoice);
+        when(this.invoiceGateway.readById(invoiceId)).thenReturn(this.invoice);
 
         InvoiceBreakdown breakdown = this.invoiceService.getInvoiceBreakdown(invoiceId);
 
@@ -112,7 +112,7 @@ class InvoiceServiceIT {
         assertEquals(new BigDecimal("20.66"), breakdown.getExpenses().get(0).getTaxableBase().setScale(2));
         assertEquals(new BigDecimal("4.34"), breakdown.getExpenses().get(0).getVatAmount().setScale(2));
 
-        verify(this.invoicePersistence).readById(invoiceId);
+        verify(this.invoiceGateway).readById(invoiceId);
     }
 
     @Test
@@ -121,7 +121,7 @@ class InvoiceServiceIT {
                 () -> this.invoiceService.getInvoiceBreakdown(null));
 
         assertEquals("Bad Request Exception. Invoice not found", thrown.getMessage());
-        verify(this.invoicePersistence).readById(null);
+        verify(this.invoiceGateway).readById(null);
     }
 
     @Test
@@ -145,10 +145,10 @@ class InvoiceServiceIT {
     @Test
     void shouldCreateInvoice() {
         when(this.engagementWebClient.readById(this.invoice.getEngagementId())).thenReturn(new Object());
-        when(this.expensePersistence.readById(this.expense.getId())).thenReturn(this.expense);
-        when(this.incomePersistence.readById(this.income.getId())).thenReturn(this.income);
-        when(this.invoicePersistence.findByExpenseId(this.expense.getId())).thenReturn(null);
-        when(this.invoicePersistence.findByIncomeId(this.income.getId())).thenReturn(null);
+        when(this.expenseGateway.readById(this.expense.getId())).thenReturn(this.expense);
+        when(this.incomeGateway.readById(this.income.getId())).thenReturn(this.income);
+        when(this.invoiceGateway.findByExpenseId(this.expense.getId())).thenReturn(null);
+        when(this.invoiceGateway.findByIncomeId(this.income.getId())).thenReturn(null);
 
         Invoice createdInvoice = this.invoiceService.create(this.invoice);
 
@@ -160,10 +160,10 @@ class InvoiceServiceIT {
         assertEquals(List.of(this.income), createdInvoice.getIncomes());
 
         ArgumentCaptor<Invoice> invoiceCaptor = ArgumentCaptor.forClass(Invoice.class);
-        verify(this.invoicePersistence).create(invoiceCaptor.capture());
+        verify(this.invoiceGateway).create(invoiceCaptor.capture());
         verify(this.engagementWebClient).readById(this.invoice.getEngagementId());
-        verify(this.expensePersistence).readById(this.expense.getId());
-        verify(this.incomePersistence).readById(this.income.getId());
+        verify(this.expenseGateway).readById(this.expense.getId());
+        verify(this.incomeGateway).readById(this.income.getId());
 
         Invoice persistedInvoice = invoiceCaptor.getValue();
         assertNotNull(persistedInvoice.getId());
@@ -178,8 +178,8 @@ class InvoiceServiceIT {
     void shouldCreateInvoiceWithOnlyExpenses() {
         this.invoice.setIncomes(List.of());
         when(this.engagementWebClient.readById(this.invoice.getEngagementId())).thenReturn(new Object());
-        when(this.expensePersistence.readById(this.expense.getId())).thenReturn(this.expense);
-        when(this.invoicePersistence.findByExpenseId(this.expense.getId())).thenReturn(null);
+        when(this.expenseGateway.readById(this.expense.getId())).thenReturn(this.expense);
+        when(this.invoiceGateway.findByExpenseId(this.expense.getId())).thenReturn(null);
 
         Invoice createdInvoice = this.invoiceService.create(this.invoice);
 
@@ -187,17 +187,17 @@ class InvoiceServiceIT {
         assertEquals(List.of(this.expense), createdInvoice.getExpenses());
         assertEquals(0, createdInvoice.getIncomes().size());
         verify(this.engagementWebClient).readById(this.invoice.getEngagementId());
-        verify(this.expensePersistence).readById(this.expense.getId());
-        verify(this.incomePersistence, never()).readById(any());
-        verify(this.invoicePersistence).create(any());
+        verify(this.expenseGateway).readById(this.expense.getId());
+        verify(this.incomeGateway, never()).readById(any());
+        verify(this.invoiceGateway).create(any());
     }
 
     @Test
     void shouldCreateInvoiceWithOnlyIncomes() {
         this.invoice.setExpenses(List.of());
         when(this.engagementWebClient.readById(this.invoice.getEngagementId())).thenReturn(new Object());
-        when(this.incomePersistence.readById(this.income.getId())).thenReturn(this.income);
-        when(this.invoicePersistence.findByIncomeId(this.income.getId())).thenReturn(null);
+        when(this.incomeGateway.readById(this.income.getId())).thenReturn(this.income);
+        when(this.invoiceGateway.findByIncomeId(this.income.getId())).thenReturn(null);
 
         Invoice createdInvoice = this.invoiceService.create(this.invoice);
 
@@ -205,9 +205,9 @@ class InvoiceServiceIT {
         assertEquals(0, createdInvoice.getExpenses().size());
         assertEquals(List.of(this.income), createdInvoice.getIncomes());
         verify(this.engagementWebClient).readById(this.invoice.getEngagementId());
-        verify(this.expensePersistence, never()).readById(any());
-        verify(this.incomePersistence).readById(this.income.getId());
-        verify(this.invoicePersistence).create(any());
+        verify(this.expenseGateway, never()).readById(any());
+        verify(this.incomeGateway).readById(this.income.getId());
+        verify(this.invoiceGateway).create(any());
     }
 
     @Test
@@ -220,9 +220,9 @@ class InvoiceServiceIT {
 
         assertEquals("Bad Request Exception. Invoice must contain at least one expense or one income", thrown.getMessage());
         verifyNoInteractions(this.engagementWebClient);
-        verifyNoInteractions(this.expensePersistence);
-        verifyNoInteractions(this.incomePersistence);
-        verify(this.invoicePersistence, never()).create(any());
+        verifyNoInteractions(this.expenseGateway);
+        verifyNoInteractions(this.incomeGateway);
+        verify(this.invoiceGateway, never()).create(any());
     }
 
     @Test
@@ -234,9 +234,9 @@ class InvoiceServiceIT {
 
         assertEquals("Bad Request Exception. Invoice date cannot be in the future", thrown.getMessage());
         verifyNoInteractions(this.engagementWebClient);
-        verifyNoInteractions(this.expensePersistence);
-        verifyNoInteractions(this.incomePersistence);
-        verify(this.invoicePersistence, never()).create(any());
+        verifyNoInteractions(this.expenseGateway);
+        verifyNoInteractions(this.incomeGateway);
+        verify(this.invoiceGateway, never()).create(any());
     }
 
     @Test
@@ -249,15 +249,15 @@ class InvoiceServiceIT {
 
         assertEquals("Engagement not found", thrown.getMessage());
         verify(this.engagementWebClient).readById(this.invoice.getEngagementId());
-        verify(this.expensePersistence, never()).readById(any());
-        verify(this.incomePersistence, never()).readById(any());
-        verify(this.invoicePersistence, never()).create(any());
+        verify(this.expenseGateway, never()).readById(any());
+        verify(this.incomeGateway, never()).readById(any());
+        verify(this.invoiceGateway, never()).create(any());
     }
 
     @Test
     void shouldNotPersistInvoiceWhenExpenseDoesNotBelongToEngagement() {
         when(this.engagementWebClient.readById(this.invoice.getEngagementId())).thenReturn(new Object());
-        when(this.expensePersistence.readById(this.expense.getId())).thenReturn(
+        when(this.expenseGateway.readById(this.expense.getId())).thenReturn(
                 Expense.builder()
                         .id(this.expense.getId())
                         .engagementId(UUID.randomUUID())
@@ -272,34 +272,34 @@ class InvoiceServiceIT {
 
         assertEquals("Bad Request Exception. Expense does not belong to the invoice engagement", thrown.getMessage());
         verify(this.engagementWebClient).readById(this.invoice.getEngagementId());
-        verify(this.expensePersistence).readById(this.expense.getId());
-        verify(this.incomePersistence, never()).readById(any());
-        verify(this.invoicePersistence, never()).create(any());
+        verify(this.expenseGateway).readById(this.expense.getId());
+        verify(this.incomeGateway, never()).readById(any());
+        verify(this.invoiceGateway, never()).create(any());
     }
 
     @Test
     void shouldNotPersistInvoiceWhenExpenseAlreadyAssignedToAnotherInvoice() {
         when(this.engagementWebClient.readById(this.invoice.getEngagementId())).thenReturn(new Object());
-        when(this.expensePersistence.readById(this.expense.getId())).thenReturn(this.expense);
-        when(this.invoicePersistence.findByExpenseId(this.expense.getId())).thenReturn(Invoice.builder().id(UUID.randomUUID()).build());
+        when(this.expenseGateway.readById(this.expense.getId())).thenReturn(this.expense);
+        when(this.invoiceGateway.findByExpenseId(this.expense.getId())).thenReturn(Invoice.builder().id(UUID.randomUUID()).build());
 
         BadRequestException thrown = assertThrows(BadRequestException.class,
                 () -> this.invoiceService.create(this.invoice));
 
         assertEquals("Bad Request Exception. Expense is already assigned to another invoice", thrown.getMessage());
         verify(this.engagementWebClient).readById(this.invoice.getEngagementId());
-        verify(this.expensePersistence).readById(this.expense.getId());
-        verify(this.invoicePersistence).findByExpenseId(this.expense.getId());
-        verify(this.incomePersistence, never()).readById(any());
-        verify(this.invoicePersistence, never()).create(any());
+        verify(this.expenseGateway).readById(this.expense.getId());
+        verify(this.invoiceGateway).findByExpenseId(this.expense.getId());
+        verify(this.incomeGateway, never()).readById(any());
+        verify(this.invoiceGateway, never()).create(any());
     }
 
     @Test
     void shouldNotPersistInvoiceWhenIncomeDoesNotBelongToEngagement() {
         when(this.engagementWebClient.readById(this.invoice.getEngagementId())).thenReturn(new Object());
-        when(this.expensePersistence.readById(this.expense.getId())).thenReturn(this.expense);
-        when(this.invoicePersistence.findByExpenseId(this.expense.getId())).thenReturn(null);
-        when(this.incomePersistence.readById(this.income.getId())).thenReturn(
+        when(this.expenseGateway.readById(this.expense.getId())).thenReturn(this.expense);
+        when(this.invoiceGateway.findByExpenseId(this.expense.getId())).thenReturn(null);
+        when(this.incomeGateway.readById(this.income.getId())).thenReturn(
                 Income.builder()
                         .id(this.income.getId())
                         .engagementId(UUID.randomUUID())
@@ -314,42 +314,42 @@ class InvoiceServiceIT {
 
         assertEquals("Bad Request Exception. Income does not belong to the invoice engagement", thrown.getMessage());
         verify(this.engagementWebClient).readById(this.invoice.getEngagementId());
-        verify(this.expensePersistence).readById(this.expense.getId());
-        verify(this.incomePersistence).readById(this.income.getId());
-        verify(this.invoicePersistence, never()).create(any());
+        verify(this.expenseGateway).readById(this.expense.getId());
+        verify(this.incomeGateway).readById(this.income.getId());
+        verify(this.invoiceGateway, never()).create(any());
     }
 
     @Test
     void shouldNotPersistInvoiceWhenIncomeAlreadyAssignedToAnotherInvoice() {
         when(this.engagementWebClient.readById(this.invoice.getEngagementId())).thenReturn(new Object());
-        when(this.expensePersistence.readById(this.expense.getId())).thenReturn(this.expense);
-        when(this.invoicePersistence.findByExpenseId(this.expense.getId())).thenReturn(null);
-        when(this.incomePersistence.readById(this.income.getId())).thenReturn(this.income);
-        when(this.invoicePersistence.findByIncomeId(this.income.getId())).thenReturn(Invoice.builder().id(UUID.randomUUID()).build());
+        when(this.expenseGateway.readById(this.expense.getId())).thenReturn(this.expense);
+        when(this.invoiceGateway.findByExpenseId(this.expense.getId())).thenReturn(null);
+        when(this.incomeGateway.readById(this.income.getId())).thenReturn(this.income);
+        when(this.invoiceGateway.findByIncomeId(this.income.getId())).thenReturn(Invoice.builder().id(UUID.randomUUID()).build());
 
         BadRequestException thrown = assertThrows(BadRequestException.class,
                 () -> this.invoiceService.create(this.invoice));
 
         assertEquals("Bad Request Exception. Income is already assigned to another invoice", thrown.getMessage());
         verify(this.engagementWebClient).readById(this.invoice.getEngagementId());
-        verify(this.expensePersistence).readById(this.expense.getId());
-        verify(this.invoicePersistence).findByExpenseId(this.expense.getId());
-        verify(this.incomePersistence).readById(this.income.getId());
-        verify(this.invoicePersistence).findByIncomeId(this.income.getId());
-        verify(this.invoicePersistence, never()).create(any());
+        verify(this.expenseGateway).readById(this.expense.getId());
+        verify(this.invoiceGateway).findByExpenseId(this.expense.getId());
+        verify(this.incomeGateway).readById(this.income.getId());
+        verify(this.invoiceGateway).findByIncomeId(this.income.getId());
+        verify(this.invoiceGateway, never()).create(any());
     }
 
     @Test
     void shouldUpdateInvoice() {
         UUID invoiceId = UUID.randomUUID();
         this.invoice.setId(invoiceId);
-        when(this.invoicePersistence.readById(invoiceId)).thenReturn(this.invoice);
+        when(this.invoiceGateway.readById(invoiceId)).thenReturn(this.invoice);
         when(this.engagementWebClient.readById(this.invoice.getEngagementId())).thenReturn(new Object());
-        when(this.expensePersistence.readById(this.expense.getId())).thenReturn(this.expense);
-        when(this.incomePersistence.readById(this.income.getId())).thenReturn(this.income);
-        when(this.invoicePersistence.findByExpenseId(this.expense.getId())).thenReturn(Invoice.builder().id(invoiceId).build());
-        when(this.invoicePersistence.findByIncomeId(this.income.getId())).thenReturn(Invoice.builder().id(invoiceId).build());
-        when(this.invoicePersistence.update(invoiceId, this.invoice)).thenReturn(this.invoice);
+        when(this.expenseGateway.readById(this.expense.getId())).thenReturn(this.expense);
+        when(this.incomeGateway.readById(this.income.getId())).thenReturn(this.income);
+        when(this.invoiceGateway.findByExpenseId(this.expense.getId())).thenReturn(Invoice.builder().id(invoiceId).build());
+        when(this.invoiceGateway.findByIncomeId(this.income.getId())).thenReturn(Invoice.builder().id(invoiceId).build());
+        when(this.invoiceGateway.update(invoiceId, this.invoice)).thenReturn(this.invoice);
 
         Invoice updatedInvoice = this.invoiceService.update(invoiceId, this.invoice);
 
@@ -358,26 +358,26 @@ class InvoiceServiceIT {
         assertEquals(this.invoice.getDate(), updatedInvoice.getDate());
         assertEquals(List.of(this.expense), updatedInvoice.getExpenses());
         assertEquals(List.of(this.income), updatedInvoice.getIncomes());
-        verify(this.invoicePersistence).readById(invoiceId);
+        verify(this.invoiceGateway).readById(invoiceId);
         verify(this.engagementWebClient).readById(this.invoice.getEngagementId());
-        verify(this.expensePersistence).readById(this.expense.getId());
-        verify(this.incomePersistence).readById(this.income.getId());
-        verify(this.invoicePersistence).update(invoiceId, this.invoice);
+        verify(this.expenseGateway).readById(this.expense.getId());
+        verify(this.incomeGateway).readById(this.income.getId());
+        verify(this.invoiceGateway).update(invoiceId, this.invoice);
     }
 
     @Test
     void shouldNotUpdateInvoiceWhenDateIsFuture() {
         UUID invoiceId = UUID.randomUUID();
         this.invoice.setDate(LocalDate.now().plusDays(1));
-        when(this.invoicePersistence.readById(invoiceId)).thenReturn(Invoice.builder().id(invoiceId).build());
+        when(this.invoiceGateway.readById(invoiceId)).thenReturn(Invoice.builder().id(invoiceId).build());
 
         BadRequestException thrown = assertThrows(BadRequestException.class,
                 () -> this.invoiceService.update(invoiceId, this.invoice));
 
         assertEquals("Bad Request Exception. Invoice date cannot be in the future", thrown.getMessage());
-        verify(this.invoicePersistence).readById(invoiceId);
+        verify(this.invoiceGateway).readById(invoiceId);
         verifyNoInteractions(this.engagementWebClient);
-        verify(this.invoicePersistence, never()).update(any(), any());
+        verify(this.invoiceGateway, never()).update(any(), any());
     }
 
     @Test
@@ -385,32 +385,32 @@ class InvoiceServiceIT {
         UUID invoiceId = UUID.randomUUID();
         this.invoice.setExpenses(List.of());
         this.invoice.setIncomes(List.of());
-        when(this.invoicePersistence.readById(invoiceId)).thenReturn(Invoice.builder().id(invoiceId).build());
+        when(this.invoiceGateway.readById(invoiceId)).thenReturn(Invoice.builder().id(invoiceId).build());
 
         BadRequestException thrown = assertThrows(BadRequestException.class,
                 () -> this.invoiceService.update(invoiceId, this.invoice));
 
         assertEquals("Bad Request Exception. Invoice must contain at least one expense or one income", thrown.getMessage());
-        verify(this.invoicePersistence).readById(invoiceId);
+        verify(this.invoiceGateway).readById(invoiceId);
         verifyNoInteractions(this.engagementWebClient);
-        verifyNoInteractions(this.expensePersistence);
-        verifyNoInteractions(this.incomePersistence);
-        verify(this.invoicePersistence, never()).update(any(), any());
+        verifyNoInteractions(this.expenseGateway);
+        verifyNoInteractions(this.incomeGateway);
+        verify(this.invoiceGateway, never()).update(any(), any());
     }
 
     @Test
     void shouldNotUpdateInvoiceWhenItDoesNotExist() {
         UUID invoiceId = UUID.randomUUID();
-        when(this.invoicePersistence.readById(invoiceId))
+        when(this.invoiceGateway.readById(invoiceId))
                 .thenThrow(new NotFoundException("Invoice id: " + invoiceId));
 
         NotFoundException thrown = assertThrows(NotFoundException.class,
                 () -> this.invoiceService.update(invoiceId, this.invoice));
 
         assertEquals("Not Found Exception. Invoice id: " + invoiceId, thrown.getMessage());
-        verify(this.invoicePersistence).readById(invoiceId);
+        verify(this.invoiceGateway).readById(invoiceId);
         verifyNoInteractions(this.engagementWebClient);
-        verify(this.invoicePersistence, never()).update(any(), any());
+        verify(this.invoiceGateway, never()).update(any(), any());
     }
 
     @Test
@@ -418,27 +418,27 @@ class InvoiceServiceIT {
         UUID invoiceId = UUID.randomUUID();
         this.invoice.setId(invoiceId);
         RuntimeException exception = new RuntimeException("Engagement not found");
-        when(this.invoicePersistence.readById(invoiceId)).thenReturn(this.invoice);
+        when(this.invoiceGateway.readById(invoiceId)).thenReturn(this.invoice);
         when(this.engagementWebClient.readById(this.invoice.getEngagementId())).thenThrow(exception);
 
         RuntimeException thrown = assertThrows(RuntimeException.class,
                 () -> this.invoiceService.update(invoiceId, this.invoice));
 
         assertEquals("Engagement not found", thrown.getMessage());
-        verify(this.invoicePersistence).readById(invoiceId);
+        verify(this.invoiceGateway).readById(invoiceId);
         verify(this.engagementWebClient).readById(this.invoice.getEngagementId());
-        verify(this.expensePersistence, never()).readById(any());
-        verify(this.incomePersistence, never()).readById(any());
-        verify(this.invoicePersistence, never()).update(any(), any());
+        verify(this.expenseGateway, never()).readById(any());
+        verify(this.incomeGateway, never()).readById(any());
+        verify(this.invoiceGateway, never()).update(any(), any());
     }
 
     @Test
     void shouldNotUpdateInvoiceWhenExpenseDoesNotBelongToEngagement() {
         UUID invoiceId = UUID.randomUUID();
         this.invoice.setId(invoiceId);
-        when(this.invoicePersistence.readById(invoiceId)).thenReturn(this.invoice);
+        when(this.invoiceGateway.readById(invoiceId)).thenReturn(this.invoice);
         when(this.engagementWebClient.readById(this.invoice.getEngagementId())).thenReturn(new Object());
-        when(this.expensePersistence.readById(this.expense.getId())).thenReturn(
+        when(this.expenseGateway.readById(this.expense.getId())).thenReturn(
                 Expense.builder()
                         .id(this.expense.getId())
                         .engagementId(UUID.randomUUID())
@@ -452,22 +452,22 @@ class InvoiceServiceIT {
                 () -> this.invoiceService.update(invoiceId, this.invoice));
 
         assertEquals("Bad Request Exception. Expense does not belong to the invoice engagement", thrown.getMessage());
-        verify(this.invoicePersistence).readById(invoiceId);
+        verify(this.invoiceGateway).readById(invoiceId);
         verify(this.engagementWebClient).readById(this.invoice.getEngagementId());
-        verify(this.expensePersistence).readById(this.expense.getId());
-        verify(this.incomePersistence, never()).readById(any());
-        verify(this.invoicePersistence, never()).update(any(), any());
+        verify(this.expenseGateway).readById(this.expense.getId());
+        verify(this.incomeGateway, never()).readById(any());
+        verify(this.invoiceGateway, never()).update(any(), any());
     }
 
     @Test
     void shouldNotUpdateInvoiceWhenIncomeDoesNotBelongToEngagement() {
         UUID invoiceId = UUID.randomUUID();
         this.invoice.setId(invoiceId);
-        when(this.invoicePersistence.readById(invoiceId)).thenReturn(this.invoice);
+        when(this.invoiceGateway.readById(invoiceId)).thenReturn(this.invoice);
         when(this.engagementWebClient.readById(this.invoice.getEngagementId())).thenReturn(new Object());
-        when(this.expensePersistence.readById(this.expense.getId())).thenReturn(this.expense);
-        when(this.invoicePersistence.findByExpenseId(this.expense.getId())).thenReturn(Invoice.builder().id(invoiceId).build());
-        when(this.incomePersistence.readById(this.income.getId())).thenReturn(
+        when(this.expenseGateway.readById(this.expense.getId())).thenReturn(this.expense);
+        when(this.invoiceGateway.findByExpenseId(this.expense.getId())).thenReturn(Invoice.builder().id(invoiceId).build());
+        when(this.incomeGateway.readById(this.income.getId())).thenReturn(
                 Income.builder()
                         .id(this.income.getId())
                         .engagementId(UUID.randomUUID())
@@ -481,55 +481,55 @@ class InvoiceServiceIT {
                 () -> this.invoiceService.update(invoiceId, this.invoice));
 
         assertEquals("Bad Request Exception. Income does not belong to the invoice engagement", thrown.getMessage());
-        verify(this.invoicePersistence).readById(invoiceId);
+        verify(this.invoiceGateway).readById(invoiceId);
         verify(this.engagementWebClient).readById(this.invoice.getEngagementId());
-        verify(this.expensePersistence).readById(this.expense.getId());
-        verify(this.incomePersistence).readById(this.income.getId());
-        verify(this.invoicePersistence, never()).update(any(), any());
+        verify(this.expenseGateway).readById(this.expense.getId());
+        verify(this.incomeGateway).readById(this.income.getId());
+        verify(this.invoiceGateway, never()).update(any(), any());
     }
 
     @Test
     void shouldNotUpdateInvoiceWhenExpenseAlreadyAssignedToAnotherInvoice() {
         UUID invoiceId = UUID.randomUUID();
         this.invoice.setId(invoiceId);
-        when(this.invoicePersistence.readById(invoiceId)).thenReturn(this.invoice);
+        when(this.invoiceGateway.readById(invoiceId)).thenReturn(this.invoice);
         when(this.engagementWebClient.readById(this.invoice.getEngagementId())).thenReturn(new Object());
-        when(this.expensePersistence.readById(this.expense.getId())).thenReturn(this.expense);
-        when(this.invoicePersistence.findByExpenseId(this.expense.getId())).thenReturn(Invoice.builder().id(UUID.randomUUID()).build());
+        when(this.expenseGateway.readById(this.expense.getId())).thenReturn(this.expense);
+        when(this.invoiceGateway.findByExpenseId(this.expense.getId())).thenReturn(Invoice.builder().id(UUID.randomUUID()).build());
 
         BadRequestException thrown = assertThrows(BadRequestException.class,
                 () -> this.invoiceService.update(invoiceId, this.invoice));
 
         assertEquals("Bad Request Exception. Expense is already assigned to another invoice", thrown.getMessage());
-        verify(this.invoicePersistence).readById(invoiceId);
+        verify(this.invoiceGateway).readById(invoiceId);
         verify(this.engagementWebClient).readById(this.invoice.getEngagementId());
-        verify(this.expensePersistence).readById(this.expense.getId());
-        verify(this.invoicePersistence).findByExpenseId(this.expense.getId());
-        verify(this.incomePersistence, never()).readById(any());
-        verify(this.invoicePersistence, never()).update(any(), any());
+        verify(this.expenseGateway).readById(this.expense.getId());
+        verify(this.invoiceGateway).findByExpenseId(this.expense.getId());
+        verify(this.incomeGateway, never()).readById(any());
+        verify(this.invoiceGateway, never()).update(any(), any());
     }
 
     @Test
     void shouldNotUpdateInvoiceWhenIncomeAlreadyAssignedToAnotherInvoice() {
         UUID invoiceId = UUID.randomUUID();
         this.invoice.setId(invoiceId);
-        when(this.invoicePersistence.readById(invoiceId)).thenReturn(this.invoice);
+        when(this.invoiceGateway.readById(invoiceId)).thenReturn(this.invoice);
         when(this.engagementWebClient.readById(this.invoice.getEngagementId())).thenReturn(new Object());
-        when(this.expensePersistence.readById(this.expense.getId())).thenReturn(this.expense);
-        when(this.invoicePersistence.findByExpenseId(this.expense.getId())).thenReturn(Invoice.builder().id(invoiceId).build());
-        when(this.incomePersistence.readById(this.income.getId())).thenReturn(this.income);
-        when(this.invoicePersistence.findByIncomeId(this.income.getId())).thenReturn(Invoice.builder().id(UUID.randomUUID()).build());
+        when(this.expenseGateway.readById(this.expense.getId())).thenReturn(this.expense);
+        when(this.invoiceGateway.findByExpenseId(this.expense.getId())).thenReturn(Invoice.builder().id(invoiceId).build());
+        when(this.incomeGateway.readById(this.income.getId())).thenReturn(this.income);
+        when(this.invoiceGateway.findByIncomeId(this.income.getId())).thenReturn(Invoice.builder().id(UUID.randomUUID()).build());
 
         BadRequestException thrown = assertThrows(BadRequestException.class,
                 () -> this.invoiceService.update(invoiceId, this.invoice));
 
         assertEquals("Bad Request Exception. Income is already assigned to another invoice", thrown.getMessage());
-        verify(this.invoicePersistence).readById(invoiceId);
+        verify(this.invoiceGateway).readById(invoiceId);
         verify(this.engagementWebClient).readById(this.invoice.getEngagementId());
-        verify(this.expensePersistence).readById(this.expense.getId());
-        verify(this.incomePersistence).readById(this.income.getId());
-        verify(this.invoicePersistence).findByIncomeId(this.income.getId());
-        verify(this.invoicePersistence, never()).update(any(), any());
+        verify(this.expenseGateway).readById(this.expense.getId());
+        verify(this.incomeGateway).readById(this.income.getId());
+        verify(this.invoiceGateway).findByIncomeId(this.income.getId());
+        verify(this.invoiceGateway, never()).update(any(), any());
     }
 
     @Test
@@ -550,39 +550,39 @@ class InvoiceServiceIT {
                 .build();
 
                 InvoiceFindCriteria criteria = new InvoiceFindCriteria();
-                when(this.invoicePersistence.findAll(criteria)).thenReturn(Stream.of(invoiceA, invoiceB));
+                when(this.invoiceGateway.findAll(criteria)).thenReturn(Stream.of(invoiceA, invoiceB));
 
                 List<Invoice> invoices = this.invoiceService.findAll(criteria).toList();
 
         assertEquals(2, invoices.size());
         assertEquals(List.of(invoiceA, invoiceB), invoices);
-                verify(this.invoicePersistence).findAll(criteria);
+                verify(this.invoiceGateway).findAll(criteria);
         verifyNoInteractions(this.engagementWebClient);
     }
 
     @Test
     void shouldReadInvoiceById() {
         this.invoice.setId(UUID.randomUUID());
-        when(this.invoicePersistence.readById(this.invoice.getId())).thenReturn(this.invoice);
+        when(this.invoiceGateway.readById(this.invoice.getId())).thenReturn(this.invoice);
 
         Invoice readInvoice = this.invoiceService.readById(this.invoice.getId());
 
         assertEquals(this.invoice, readInvoice);
-        verify(this.invoicePersistence).readById(this.invoice.getId());
+        verify(this.invoiceGateway).readById(this.invoice.getId());
         verifyNoInteractions(this.engagementWebClient);
     }
 
     @Test
     void shouldFailReadInvoiceByIdWhenInvoiceDoesNotExist() {
         UUID invoiceId = UUID.randomUUID();
-        when(this.invoicePersistence.readById(invoiceId))
+        when(this.invoiceGateway.readById(invoiceId))
                 .thenThrow(new NotFoundException("Invoice id: " + invoiceId));
 
         NotFoundException thrown = assertThrows(NotFoundException.class,
                 () -> this.invoiceService.readById(invoiceId));
 
         assertEquals("Not Found Exception. Invoice id: " + invoiceId, thrown.getMessage());
-        verify(this.invoicePersistence).readById(invoiceId);
+        verify(this.invoiceGateway).readById(invoiceId);
         verifyNoInteractions(this.engagementWebClient);
     }
 
@@ -606,14 +606,14 @@ class InvoiceServiceIT {
                 .build();
 
         when(this.engagementWebClient.readById(engagementId)).thenReturn(new Object());
-        when(this.invoicePersistence.findAll(criteria)).thenReturn(Stream.of(invoiceA, invoiceB));
+        when(this.invoiceGateway.findAll(criteria)).thenReturn(Stream.of(invoiceA, invoiceB));
 
         List<Invoice> invoices = this.invoiceService.findAll(criteria).toList();
 
         assertEquals(2, invoices.size());
         assertEquals(List.of(invoiceA, invoiceB), invoices);
         verify(this.engagementWebClient).readById(engagementId);
-        verify(this.invoicePersistence).findAll(criteria);
+        verify(this.invoiceGateway).findAll(criteria);
     }
 
     @Test
@@ -628,7 +628,7 @@ class InvoiceServiceIT {
 
         assertEquals("Engagement not found", thrown.getMessage());
         verify(this.engagementWebClient).readById(engagementId);
-        verify(this.invoicePersistence, never()).findAll(any());
+        verify(this.invoiceGateway, never()).findAll(any());
     }
 
     @Test
@@ -650,13 +650,13 @@ class InvoiceServiceIT {
                 .incomes(List.of())
                 .build();
 
-        when(this.invoicePersistence.findAll(criteria)).thenReturn(Stream.of(invoiceA, invoiceB));
+        when(this.invoiceGateway.findAll(criteria)).thenReturn(Stream.of(invoiceA, invoiceB));
 
         List<Invoice> invoices = this.invoiceService.findAll(criteria).toList();
 
         assertEquals(2, invoices.size());
         assertEquals(List.of(invoiceA, invoiceB), invoices);
-        verify(this.invoicePersistence).findAll(criteria);
+        verify(this.invoiceGateway).findAll(criteria);
         verifyNoInteractions(this.engagementWebClient);
     }
 
@@ -674,14 +674,14 @@ class InvoiceServiceIT {
                 .build();
 
         when(this.engagementWebClient.readById(engagementId)).thenReturn(new Object());
-        when(this.invoicePersistence.findAll(criteria)).thenReturn(Stream.of(invoiceByCriteria));
+        when(this.invoiceGateway.findAll(criteria)).thenReturn(Stream.of(invoiceByCriteria));
 
         List<Invoice> invoices = this.invoiceService.findAll(criteria).toList();
 
         assertEquals(1, invoices.size());
                 assertEquals(invoiceByCriteria, invoices.get(0));
         verify(this.engagementWebClient).readById(engagementId);
-        verify(this.invoicePersistence).findAll(criteria);
+        verify(this.invoiceGateway).findAll(criteria);
     }
 
     @Test
@@ -689,14 +689,14 @@ class InvoiceServiceIT {
         InvoiceFindCriteria criteria = new InvoiceFindCriteria();
         List<Invoice> expected = List.of(this.invoice);
 
-                when(this.invoicePersistence.findAll(criteria)).thenReturn(Stream.of(this.invoice));
+                when(this.invoiceGateway.findAll(criteria)).thenReturn(Stream.of(this.invoice));
 
                 List<Invoice> result = this.invoiceService.findAll(criteria).toList();
 
         assertNotNull(result);
         assertEquals(1, result.size());
         assertEquals(expected, result);
-        verify(this.invoicePersistence).findAll(criteria);
+        verify(this.invoiceGateway).findAll(criteria);
         verifyNoInteractions(this.engagementWebClient);
     }
 
@@ -712,6 +712,6 @@ class InvoiceServiceIT {
 
         assertThrows(NotFoundException.class, () -> this.invoiceService.findAll(criteria));
         verify(this.engagementWebClient).readById(engagementId);
-        verify(this.invoicePersistence, never()).findAll(any());
+        verify(this.invoiceGateway, never()).findAll(any());
     }
 }

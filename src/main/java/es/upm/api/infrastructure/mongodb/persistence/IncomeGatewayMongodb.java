@@ -1,8 +1,8 @@
 package es.upm.api.infrastructure.mongodb.persistence;
 
 import es.upm.api.domain.model.Income;
-import es.upm.api.domain.model.IncomeFindCriteria;
-import es.upm.api.domain.persistence.IncomePersistence;
+import es.upm.api.domain.model.criteria.IncomeFindCriteria;
+import es.upm.api.domain.ports.out.billing.IncomeGateway;
 import es.upm.api.infrastructure.mongodb.entities.IncomeEntity;
 import es.upm.api.infrastructure.mongodb.repositories.IncomeRepository;
 import es.upm.miw.exception.NotFoundException;
@@ -14,13 +14,13 @@ import java.util.UUID;
 import java.util.stream.Stream;
 
 @Repository
-public class IncomePersistenceMongodb implements IncomePersistence {
+public class IncomeGatewayMongodb implements IncomeGateway {
 
     public static final Sort DATE = Sort.by(Sort.Direction.DESC, "date");
 
     private final IncomeRepository incomeRepository;
 
-    public IncomePersistenceMongodb(IncomeRepository incomeRepository) {
+    public IncomeGatewayMongodb(IncomeRepository incomeRepository) {
         this.incomeRepository = incomeRepository;
     }
 

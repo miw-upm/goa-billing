@@ -1,7 +1,7 @@
 package es.upm.api.infrastructure.resources;
 
 import es.upm.api.domain.model.Expense;
-import es.upm.api.domain.model.ExpenseFindCriteria;
+import es.upm.api.domain.model.criteria.ExpenseFindCriteria;
 import es.upm.api.domain.services.ExpenseService;
 import es.upm.api.infrastructure.resources.dtos.ExpenseCreateRequest;
 import es.upm.api.infrastructure.resources.dtos.ExpenseUpdateRequest;

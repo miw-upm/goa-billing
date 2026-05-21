@@ -1,7 +1,7 @@
 package es.upm.api.infrastructure.resources;
 
 import es.upm.api.domain.model.Income;
-import es.upm.api.domain.model.IncomeFindCriteria;
+import es.upm.api.domain.model.criteria.IncomeFindCriteria;
 import es.upm.api.domain.services.IncomeService;
 import es.upm.miw.exception.BadRequestException;
 import es.upm.miw.exception.NotFoundException;

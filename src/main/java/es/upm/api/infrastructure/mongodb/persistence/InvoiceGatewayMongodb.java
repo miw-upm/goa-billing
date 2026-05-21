@@ -1,8 +1,8 @@
 package es.upm.api.infrastructure.mongodb.persistence;
 
 import es.upm.api.domain.model.Invoice;
-import es.upm.api.domain.model.InvoiceFindCriteria;
-import es.upm.api.domain.persistence.InvoicePersistence;
+import es.upm.api.domain.model.criteria.InvoiceFindCriteria;
+import es.upm.api.domain.ports.out.billing.InvoiceGateway;
 import es.upm.api.infrastructure.mongodb.entities.InvoiceEntity;
 import es.upm.api.infrastructure.mongodb.repositories.InvoiceRepository;
 import es.upm.miw.exception.NotFoundException;
@@ -14,13 +14,13 @@ import java.util.UUID;
 import java.util.stream.Stream;
 
 @Repository
-public class InvoicePersistenceMongodb implements InvoicePersistence {
+public class InvoiceGatewayMongodb implements InvoiceGateway {
 
     public static final Sort DATE = Sort.by(Sort.Direction.DESC, "date");
 
     private final InvoiceRepository invoiceRepository;
 
-    public InvoicePersistenceMongodb(InvoiceRepository invoiceRepository) {
+    public InvoiceGatewayMongodb(InvoiceRepository invoiceRepository) {
         this.invoiceRepository = invoiceRepository;
     }
 

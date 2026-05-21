@@ -1,26 +1,25 @@
 package es.upm.api.infrastructure.mongodb.persistence;
 
 import es.upm.api.domain.model.Expense;
-import es.upm.api.domain.model.ExpenseFindCriteria;
-import es.upm.api.domain.persistence.ExpensePersistence;
+import es.upm.api.domain.model.criteria.ExpenseFindCriteria;
+import es.upm.api.domain.ports.out.billing.ExpenseGateway;
 import es.upm.api.infrastructure.mongodb.entities.ExpenseEntity;
 import es.upm.api.infrastructure.mongodb.repositories.ExpenseRepository;
 import es.upm.miw.exception.NotFoundException;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Repository;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Stream;
 
 @Repository
-public class ExpensePersistenceMongodb implements ExpensePersistence {
+public class ExpenseGatewayMongodb implements ExpenseGateway {
     public static final Sort DATE = Sort.by(Sort.Direction.DESC, "date");
 
     private final ExpenseRepository expenseRepository;
 
-    public ExpensePersistenceMongodb(ExpenseRepository expenseRepository) {
+    public ExpenseGatewayMongodb(ExpenseRepository expenseRepository) {
         this.expenseRepository = expenseRepository;
     }
 

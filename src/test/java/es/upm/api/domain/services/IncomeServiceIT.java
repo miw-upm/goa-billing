@@ -1,10 +1,11 @@
 package es.upm.api.domain.services;
 
 import es.upm.api.domain.model.Income;
-import es.upm.api.domain.model.IncomeFindCriteria;
-import es.upm.api.domain.persistence.IncomePersistence;
-import es.upm.api.domain.webclients.EngagementWebClient;
-import es.upm.api.domain.webclients.UserWebClient;
+import es.upm.api.domain.model.criteria.IncomeFindCriteria;
+import es.upm.api.domain.model.external.UserSnapshot;
+import es.upm.api.domain.ports.out.billing.IncomeGateway;
+import es.upm.api.domain.ports.out.engagement.EngagementWebClient;
+import es.upm.api.domain.ports.out.user.UserWebClient;
 import es.upm.miw.exception.BadRequestException;
 import es.upm.miw.exception.NotFoundException;
 import org.junit.jupiter.api.BeforeEach;
@@ -31,7 +32,7 @@ class IncomeServiceIT {
     private IncomeService incomeService;
 
     @MockitoBean
-    private IncomePersistence incomePersistence;
+    private IncomeGateway incomeGateway;
 
     @MockitoBean
     private EngagementWebClient engagementWebClient;
@@ -55,12 +56,12 @@ class IncomeServiceIT {
     @Test
     void shouldReadIncomeById() {
         this.income.setId(UUID.randomUUID());
-        when(this.incomePersistence.readById(this.income.getId())).thenReturn(this.income);
+        when(this.incomeGateway.readById(this.income.getId())).thenReturn(this.income);
 
         Income result = this.incomeService.readById(this.income.getId());
 
         assertEquals(this.income, result);
-        verify(this.incomePersistence).readById(this.income.getId());
+        verify(this.incomeGateway).readById(this.income.getId());
         verifyNoInteractions(this.engagementWebClient);
         verifyNoInteractions(this.userWebClient);
     }
@@ -70,13 +71,13 @@ class IncomeServiceIT {
         UUID id = UUID.randomUUID();
         String expectedDetail = "Income id: " + id;
         String expectedMessage = "Not Found Exception. " + expectedDetail;
-        when(this.incomePersistence.readById(id)).thenThrow(new NotFoundException(expectedDetail));
+        when(this.incomeGateway.readById(id)).thenThrow(new NotFoundException(expectedDetail));
 
         NotFoundException thrown = assertThrows(NotFoundException.class,
                 () -> this.incomeService.readById(id));
 
         assertEquals(expectedMessage, thrown.getMessage());
-        verify(this.incomePersistence).readById(id);
+        verify(this.incomeGateway).readById(id);
         verifyNoInteractions(this.engagementWebClient);
         verifyNoInteractions(this.userWebClient);
     }
@@ -96,7 +97,7 @@ class IncomeServiceIT {
         assertEquals(this.income.getDate(), createdIncome.getDate());
 
         ArgumentCaptor<Income> incomeCaptor = ArgumentCaptor.forClass(Income.class);
-        verify(this.incomePersistence).create(incomeCaptor.capture());
+        verify(this.incomeGateway).create(incomeCaptor.capture());
         verify(this.engagementWebClient).readById(this.income.getEngagementId());
         verify(this.userWebClient).readUserById(this.income.getUserId());
 
@@ -120,7 +121,7 @@ class IncomeServiceIT {
         assertEquals("Engagement not found", thrown.getMessage());
         verify(this.engagementWebClient).readById(this.income.getEngagementId());
         verify(this.userWebClient, never()).readUserById(any());
-        verify(this.incomePersistence, never()).create(any());
+        verify(this.incomeGateway, never()).create(any());
     }
 
     @Test
@@ -135,7 +136,7 @@ class IncomeServiceIT {
         assertEquals("User not found", thrown.getMessage());
         verify(this.engagementWebClient).readById(this.income.getEngagementId());
         verify(this.userWebClient).readUserById(this.income.getUserId());
-        verify(this.incomePersistence, never()).create(any());
+        verify(this.incomeGateway, never()).create(any());
     }
 
     @Test
@@ -148,7 +149,7 @@ class IncomeServiceIT {
         assertEquals("Bad Request Exception. Income date cannot be in the future", thrown.getMessage());
         verifyNoInteractions(this.engagementWebClient);
         verifyNoInteractions(this.userWebClient);
-        verify(this.incomePersistence, never()).create(any());
+        verify(this.incomeGateway, never()).create(any());
     }
 
     // Helper para crear Income
@@ -174,8 +175,8 @@ class IncomeServiceIT {
 
         when(this.engagementWebClient.readById(updateData.getEngagementId())).thenReturn(new Object());
         when(this.userWebClient.readUserById(updateData.getUserId()))
-                .thenReturn(es.upm.api.domain.model.UserDto.builder().id(updateData.getUserId()).build());
-        doNothing().when(this.incomePersistence).update(id, updateData);
+                .thenReturn(UserSnapshot.builder().id(updateData.getUserId()).build());
+        doNothing().when(this.incomeGateway).update(id, updateData);
 
         Income response = this.incomeService.update(id, updateData);
 
@@ -186,7 +187,7 @@ class IncomeServiceIT {
         assertEquals(id, response.getId());
         verify(this.engagementWebClient).readById(updateData.getEngagementId());
         verify(this.userWebClient).readUserById(updateData.getUserId());
-        verify(this.incomePersistence).update(id, updateData);
+        verify(this.incomeGateway).update(id, updateData);
     }
 
     @Test
@@ -207,7 +208,7 @@ class IncomeServiceIT {
         assertEquals("Engagement not found", thrown.getMessage());
         verify(this.engagementWebClient).readById(updateData.getEngagementId());
         verify(this.userWebClient, never()).readUserById(any());
-        verify(this.incomePersistence, never()).update(any(), any());
+        verify(this.incomeGateway, never()).update(any(), any());
     }
 
     @Test
@@ -229,7 +230,7 @@ class IncomeServiceIT {
         assertEquals("User not found", thrown.getMessage());
         verify(this.engagementWebClient).readById(updateData.getEngagementId());
         verify(this.userWebClient).readUserById(updateData.getUserId());
-        verify(this.incomePersistence, never()).update(any(), any());
+        verify(this.incomeGateway, never()).update(any(), any());
     }
 
     @Test
@@ -248,7 +249,7 @@ class IncomeServiceIT {
         assertEquals("Bad Request Exception. Income date cannot be in the future", thrown.getMessage());
         verifyNoInteractions(this.engagementWebClient);
         verifyNoInteractions(this.userWebClient);
-        verify(this.incomePersistence, never()).update(any(), any());
+        verify(this.incomeGateway, never()).update(any(), any());
     }
 
     @Test
@@ -258,24 +259,24 @@ class IncomeServiceIT {
         Income incomeB = buildIncome(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(),
                 BigDecimal.valueOf(90), this.income.getDate());
 
-        when(this.incomePersistence.findAll(criteria)).thenReturn(Stream.of(incomeA, incomeB));
+        when(this.incomeGateway.findAll(criteria)).thenReturn(Stream.of(incomeA, incomeB));
 
         List<Income> incomes = this.incomeService.findAll(criteria).toList();
 
         assertEquals(2, incomes.size());
         assertEquals(List.of(incomeA, incomeB), incomes);
-        verify(this.incomePersistence).findAll(criteria);
+        verify(this.incomeGateway).findAll(criteria);
         verifyNoInteractions(this.engagementWebClient);
     }
 
     @Test
     void shouldReturnEmptyWhenNoIncomesExist() {
-        when(this.incomePersistence.findAll(this.criteria)).thenReturn(Stream.empty());
+        when(this.incomeGateway.findAll(this.criteria)).thenReturn(Stream.empty());
 
         List<Income> incomes = this.incomeService.findAll(this.criteria).toList();
 
         assertTrue(incomes.isEmpty());
-        verify(this.incomePersistence).findAll(this.criteria);
+        verify(this.incomeGateway).findAll(this.criteria);
         verifyNoInteractions(this.engagementWebClient);
     }
 
@@ -289,14 +290,14 @@ class IncomeServiceIT {
         IncomeFindCriteria criteria = new IncomeFindCriteria(this.income.getEngagementId(), null);
 
         when(this.engagementWebClient.readById(this.income.getEngagementId())).thenReturn(new Object());
-        when(this.incomePersistence.findAll(criteria)).thenReturn(Stream.of(incomeA, incomeB));
+        when(this.incomeGateway.findAll(criteria)).thenReturn(Stream.of(incomeA, incomeB));
 
         List<Income> incomes = this.incomeService.findAll(criteria).toList();
 
         assertEquals(2, incomes.size());
         assertEquals(List.of(incomeA, incomeB), incomes);
         verify(this.engagementWebClient).readById(this.income.getEngagementId());
-        verify(this.incomePersistence).findAll(criteria);
+        verify(this.incomeGateway).findAll(criteria);
     }
 
     @Test
@@ -311,7 +312,7 @@ class IncomeServiceIT {
 
         assertEquals("Engagement not found", thrown.getMessage());
         verify(this.engagementWebClient).readById(this.income.getEngagementId());
-        verify(this.incomePersistence, never()).findAll(any());
+        verify(this.incomeGateway, never()).findAll(any());
     }
 
     @Test
@@ -323,13 +324,13 @@ class IncomeServiceIT {
 
         IncomeFindCriteria criteria = new IncomeFindCriteria(null, this.income.getDate());
 
-        when(this.incomePersistence.findAll(criteria)).thenReturn(Stream.of(incomeA, incomeB));
+        when(this.incomeGateway.findAll(criteria)).thenReturn(Stream.of(incomeA, incomeB));
 
         List<Income> incomes = this.incomeService.findAll(criteria).toList();
 
         assertEquals(2, incomes.size());
         assertEquals(List.of(incomeA, incomeB), incomes);
-        verify(this.incomePersistence).findAll(criteria);
+        verify(this.incomeGateway).findAll(criteria);
         verifyNoInteractions(this.engagementWebClient);
     }
 }

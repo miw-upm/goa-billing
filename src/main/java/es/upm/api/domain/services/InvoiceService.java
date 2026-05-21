@@ -3,13 +3,13 @@ package es.upm.api.domain.services;
 import es.upm.api.domain.model.Expense;
 import es.upm.api.domain.model.Income;
 import es.upm.api.domain.model.Invoice;
-import es.upm.api.domain.model.InvoiceFindCriteria;
+import es.upm.api.domain.model.criteria.InvoiceFindCriteria;
 import es.upm.api.domain.model.InvoiceBreakdown;
 import es.upm.api.domain.model.BreakdownItem;
-import es.upm.api.domain.persistence.ExpensePersistence;
-import es.upm.api.domain.persistence.IncomePersistence;
-import es.upm.api.domain.persistence.InvoicePersistence;
-import es.upm.api.domain.webclients.EngagementWebClient;
+import es.upm.api.domain.ports.out.billing.ExpenseGateway;
+import es.upm.api.domain.ports.out.billing.IncomeGateway;
+import es.upm.api.domain.ports.out.billing.InvoiceGateway;
+import es.upm.api.domain.ports.out.engagement.EngagementWebClient;
 import es.upm.miw.exception.BadRequestException;
 import org.springframework.stereotype.Service;
 
@@ -25,44 +25,44 @@ public class InvoiceService {
 
     private static final BigDecimal VAT_RATE = new BigDecimal("0.21");
 
-    private final InvoicePersistence invoicePersistence;
-    private final ExpensePersistence expensePersistence;
-    private final IncomePersistence incomePersistence;
+    private final InvoiceGateway invoiceGateway;
+    private final ExpenseGateway expenseGateway;
+    private final IncomeGateway incomeGateway;
     private final EngagementWebClient engagementWebClient;
 
-    public InvoiceService(InvoicePersistence invoicePersistence,
-                          ExpensePersistence expensePersistence,
-                          IncomePersistence incomePersistence,
+    public InvoiceService(InvoiceGateway invoiceGateway,
+                          ExpenseGateway expenseGateway,
+                          IncomeGateway incomeGateway,
                           EngagementWebClient engagementWebClient) {
-        this.invoicePersistence = invoicePersistence;
-        this.expensePersistence = expensePersistence;
-        this.incomePersistence = incomePersistence;
+        this.invoiceGateway = invoiceGateway;
+        this.expenseGateway = expenseGateway;
+        this.incomeGateway = incomeGateway;
         this.engagementWebClient = engagementWebClient;
     }
 
     public Invoice create(Invoice invoice) {
         invoice.setId(UUID.randomUUID());
         this.validateInvoice(invoice);
-        this.invoicePersistence.create(invoice);
+        this.invoiceGateway.create(invoice);
         return invoice;
     }
 
     public Invoice update(UUID id, Invoice invoice) {
-        this.invoicePersistence.readById(id);
+        this.invoiceGateway.readById(id);
         invoice.setId(id);
         this.validateInvoice(invoice);
-        return this.invoicePersistence.update(id, invoice);
+        return this.invoiceGateway.update(id, invoice);
     }
 
     public Invoice readById(UUID id) {
-        return this.invoicePersistence.readById(id);
+        return this.invoiceGateway.readById(id);
     }
 
     public Stream<Invoice> findAll(InvoiceFindCriteria criteria) {
         if (criteria.getEngagementId() != null) {
             this.engagementWebClient.readById(criteria.getEngagementId());
         }
-        return this.invoicePersistence.findAll(criteria);
+        return this.invoiceGateway.findAll(criteria);
     }
 
     public InvoiceBreakdown getInvoiceBreakdown(UUID id) {
@@ -145,11 +145,11 @@ public class InvoiceService {
 
     private List<Expense> validateExpenses(Invoice invoice) {
         return invoice.getExpenses().stream().map(expense -> {
-            Expense existingExpense = this.expensePersistence.readById(expense.getId());
+            Expense existingExpense = this.expenseGateway.readById(expense.getId());
             if (!invoice.getEngagementId().equals(existingExpense.getEngagementId())) {
                 throw new BadRequestException("Expense does not belong to the invoice engagement");
             }
-            Invoice assignedInvoice = this.invoicePersistence.findByExpenseId(expense.getId());
+            Invoice assignedInvoice = this.invoiceGateway.findByExpenseId(expense.getId());
             if (assignedInvoice != null && !invoice.getId().equals(assignedInvoice.getId())) {
                 throw new BadRequestException("Expense is already assigned to another invoice");
             }
@@ -159,11 +159,11 @@ public class InvoiceService {
 
     private List<Income> validateIncomes(Invoice invoice) {
         return invoice.getIncomes().stream().map(income -> {
-            Income existingIncome = this.incomePersistence.readById(income.getId());
+            Income existingIncome = this.incomeGateway.readById(income.getId());
             if (!invoice.getEngagementId().equals(existingIncome.getEngagementId())) {
                 throw new BadRequestException("Income does not belong to the invoice engagement");
             }
-            Invoice assignedInvoice = this.invoicePersistence.findByIncomeId(income.getId());
+            Invoice assignedInvoice = this.invoiceGateway.findByIncomeId(income.getId());
             if (assignedInvoice != null && !invoice.getId().equals(assignedInvoice.getId())) {
                 throw new BadRequestException("Income is already assigned to another invoice");
             }
