@@ -1,34 +1,34 @@
 package es.upm.api.adapter.in.resources.dtos;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import es.upm.api.domain.model.validations.AtLeastOneInvoiceItem;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Positive;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.UUID;
 
+@AtLeastOneInvoiceItem
 @Builder
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class IncomeCreateRequest {
+public class InvoiceUpdatingDto {
 
     @NotNull
     private UUID engagementId;
 
     @NotNull
-    private UUID userId;
-
-    @NotNull
-    @Positive
-    private BigDecimal amount;
-
-    @NotNull
     @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate date;
+
+    @NotNull
+    private List<UUID> expenseIds;
+
+    @NotNull
+    private List<UUID> incomeIds;
 }

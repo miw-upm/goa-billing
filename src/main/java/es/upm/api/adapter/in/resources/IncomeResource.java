@@ -3,8 +3,8 @@ package es.upm.api.adapter.in.resources;
 import es.upm.api.domain.model.Income;
 import es.upm.api.domain.model.criteria.IncomeFindCriteria;
 import es.upm.api.domain.services.IncomeService;
-import es.upm.api.adapter.in.resources.dtos.IncomeCreateRequest;
-import es.upm.api.adapter.in.resources.dtos.IncomeUpdateRequest;
+import es.upm.api.adapter.in.resources.dtos.IncomeCreationDto;
+import es.upm.api.adapter.in.resources.dtos.IncomeUpdatingDto;
 import es.upm.miw.security.Security;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -36,7 +36,7 @@ public class IncomeResource {
 
     @PostMapping
     @Operation(summary = "Create income")
-    public Income create(@Valid @RequestBody IncomeCreateRequest request) {
+    public Income create(@Valid @RequestBody IncomeCreationDto request) {
         return this.incomeService.create(
                 Income.builder()
                         .engagementId(request.getEngagementId())
@@ -57,7 +57,7 @@ public class IncomeResource {
     @Operation(summary = "Update income")
     public Income update(
             @PathVariable("id") java.util.UUID id,
-            @Valid @RequestBody IncomeUpdateRequest request) {
+            @Valid @RequestBody IncomeUpdatingDto request) {
         return this.incomeService.update(
                 id,
                 Income.builder()

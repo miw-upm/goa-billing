@@ -9,7 +9,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.UUID;
 
-public class ExpenseUpdateRequest {
+public class ExpenseUpdatingDto {
 
     @NotNull
     private UUID engagementId;

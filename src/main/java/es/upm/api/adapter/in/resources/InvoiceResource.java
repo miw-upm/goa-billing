@@ -6,8 +6,8 @@ import es.upm.api.domain.model.Invoice;
 import es.upm.api.domain.model.criteria.InvoiceFindCriteria;
 import es.upm.api.domain.model.InvoiceBreakdown;
 import es.upm.api.domain.services.InvoiceService;
-import es.upm.api.adapter.in.resources.dtos.InvoiceCreateRequest;
-import es.upm.api.adapter.in.resources.dtos.InvoiceUpdateRequest;
+import es.upm.api.adapter.in.resources.dtos.InvoiceCreationDto;
+import es.upm.api.adapter.in.resources.dtos.InvoiceUpdatingDto;
 import es.upm.miw.security.Security;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -34,7 +34,7 @@ public class InvoiceResource {
 
     @PostMapping
     @Operation(summary = "Create invoice")
-    public Invoice create(@Valid @RequestBody InvoiceCreateRequest request) {
+    public Invoice create(@Valid @RequestBody InvoiceCreationDto request) {
         return this.invoiceService.create(
                 Invoice.builder()
                         .engagementId(request.getEngagementId())
@@ -51,7 +51,7 @@ public class InvoiceResource {
 
     @PutMapping("/{id}")
     @Operation(summary = "Update invoice")
-    public Invoice update(@PathVariable UUID id, @Valid @RequestBody InvoiceUpdateRequest request) {
+    public Invoice update(@PathVariable UUID id, @Valid @RequestBody InvoiceUpdatingDto request) {
         return this.invoiceService.update(
                 id,
                 Invoice.builder()

@@ -17,7 +17,7 @@ import java.util.UUID;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class InvoiceUpdateRequest {
+public class InvoiceCreationDto {
 
     @NotNull
     private UUID engagementId;

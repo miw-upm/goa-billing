@@ -3,8 +3,8 @@ package es.upm.api.adapter.in.resources;
 import es.upm.api.domain.model.Expense;
 import es.upm.api.domain.model.criteria.ExpenseFindCriteria;
 import es.upm.api.domain.services.ExpenseService;
-import es.upm.api.adapter.in.resources.dtos.ExpenseCreateRequest;
-import es.upm.api.adapter.in.resources.dtos.ExpenseUpdateRequest;
+import es.upm.api.adapter.in.resources.dtos.ExpenseCreationDto;
+import es.upm.api.adapter.in.resources.dtos.ExpenseUpdatingDto;
 import es.upm.miw.security.Security;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -31,7 +31,7 @@ public class ExpenseResource {
 
     @PostMapping
     @Operation(summary = "Create expense")
-    public Expense create(@Valid @RequestBody ExpenseCreateRequest request) {
+    public Expense create(@Valid @RequestBody ExpenseCreationDto request) {
         Expense expense = Expense.builder()
                 .engagementId(request.getEngagementId())
                 .amount(request.getAmount())
@@ -43,7 +43,7 @@ public class ExpenseResource {
 
     @PutMapping("/{id}")
     @Operation(summary = "Update expense")
-    public Expense update(@PathVariable UUID id, @Valid @RequestBody ExpenseUpdateRequest request) {
+    public Expense update(@PathVariable UUID id, @Valid @RequestBody ExpenseUpdatingDto request) {
         Expense expense = Expense.builder()
                 .engagementId(request.getEngagementId())
                 .amount(request.getAmount())

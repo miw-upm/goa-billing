@@ -1,18 +1,19 @@
 package es.upm.api.adapter.in.resources.dtos;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
-
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.UUID;
 
-public class ExpenseCreateRequest {
+import com.fasterxml.jackson.annotation.JsonFormat;
 
+public class IncomeUpdatingDto {
     @NotNull
     private UUID engagementId;
+
+    @NotNull
+    private UUID userId;
 
     @NotNull
     @Positive
@@ -22,15 +23,20 @@ public class ExpenseCreateRequest {
     @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate date;
 
-    @NotBlank
-    private String description;
-
     public UUID getEngagementId() {
         return engagementId;
     }
 
     public void setEngagementId(UUID engagementId) {
         this.engagementId = engagementId;
+    }
+
+    public UUID getUserId() {
+        return userId;
+    }
+
+    public void setUserId(UUID userId) {
+        this.userId = userId;
     }
 
     public BigDecimal getAmount() {
@@ -47,13 +53,5 @@ public class ExpenseCreateRequest {
 
     public void setDate(LocalDate date) {
         this.date = date;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
     }
 }
