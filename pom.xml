@@ -60,9 +60,23 @@
         <de.flapdoodle.embed.mongo.spring3x.version>4.20.0</de.flapdoodle.embed.mongo.spring3x.version>
         <!-- Spring cloud -->
         <spring-cloud.version>2025.0.1</spring-cloud.version>
+        <!-- GOA commons -->
+        <goa-commons.version>1.9.2</goa-commons.version>
     </properties>
 
+    <repositories>
+        <repository>
+            <id>github</id>
+            <url>https://maven.pkg.github.com/miw-upm/goa-commons</url>
+        </repository>
+    </repositories>
+
     <dependencies>
+        <dependency>
+            <groupId>es.upm.miw</groupId>
+            <artifactId>goa-commons</artifactId>
+            <version>${goa-commons.version}</version>
+        </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter</artifactId>
