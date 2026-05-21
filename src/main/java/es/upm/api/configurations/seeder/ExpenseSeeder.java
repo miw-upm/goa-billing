@@ -1,7 +1,7 @@
 package es.upm.api.configurations.seeder;
 
-import es.upm.api.infrastructure.mongodb.entities.ExpenseEntity;
-import es.upm.api.infrastructure.mongodb.repositories.ExpenseRepository;
+import es.upm.api.adapter.out.billing.mongo.expense.ExpenseEntity;
+import es.upm.api.adapter.out.billing.mongo.expense.ExpenseRepository;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Repository;

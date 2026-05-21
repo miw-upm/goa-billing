@@ -14,8 +14,8 @@ import org.springframework.security.oauth2.server.resource.authentication.JwtAut
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.web.SecurityFilterChain;
 
-import static es.upm.api.infrastructure.resources.SystemResource.SYSTEM;
-import static es.upm.api.infrastructure.resources.SystemResource.VERSION_BADGE;
+import static es.upm.api.adapter.in.resources.SystemResource.SYSTEM;
+import static es.upm.api.adapter.in.resources.SystemResource.VERSION_BADGE;
 import static org.springframework.security.config.http.SessionCreationPolicy.STATELESS;
 
 @Configuration
