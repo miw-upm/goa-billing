@@ -61,7 +61,7 @@ public class ExpenseResource {
 
     @GetMapping
     @Operation(summary = "List Expenses")
-    public Stream<Expense> findAll(@ModelAttribute ExpenseFindCriteria criteria) {
+    public Stream<Expense> find(@ModelAttribute ExpenseFindCriteria criteria) {
         return this.expenseService.findAll(criteria);
     }
 }

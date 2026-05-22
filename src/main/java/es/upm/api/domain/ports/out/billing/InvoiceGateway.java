@@ -1,6 +1,6 @@
 package es.upm.api.domain.ports.out.billing;
 
-import es.upm.api.domain.model.Invoice;
+import es.upm.api.domain.model.InvoiceOld;
 import es.upm.api.domain.model.criteria.InvoiceFindCriteria;
 import org.springframework.stereotype.Repository;
 
@@ -9,10 +9,10 @@ import java.util.stream.Stream;
 
 @Repository
 public interface InvoiceGateway {
-    void create(Invoice invoice);
-    Invoice update(UUID id, Invoice invoice);
-    Invoice readById(UUID id);
-    Stream<Invoice> findAll(InvoiceFindCriteria criteria);
-    Invoice findByExpenseId(UUID expenseId);
-    Invoice findByIncomeId(UUID incomeId);
+    void create(InvoiceOld invoiceOld);
+    InvoiceOld update(UUID id, InvoiceOld invoiceOld);
+    InvoiceOld readById(UUID id);
+    Stream<InvoiceOld> findAll(InvoiceFindCriteria criteria);
+    InvoiceOld findByExpenseId(UUID expenseId);
+    InvoiceOld findByIncomeId(UUID incomeId);
 }

@@ -17,7 +17,7 @@ import java.util.UUID;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class Invoice {
+public class InvoiceOld {
     private UUID id;
 
     @NotNull

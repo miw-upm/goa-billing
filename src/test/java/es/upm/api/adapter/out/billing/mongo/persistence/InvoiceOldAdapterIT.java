@@ -3,7 +3,7 @@ package es.upm.api.adapter.out.billing.mongo.persistence;
 import es.upm.api.adapter.out.billing.mongo.invoice.InvoiceAdapter;
 import es.upm.api.domain.model.Expense;
 import es.upm.api.domain.model.Income;
-import es.upm.api.domain.model.Invoice;
+import es.upm.api.domain.model.InvoiceOld;
 import es.upm.api.domain.model.criteria.InvoiceFindCriteria;
 import es.upm.api.adapter.out.billing.mongo.invoice.InvoiceEntity;
 import es.upm.api.adapter.out.billing.mongo.invoice.InvoiceRepository;
@@ -30,7 +30,7 @@ import static org.mockito.Mockito.when;
 
 @SpringBootTest
 @ActiveProfiles("test")
-class InvoiceAdapterIT {
+class InvoiceOldAdapterIT {
 
     @Autowired
     private InvoiceAdapter invoicePersistenceMongodb;
@@ -38,12 +38,12 @@ class InvoiceAdapterIT {
     @MockitoBean
     private InvoiceRepository invoiceRepository;
 
-    private Invoice invoice;
+    private InvoiceOld invoiceOld;
 
     @BeforeEach
     void setUp() {
         UUID engagementId = UUID.randomUUID();
-        this.invoice = Invoice.builder()
+        this.invoiceOld = InvoiceOld.builder()
                 .id(UUID.randomUUID())
                 .engagementId(engagementId)
                 .date(LocalDate.of(2026, 3, 21))
@@ -69,46 +69,46 @@ class InvoiceAdapterIT {
         when(this.invoiceRepository.save(any(InvoiceEntity.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
-        this.invoicePersistenceMongodb.create(this.invoice);
+        this.invoicePersistenceMongodb.create(this.invoiceOld);
 
         ArgumentCaptor<InvoiceEntity> invoiceEntityCaptor = ArgumentCaptor.forClass(InvoiceEntity.class);
         verify(this.invoiceRepository).save(invoiceEntityCaptor.capture());
 
         InvoiceEntity persistedInvoiceEntity = invoiceEntityCaptor.getValue();
-        assertEquals(this.invoice.getId(), persistedInvoiceEntity.getId());
-        assertEquals(this.invoice.getEngagementId(), persistedInvoiceEntity.getEngagementId());
-        assertEquals(this.invoice.getDate(), persistedInvoiceEntity.getDate());
-        assertEquals(this.invoice.getExpenses(), persistedInvoiceEntity.getExpenses());
-        assertEquals(this.invoice.getIncomes(), persistedInvoiceEntity.getIncomes());
+        assertEquals(this.invoiceOld.getId(), persistedInvoiceEntity.getId());
+        assertEquals(this.invoiceOld.getEngagementId(), persistedInvoiceEntity.getEngagementId());
+        assertEquals(this.invoiceOld.getDate(), persistedInvoiceEntity.getDate());
+        assertEquals(this.invoiceOld.getExpenses(), persistedInvoiceEntity.getExpenses());
+        assertEquals(this.invoiceOld.getIncomes(), persistedInvoiceEntity.getIncomes());
     }
 
     @Test
     void shouldReadInvoiceById() {
-        when(this.invoiceRepository.findById(this.invoice.getId())).thenReturn(Optional.of(new InvoiceEntity(this.invoice)));
+        when(this.invoiceRepository.findById(this.invoiceOld.getId())).thenReturn(Optional.of(new InvoiceEntity(this.invoiceOld)));
 
-        Invoice readInvoice = this.invoicePersistenceMongodb.readById(this.invoice.getId());
+        InvoiceOld readInvoiceOld = this.invoicePersistenceMongodb.readById(this.invoiceOld.getId());
 
-        assertEquals(this.invoice, readInvoice);
-        verify(this.invoiceRepository).findById(this.invoice.getId());
+        assertEquals(this.invoiceOld, readInvoiceOld);
+        verify(this.invoiceRepository).findById(this.invoiceOld.getId());
     }
 
     @Test
     void shouldUpdateInvoice() {
-        Invoice updatedInvoice = Invoice.builder()
-                .id(this.invoice.getId())
+        InvoiceOld updatedInvoiceOld = InvoiceOld.builder()
+                .id(this.invoiceOld.getId())
                 .engagementId(UUID.randomUUID())
                 .date(LocalDate.of(2026, 3, 25))
                 .expenses(List.of())
-                .incomes(this.invoice.getIncomes())
+                .incomes(this.invoiceOld.getIncomes())
                 .build();
-        when(this.invoiceRepository.findById(this.invoice.getId())).thenReturn(Optional.of(new InvoiceEntity(this.invoice)));
+        when(this.invoiceRepository.findById(this.invoiceOld.getId())).thenReturn(Optional.of(new InvoiceEntity(this.invoiceOld)));
         when(this.invoiceRepository.save(any(InvoiceEntity.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
-        Invoice persistedInvoice = this.invoicePersistenceMongodb.update(this.invoice.getId(), updatedInvoice);
+        InvoiceOld persistedInvoiceOld = this.invoicePersistenceMongodb.update(this.invoiceOld.getId(), updatedInvoiceOld);
 
-        assertEquals(updatedInvoice, persistedInvoice);
-        verify(this.invoiceRepository).findById(this.invoice.getId());
+        assertEquals(updatedInvoiceOld, persistedInvoiceOld);
+        verify(this.invoiceRepository).findById(this.invoiceOld.getId());
         verify(this.invoiceRepository).save(any(InvoiceEntity.class));
     }
 
@@ -120,7 +120,7 @@ class InvoiceAdapterIT {
         NotFoundException thrown = assertThrows(NotFoundException.class,
                 () -> this.invoicePersistenceMongodb.readById(invoiceId));
 
-        assertEquals("Not Found Exception. Invoice id: " + invoiceId, thrown.getMessage());
+        assertEquals("Not Found Exception. InvoiceOld id: " + invoiceId, thrown.getMessage());
         verify(this.invoiceRepository).findById(invoiceId);
     }
 
@@ -130,7 +130,7 @@ class InvoiceAdapterIT {
         when(this.invoiceRepository.save(any(InvoiceEntity.class))).thenThrow(exception);
 
         RuntimeException thrown = assertThrows(RuntimeException.class,
-                () -> this.invoicePersistenceMongodb.create(this.invoice));
+                () -> this.invoicePersistenceMongodb.create(this.invoiceOld));
 
         assertEquals("Mongo error", thrown.getMessage());
         verify(this.invoiceRepository).save(any(InvoiceEntity.class));
@@ -142,35 +142,35 @@ class InvoiceAdapterIT {
         when(this.invoiceRepository.findById(invoiceId)).thenReturn(Optional.empty());
 
         NotFoundException thrown = assertThrows(NotFoundException.class,
-                () -> this.invoicePersistenceMongodb.update(invoiceId, this.invoice));
+                () -> this.invoicePersistenceMongodb.update(invoiceId, this.invoiceOld));
 
-        assertEquals("Not Found Exception. Invoice id: " + invoiceId, thrown.getMessage());
+        assertEquals("Not Found Exception. InvoiceOld id: " + invoiceId, thrown.getMessage());
         verify(this.invoiceRepository).findById(invoiceId);
     }
 
     @Test
     void shouldFindAllInvoices() {
         InvoiceFindCriteria criteria = new InvoiceFindCriteria();
-        when(this.invoiceRepository.findAll(InvoiceAdapter.DATE)).thenReturn(List.of(new InvoiceEntity(this.invoice)));
+        when(this.invoiceRepository.findAll(InvoiceAdapter.DATE)).thenReturn(List.of(new InvoiceEntity(this.invoiceOld)));
 
-        List<Invoice> invoices = this.invoicePersistenceMongodb.findAll(criteria).toList();
+        List<InvoiceOld> invoiceOlds = this.invoicePersistenceMongodb.findAll(criteria).toList();
 
-        assertEquals(1, invoices.size());
-        assertEquals(this.invoice, invoices.get(0));
+        assertEquals(1, invoiceOlds.size());
+        assertEquals(this.invoiceOld, invoiceOlds.get(0));
         verify(this.invoiceRepository).findAll(InvoiceAdapter.DATE);
     }
 
     @Test
     void shouldFindInvoicesByEngagementId() {
-        UUID engagementId = this.invoice.getEngagementId();
+        UUID engagementId = this.invoiceOld.getEngagementId();
         InvoiceFindCriteria criteria = new InvoiceFindCriteria(engagementId, null);
         when(this.invoiceRepository.findByEngagementId(engagementId, InvoiceAdapter.DATE))
-                .thenReturn(List.of(new InvoiceEntity(this.invoice)));
+                .thenReturn(List.of(new InvoiceEntity(this.invoiceOld)));
 
-        List<Invoice> invoices = this.invoicePersistenceMongodb.findAll(criteria).toList();
+        List<InvoiceOld> invoiceOlds = this.invoicePersistenceMongodb.findAll(criteria).toList();
 
-        assertEquals(1, invoices.size());
-        assertEquals(this.invoice, invoices.get(0));
+        assertEquals(1, invoiceOlds.size());
+        assertEquals(this.invoiceOld, invoiceOlds.get(0));
         verify(this.invoiceRepository).findByEngagementId(engagementId, InvoiceAdapter.DATE);
     }
 
@@ -180,82 +180,82 @@ class InvoiceAdapterIT {
         InvoiceFindCriteria criteria = new InvoiceFindCriteria(engagementId, null);
         when(this.invoiceRepository.findByEngagementId(engagementId, InvoiceAdapter.DATE)).thenReturn(List.of());
 
-        List<Invoice> invoices = this.invoicePersistenceMongodb.findAll(criteria).toList();
+        List<InvoiceOld> invoiceOlds = this.invoicePersistenceMongodb.findAll(criteria).toList();
 
-        assertEquals(0, invoices.size());
+        assertEquals(0, invoiceOlds.size());
         verify(this.invoiceRepository).findByEngagementId(engagementId, InvoiceAdapter.DATE);
     }
 
     @Test
     void shouldFindInvoicesByDate() {
-        LocalDate date = this.invoice.getDate();
+        LocalDate date = this.invoiceOld.getDate();
         InvoiceFindCriteria criteria = new InvoiceFindCriteria(null, date);
         when(this.invoiceRepository.findByDate(date, InvoiceAdapter.DATE))
-                .thenReturn(List.of(new InvoiceEntity(this.invoice)));
+                .thenReturn(List.of(new InvoiceEntity(this.invoiceOld)));
 
-        List<Invoice> invoices = this.invoicePersistenceMongodb.findAll(criteria).toList();
+        List<InvoiceOld> invoiceOlds = this.invoicePersistenceMongodb.findAll(criteria).toList();
 
-        assertEquals(1, invoices.size());
-        assertEquals(this.invoice, invoices.get(0));
+        assertEquals(1, invoiceOlds.size());
+        assertEquals(this.invoiceOld, invoiceOlds.get(0));
         verify(this.invoiceRepository).findByDate(date, InvoiceAdapter.DATE);
     }
 
     @Test
     void shouldFindInvoicesByEngagementIdAndDate() {
-        UUID engagementId = this.invoice.getEngagementId();
-        LocalDate date = this.invoice.getDate();
+        UUID engagementId = this.invoiceOld.getEngagementId();
+        LocalDate date = this.invoiceOld.getDate();
         InvoiceFindCriteria criteria = new InvoiceFindCriteria(engagementId, date);
         when(this.invoiceRepository.findByEngagementIdAndDate(engagementId, date, InvoiceAdapter.DATE))
-                .thenReturn(List.of(new InvoiceEntity(this.invoice)));
+                .thenReturn(List.of(new InvoiceEntity(this.invoiceOld)));
 
-        List<Invoice> invoices = this.invoicePersistenceMongodb.findAll(criteria).toList();
+        List<InvoiceOld> invoiceOlds = this.invoicePersistenceMongodb.findAll(criteria).toList();
 
-        assertEquals(1, invoices.size());
-        assertEquals(this.invoice, invoices.get(0));
+        assertEquals(1, invoiceOlds.size());
+        assertEquals(this.invoiceOld, invoiceOlds.get(0));
         verify(this.invoiceRepository).findByEngagementIdAndDate(engagementId, date, InvoiceAdapter.DATE);
     }
 
     @Test
     void shouldFindInvoiceByExpenseId() {
-        UUID expenseId = this.invoice.getExpenses().get(0).getId();
-        when(this.invoiceRepository.findByExpensesId(expenseId)).thenReturn(new InvoiceEntity(this.invoice));
+        UUID expenseId = this.invoiceOld.getExpenses().get(0).getId();
+        when(this.invoiceRepository.findByExpensesId(expenseId)).thenReturn(new InvoiceEntity(this.invoiceOld));
 
-        Invoice foundInvoice = this.invoicePersistenceMongodb.findByExpenseId(expenseId);
+        InvoiceOld foundInvoiceOld = this.invoicePersistenceMongodb.findByExpenseId(expenseId);
 
-        assertEquals(this.invoice, foundInvoice);
+        assertEquals(this.invoiceOld, foundInvoiceOld);
         verify(this.invoiceRepository).findByExpensesId(expenseId);
     }
 
     @Test
     void shouldReturnNullWhenExpenseIsNotAssigned() {
-        UUID expenseId = this.invoice.getExpenses().get(0).getId();
+        UUID expenseId = this.invoiceOld.getExpenses().get(0).getId();
         when(this.invoiceRepository.findByExpensesId(expenseId)).thenReturn(null);
 
-        Invoice foundInvoice = this.invoicePersistenceMongodb.findByExpenseId(expenseId);
+        InvoiceOld foundInvoiceOld = this.invoicePersistenceMongodb.findByExpenseId(expenseId);
 
-        assertEquals(null, foundInvoice);
+        assertEquals(null, foundInvoiceOld);
         verify(this.invoiceRepository).findByExpensesId(expenseId);
     }
 
     @Test
     void shouldFindInvoiceByIncomeId() {
-        UUID incomeId = this.invoice.getIncomes().get(0).getId();
-        when(this.invoiceRepository.findByIncomesId(incomeId)).thenReturn(new InvoiceEntity(this.invoice));
+        UUID incomeId = this.invoiceOld.getIncomes().get(0).getId();
+        when(this.invoiceRepository.findByIncomesId(incomeId)).thenReturn(new InvoiceEntity(this.invoiceOld));
 
-        Invoice foundInvoice = this.invoicePersistenceMongodb.findByIncomeId(incomeId);
+        InvoiceOld foundInvoiceOld = this.invoicePersistenceMongodb.findByIncomeId(incomeId);
 
-        assertEquals(this.invoice, foundInvoice);
+        assertEquals(this.invoiceOld, foundInvoiceOld);
         verify(this.invoiceRepository).findByIncomesId(incomeId);
     }
 
     @Test
     void shouldReturnNullWhenIncomeIsNotAssigned() {
-        UUID incomeId = this.invoice.getIncomes().get(0).getId();
+        UUID incomeId = this.invoiceOld.getIncomes().get(0).getId();
         when(this.invoiceRepository.findByIncomesId(incomeId)).thenReturn(null);
 
-        Invoice foundInvoice = this.invoicePersistenceMongodb.findByIncomeId(incomeId);
+        InvoiceOld foundInvoiceOld = this.invoicePersistenceMongodb.findByIncomeId(incomeId);
 
-        assertEquals(null, foundInvoice);
+        assertEquals(null, foundInvoiceOld);
         verify(this.invoiceRepository).findByIncomesId(incomeId);
     }
 }

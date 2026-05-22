@@ -227,7 +227,7 @@ class ExpenseResourceIT {
 
     @Test
     @WithMockUser(roles = "admin")
-    void shouldFindAllWithValues() throws Exception {
+    void shouldFindWithValues() throws Exception {
         UUID expenseId = UUID.randomUUID();
         UUID engagementId = UUID.randomUUID();
         Expense response = Expense.builder()

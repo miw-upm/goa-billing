@@ -3,7 +3,7 @@ package es.upm.api.adapter.out.billing.mongo.repositories;
 import es.upm.api.adapter.out.billing.mongo.invoice.InvoiceRepository;
 import es.upm.api.domain.model.Expense;
 import es.upm.api.domain.model.Income;
-import es.upm.api.domain.model.Invoice;
+import es.upm.api.domain.model.InvoiceOld;
 import es.upm.api.adapter.out.billing.mongo.invoice.InvoiceEntity;
 import org.springframework.data.domain.Sort;
 import org.junit.jupiter.api.BeforeEach;
@@ -25,20 +25,20 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @DataMongoTest
 @ActiveProfiles("test")
-class InvoiceRepositoryTest {
+class InvoiceOldRepositoryTest {
 
     private static final Sort DATE = Sort.by(Sort.Direction.DESC, "date");
 
     @Autowired
     private InvoiceRepository invoiceRepository;
 
-    private Invoice invoice;
+    private InvoiceOld invoiceOld;
 
     @BeforeEach
     void setUp() {
         this.invoiceRepository.deleteAll();
         UUID engagementId = UUID.randomUUID();
-        this.invoice = Invoice.builder()
+        this.invoiceOld = InvoiceOld.builder()
                 .id(UUID.randomUUID())
                 .engagementId(engagementId)
                 .date(LocalDate.of(2026, 3, 21))
@@ -61,20 +61,20 @@ class InvoiceRepositoryTest {
 
     @Test
     void shouldSaveInvoice() {
-        InvoiceEntity savedInvoiceEntity = this.invoiceRepository.save(new InvoiceEntity(this.invoice));
+        InvoiceEntity savedInvoiceEntity = this.invoiceRepository.save(new InvoiceEntity(this.invoiceOld));
 
         assertNotNull(savedInvoiceEntity);
         assertNotNull(savedInvoiceEntity.getId());
-        assertEquals(this.invoice.getId(), savedInvoiceEntity.getId());
-        assertEquals(this.invoice.getEngagementId(), savedInvoiceEntity.getEngagementId());
-        assertEquals(this.invoice.getDate(), savedInvoiceEntity.getDate());
-        assertEquals(this.invoice.getExpenses(), savedInvoiceEntity.getExpenses());
-        assertEquals(this.invoice.getIncomes(), savedInvoiceEntity.getIncomes());
+        assertEquals(this.invoiceOld.getId(), savedInvoiceEntity.getId());
+        assertEquals(this.invoiceOld.getEngagementId(), savedInvoiceEntity.getEngagementId());
+        assertEquals(this.invoiceOld.getDate(), savedInvoiceEntity.getDate());
+        assertEquals(this.invoiceOld.getExpenses(), savedInvoiceEntity.getExpenses());
+        assertEquals(this.invoiceOld.getIncomes(), savedInvoiceEntity.getIncomes());
     }
 
     @Test
     void shouldFindInvoiceById() {
-        InvoiceEntity savedInvoiceEntity = this.invoiceRepository.save(new InvoiceEntity(this.invoice));
+        InvoiceEntity savedInvoiceEntity = this.invoiceRepository.save(new InvoiceEntity(this.invoiceOld));
 
         Optional<InvoiceEntity> optionalInvoiceEntity = this.invoiceRepository.findById(savedInvoiceEntity.getId());
 
@@ -89,9 +89,9 @@ class InvoiceRepositoryTest {
 
     @Test
     void shouldFindInvoicesByEngagementId() {
-        InvoiceEntity savedInvoiceEntity = this.invoiceRepository.save(new InvoiceEntity(this.invoice));
+        InvoiceEntity savedInvoiceEntity = this.invoiceRepository.save(new InvoiceEntity(this.invoiceOld));
 
-        List<InvoiceEntity> foundInvoices = this.invoiceRepository.findByEngagementId(this.invoice.getEngagementId(), DATE);
+        List<InvoiceEntity> foundInvoices = this.invoiceRepository.findByEngagementId(this.invoiceOld.getEngagementId(), DATE);
 
         assertEquals(1, foundInvoices.size());
         assertEquals(savedInvoiceEntity.getId(), foundInvoices.get(0).getId());
@@ -99,7 +99,7 @@ class InvoiceRepositoryTest {
 
     @Test
     void shouldReturnEmptyWhenEngagementIdDoesNotMatchAnyInvoice() {
-        this.invoiceRepository.save(new InvoiceEntity(this.invoice));
+        this.invoiceRepository.save(new InvoiceEntity(this.invoiceOld));
 
         List<InvoiceEntity> foundInvoices = this.invoiceRepository.findByEngagementId(UUID.randomUUID(), DATE);
 
@@ -108,9 +108,9 @@ class InvoiceRepositoryTest {
 
     @Test
     void shouldFindInvoicesByDate() {
-        InvoiceEntity savedInvoiceEntity = this.invoiceRepository.save(new InvoiceEntity(this.invoice));
+        InvoiceEntity savedInvoiceEntity = this.invoiceRepository.save(new InvoiceEntity(this.invoiceOld));
 
-        List<InvoiceEntity> foundInvoices = this.invoiceRepository.findByDate(this.invoice.getDate(), DATE);
+        List<InvoiceEntity> foundInvoices = this.invoiceRepository.findByDate(this.invoiceOld.getDate(), DATE);
 
         assertEquals(1, foundInvoices.size());
         assertEquals(savedInvoiceEntity.getId(), foundInvoices.get(0).getId());
@@ -118,10 +118,10 @@ class InvoiceRepositoryTest {
 
     @Test
     void shouldFindInvoicesByEngagementIdAndDate() {
-        InvoiceEntity savedInvoiceEntity = this.invoiceRepository.save(new InvoiceEntity(this.invoice));
+        InvoiceEntity savedInvoiceEntity = this.invoiceRepository.save(new InvoiceEntity(this.invoiceOld));
 
         List<InvoiceEntity> foundInvoices = this.invoiceRepository.findByEngagementIdAndDate(
-                this.invoice.getEngagementId(), this.invoice.getDate(), DATE
+                this.invoiceOld.getEngagementId(), this.invoiceOld.getDate(), DATE
         );
 
         assertEquals(1, foundInvoices.size());
@@ -130,8 +130,8 @@ class InvoiceRepositoryTest {
 
     @Test
     void shouldFindInvoiceByExpenseId() {
-        InvoiceEntity savedInvoiceEntity = this.invoiceRepository.save(new InvoiceEntity(this.invoice));
-        UUID expenseId = this.invoice.getExpenses().get(0).getId();
+        InvoiceEntity savedInvoiceEntity = this.invoiceRepository.save(new InvoiceEntity(this.invoiceOld));
+        UUID expenseId = this.invoiceOld.getExpenses().get(0).getId();
 
         InvoiceEntity foundInvoiceEntity = this.invoiceRepository.findByExpensesId(expenseId);
 
@@ -141,7 +141,7 @@ class InvoiceRepositoryTest {
 
     @Test
     void shouldReturnNullWhenExpenseIdIsNotAssigned() {
-        this.invoiceRepository.save(new InvoiceEntity(this.invoice));
+        this.invoiceRepository.save(new InvoiceEntity(this.invoiceOld));
 
         InvoiceEntity foundInvoiceEntity = this.invoiceRepository.findByExpensesId(UUID.randomUUID());
 
@@ -150,8 +150,8 @@ class InvoiceRepositoryTest {
 
     @Test
     void shouldFindInvoiceByIncomeId() {
-        InvoiceEntity savedInvoiceEntity = this.invoiceRepository.save(new InvoiceEntity(this.invoice));
-        UUID incomeId = this.invoice.getIncomes().get(0).getId();
+        InvoiceEntity savedInvoiceEntity = this.invoiceRepository.save(new InvoiceEntity(this.invoiceOld));
+        UUID incomeId = this.invoiceOld.getIncomes().get(0).getId();
 
         InvoiceEntity foundInvoiceEntity = this.invoiceRepository.findByIncomesId(incomeId);
 
@@ -161,7 +161,7 @@ class InvoiceRepositoryTest {
 
     @Test
     void shouldReturnNullWhenIncomeIdIsNotAssigned() {
-        this.invoiceRepository.save(new InvoiceEntity(this.invoice));
+        this.invoiceRepository.save(new InvoiceEntity(this.invoiceOld));
 
         InvoiceEntity foundInvoiceEntity = this.invoiceRepository.findByIncomesId(UUID.randomUUID());
 

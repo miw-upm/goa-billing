@@ -1,11 +1,8 @@
 package es.upm.api.adapter.in.resources;
 
-import es.upm.api.domain.model.Expense;
-import es.upm.api.domain.model.Income;
-import es.upm.api.domain.model.Invoice;
+import es.upm.api.domain.model.*;
+import es.upm.api.domain.model.InvoiceOld;
 import es.upm.api.domain.model.criteria.InvoiceFindCriteria;
-import es.upm.api.domain.model.InvoiceBreakdown;
-import es.upm.api.domain.model.BreakdownItem;
 import es.upm.api.domain.services.InvoiceService;
 import es.upm.miw.exception.BadRequestException;
 import es.upm.miw.exception.NotFoundException;
@@ -40,7 +37,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc(addFilters = false)
 @ActiveProfiles("test")
-class InvoiceResourceIT {
+class InvoiceOldResourceIT {
 
     @Autowired
     private MockMvc mockMvc;
@@ -65,7 +62,7 @@ class InvoiceResourceIT {
                 }
                 """.formatted(engagementId, expenseId, incomeId);
 
-        Invoice response = Invoice.builder()
+        InvoiceOld response = InvoiceOld.builder()
                 .id(invoiceId)
                 .engagementId(engagementId)
                 .date(LocalDate.of(2026, 3, 21))
@@ -116,7 +113,7 @@ class InvoiceResourceIT {
                 }
                 """.formatted(engagementId, expenseId);
 
-        Invoice response = Invoice.builder()
+        InvoiceOld response = InvoiceOld.builder()
                 .id(invoiceId)
                 .engagementId(engagementId)
                 .date(LocalDate.of(2026, 3, 21))
@@ -160,7 +157,7 @@ class InvoiceResourceIT {
                 }
                 """.formatted(engagementId, incomeId);
 
-        Invoice response = Invoice.builder()
+        InvoiceOld response = InvoiceOld.builder()
                 .id(invoiceId)
                 .engagementId(engagementId)
                 .date(LocalDate.of(2026, 3, 21))
@@ -240,7 +237,7 @@ class InvoiceResourceIT {
                 """.formatted(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID());
 
         when(this.invoiceService.create(any()))
-                .thenThrow(new BadRequestException("Invoice date cannot be in the future"));
+                .thenThrow(new BadRequestException("InvoiceOld date cannot be in the future"));
 
         this.mockMvc.perform(post("/invoices")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -267,7 +264,7 @@ class InvoiceResourceIT {
                 }
                 """.formatted(engagementId, incomeId);
 
-        Invoice response = Invoice.builder()
+        InvoiceOld response = InvoiceOld.builder()
                 .id(invoiceId)
                 .engagementId(engagementId)
                 .date(LocalDate.of(2026, 3, 25))
@@ -352,7 +349,7 @@ class InvoiceResourceIT {
                 """.formatted(UUID.randomUUID(), UUID.randomUUID());
 
         when(this.invoiceService.update(any(), any()))
-                .thenThrow(new BadRequestException("Invoice date cannot be in the future"));
+                .thenThrow(new BadRequestException("InvoiceOld date cannot be in the future"));
 
         this.mockMvc.perform(put("/invoices/{id}", invoiceId)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -375,7 +372,7 @@ class InvoiceResourceIT {
                 }
                 """.formatted(UUID.randomUUID(), UUID.randomUUID());
         when(this.invoiceService.update(any(), any()))
-                .thenThrow(new NotFoundException("Invoice id: " + invoiceId));
+                .thenThrow(new NotFoundException("InvoiceOld id: " + invoiceId));
 
         this.mockMvc.perform(put("/invoices/{id}", invoiceId)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -388,14 +385,14 @@ class InvoiceResourceIT {
     @Test
     @WithMockUser(roles = "admin")
     void shouldFindAllInvoices() throws Exception {
-        Invoice invoiceA = Invoice.builder()
+        InvoiceOld invoiceOldA = InvoiceOld.builder()
                 .id(UUID.randomUUID())
                 .engagementId(UUID.randomUUID())
                 .date(LocalDate.of(2026, 3, 20))
                 .expenses(List.of())
                 .incomes(List.of())
                 .build();
-        Invoice invoiceB = Invoice.builder()
+        InvoiceOld invoiceOldB = InvoiceOld.builder()
                 .id(UUID.randomUUID())
                 .engagementId(UUID.randomUUID())
                 .date(LocalDate.of(2026, 3, 21))
@@ -403,12 +400,12 @@ class InvoiceResourceIT {
                 .incomes(List.of())
                 .build();
 
-        when(this.invoiceService.findAll(any(InvoiceFindCriteria.class))).thenReturn(Stream.of(invoiceA, invoiceB));
+        when(this.invoiceService.findAll(any(InvoiceFindCriteria.class))).thenReturn(Stream.of(invoiceOldA, invoiceOldB));
 
         this.mockMvc.perform(get("/invoices"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].id").value(invoiceA.getId().toString()))
-                .andExpect(jsonPath("$[1].id").value(invoiceB.getId().toString()));
+                .andExpect(jsonPath("$[0].id").value(invoiceOldA.getId().toString()))
+                .andExpect(jsonPath("$[1].id").value(invoiceOldB.getId().toString()));
 
         ArgumentCaptor<InvoiceFindCriteria> criteriaCaptor = ArgumentCaptor.forClass(InvoiceFindCriteria.class);
         verify(this.invoiceService).findAll(criteriaCaptor.capture());
@@ -424,7 +421,7 @@ class InvoiceResourceIT {
         UUID incomeId = UUID.randomUUID();
         UUID userId = UUID.randomUUID();
 
-        Invoice invoice = Invoice.builder()
+        InvoiceOld invoiceOld = InvoiceOld.builder()
                 .id(invoiceId)
                 .engagementId(engagementId)
                 .date(LocalDate.of(2026, 3, 21))
@@ -444,7 +441,7 @@ class InvoiceResourceIT {
                         .build()))
                 .build();
 
-        when(this.invoiceService.readById(invoiceId)).thenReturn(invoice);
+        when(this.invoiceService.readById(invoiceId)).thenReturn(invoiceOld);
 
         this.mockMvc.perform(get("/invoices/{id}", invoiceId))
                 .andExpect(status().isOk())
@@ -464,7 +461,7 @@ class InvoiceResourceIT {
     void shouldReturnNotFoundWhenInvoiceDoesNotExist() throws Exception {
         UUID invoiceId = UUID.randomUUID();
         when(this.invoiceService.readById(invoiceId))
-                .thenThrow(new NotFoundException("Invoice id: " + invoiceId));
+                .thenThrow(new NotFoundException("InvoiceOld id: " + invoiceId));
 
         this.mockMvc.perform(get("/invoices/{id}", invoiceId))
                 .andExpect(status().isNotFound());
@@ -476,14 +473,14 @@ class InvoiceResourceIT {
     @WithMockUser(roles = "admin")
     void shouldFindInvoicesByEngagementId() throws Exception {
         UUID engagementId = UUID.randomUUID();
-        Invoice invoiceA = Invoice.builder()
+        InvoiceOld invoiceOldA = InvoiceOld.builder()
                 .id(UUID.randomUUID())
                 .engagementId(engagementId)
                 .date(LocalDate.of(2026, 3, 20))
                 .expenses(List.of())
                 .incomes(List.of())
                 .build();
-        Invoice invoiceB = Invoice.builder()
+        InvoiceOld invoiceOldB = InvoiceOld.builder()
                 .id(UUID.randomUUID())
                 .engagementId(engagementId)
                 .date(LocalDate.of(2026, 3, 21))
@@ -491,13 +488,13 @@ class InvoiceResourceIT {
                 .incomes(List.of())
                 .build();
 
-        when(this.invoiceService.findAll(any(InvoiceFindCriteria.class))).thenReturn(Stream.of(invoiceA, invoiceB));
+        when(this.invoiceService.findAll(any(InvoiceFindCriteria.class))).thenReturn(Stream.of(invoiceOldA, invoiceOldB));
 
         this.mockMvc.perform(get("/invoices").param("engagementId", engagementId.toString()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].id").value(invoiceA.getId().toString()))
+                .andExpect(jsonPath("$[0].id").value(invoiceOldA.getId().toString()))
                 .andExpect(jsonPath("$[0].engagementId").value(engagementId.toString()))
-                .andExpect(jsonPath("$[1].id").value(invoiceB.getId().toString()))
+                .andExpect(jsonPath("$[1].id").value(invoiceOldB.getId().toString()))
                 .andExpect(jsonPath("$[1].engagementId").value(engagementId.toString()));
 
         ArgumentCaptor<InvoiceFindCriteria> criteriaCaptor = ArgumentCaptor.forClass(InvoiceFindCriteria.class);
@@ -509,14 +506,14 @@ class InvoiceResourceIT {
     @WithMockUser(roles = "admin")
     void shouldFindInvoicesByDate() throws Exception {
         LocalDate date = LocalDate.of(2026, 3, 21);
-        Invoice invoiceA = Invoice.builder()
+        InvoiceOld invoiceOldA = InvoiceOld.builder()
                 .id(UUID.randomUUID())
                 .engagementId(UUID.randomUUID())
                 .date(date)
                 .expenses(List.of())
                 .incomes(List.of())
                 .build();
-        Invoice invoiceB = Invoice.builder()
+        InvoiceOld invoiceOldB = InvoiceOld.builder()
                 .id(UUID.randomUUID())
                 .engagementId(UUID.randomUUID())
                 .date(date)
@@ -524,13 +521,13 @@ class InvoiceResourceIT {
                 .incomes(List.of())
                 .build();
 
-        when(this.invoiceService.findAll(any(InvoiceFindCriteria.class))).thenReturn(Stream.of(invoiceA, invoiceB));
+        when(this.invoiceService.findAll(any(InvoiceFindCriteria.class))).thenReturn(Stream.of(invoiceOldA, invoiceOldB));
 
         this.mockMvc.perform(get("/invoices").param("date", date.toString()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].id").value(invoiceA.getId().toString()))
+                .andExpect(jsonPath("$[0].id").value(invoiceOldA.getId().toString()))
                 .andExpect(jsonPath("$[0].date").value(date.toString()))
-                .andExpect(jsonPath("$[1].id").value(invoiceB.getId().toString()))
+                .andExpect(jsonPath("$[1].id").value(invoiceOldB.getId().toString()))
                 .andExpect(jsonPath("$[1].date").value(date.toString()));
 
         ArgumentCaptor<InvoiceFindCriteria> criteriaCaptor = ArgumentCaptor.forClass(InvoiceFindCriteria.class);

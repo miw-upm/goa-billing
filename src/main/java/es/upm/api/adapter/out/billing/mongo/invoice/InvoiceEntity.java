@@ -2,7 +2,7 @@ package es.upm.api.adapter.out.billing.mongo.invoice;
 
 import es.upm.api.domain.model.Expense;
 import es.upm.api.domain.model.Income;
-import es.upm.api.domain.model.Invoice;
+import es.upm.api.domain.model.InvoiceOld;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -28,13 +28,13 @@ public class InvoiceEntity {
     private List<Expense> expenses;
     private List<Income> incomes;
 
-    public InvoiceEntity(Invoice invoice) {
-        BeanUtils.copyProperties(invoice, this);
+    public InvoiceEntity(InvoiceOld invoiceOld) {
+        BeanUtils.copyProperties(invoiceOld, this);
     }
 
-    public Invoice toDomain() {
-        Invoice invoice = new Invoice();
-        BeanUtils.copyProperties(this, invoice);
-        return invoice;
+    public InvoiceOld toDomain() {
+        InvoiceOld invoiceOld = new InvoiceOld();
+        BeanUtils.copyProperties(this, invoiceOld);
+        return invoiceOld;
     }
 }

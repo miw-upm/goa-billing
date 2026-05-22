@@ -3,7 +3,7 @@ package es.upm.api.adapter.out.billing.mongo.entities;
 import es.upm.api.adapter.out.billing.mongo.invoice.InvoiceEntity;
 import es.upm.api.domain.model.Expense;
 import es.upm.api.domain.model.Income;
-import es.upm.api.domain.model.Invoice;
+import es.upm.api.domain.model.InvoiceOld;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -14,14 +14,14 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-class InvoiceEntityTest {
+class InvoiceOldEntityTest {
 
-    private Invoice invoice;
+    private InvoiceOld invoiceOld;
 
     @BeforeEach
     void setUp() {
         UUID engagementId = UUID.randomUUID();
-        this.invoice = Invoice.builder()
+        this.invoiceOld = InvoiceOld.builder()
                 .id(UUID.randomUUID())
                 .engagementId(engagementId)
                 .date(LocalDate.of(2026, 3, 21))
@@ -44,30 +44,30 @@ class InvoiceEntityTest {
 
     @Test
     void shouldBuildInvoiceEntityFromInvoice() {
-        InvoiceEntity invoiceEntity = new InvoiceEntity(this.invoice);
+        InvoiceEntity invoiceEntity = new InvoiceEntity(this.invoiceOld);
 
-        assertEquals(this.invoice.getId(), invoiceEntity.getId());
-        assertEquals(this.invoice.getEngagementId(), invoiceEntity.getEngagementId());
-        assertEquals(this.invoice.getDate(), invoiceEntity.getDate());
-        assertEquals(this.invoice.getExpenses(), invoiceEntity.getExpenses());
-        assertEquals(this.invoice.getIncomes(), invoiceEntity.getIncomes());
+        assertEquals(this.invoiceOld.getId(), invoiceEntity.getId());
+        assertEquals(this.invoiceOld.getEngagementId(), invoiceEntity.getEngagementId());
+        assertEquals(this.invoiceOld.getDate(), invoiceEntity.getDate());
+        assertEquals(this.invoiceOld.getExpenses(), invoiceEntity.getExpenses());
+        assertEquals(this.invoiceOld.getIncomes(), invoiceEntity.getIncomes());
     }
 
     @Test
     void shouldConvertInvoiceEntityToDomain() {
         InvoiceEntity invoiceEntity = new InvoiceEntity();
-        invoiceEntity.setId(this.invoice.getId());
-        invoiceEntity.setEngagementId(this.invoice.getEngagementId());
-        invoiceEntity.setDate(this.invoice.getDate());
-        invoiceEntity.setExpenses(this.invoice.getExpenses());
-        invoiceEntity.setIncomes(this.invoice.getIncomes());
+        invoiceEntity.setId(this.invoiceOld.getId());
+        invoiceEntity.setEngagementId(this.invoiceOld.getEngagementId());
+        invoiceEntity.setDate(this.invoiceOld.getDate());
+        invoiceEntity.setExpenses(this.invoiceOld.getExpenses());
+        invoiceEntity.setIncomes(this.invoiceOld.getIncomes());
 
-        Invoice mappedInvoice = invoiceEntity.toDomain();
+        InvoiceOld mappedInvoiceOld = invoiceEntity.toDomain();
 
-        assertEquals(invoiceEntity.getId(), mappedInvoice.getId());
-        assertEquals(invoiceEntity.getEngagementId(), mappedInvoice.getEngagementId());
-        assertEquals(invoiceEntity.getDate(), mappedInvoice.getDate());
-        assertEquals(invoiceEntity.getExpenses(), mappedInvoice.getExpenses());
-        assertEquals(invoiceEntity.getIncomes(), mappedInvoice.getIncomes());
+        assertEquals(invoiceEntity.getId(), mappedInvoiceOld.getId());
+        assertEquals(invoiceEntity.getEngagementId(), mappedInvoiceOld.getEngagementId());
+        assertEquals(invoiceEntity.getDate(), mappedInvoiceOld.getDate());
+        assertEquals(invoiceEntity.getExpenses(), mappedInvoiceOld.getExpenses());
+        assertEquals(invoiceEntity.getIncomes(), mappedInvoiceOld.getIncomes());
     }
 }

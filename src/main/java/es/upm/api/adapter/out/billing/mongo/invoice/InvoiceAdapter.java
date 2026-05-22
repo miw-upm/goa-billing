@@ -1,6 +1,6 @@
 package es.upm.api.adapter.out.billing.mongo.invoice;
 
-import es.upm.api.domain.model.Invoice;
+import es.upm.api.domain.model.InvoiceOld;
 import es.upm.api.domain.model.criteria.InvoiceFindCriteria;
 import es.upm.api.domain.ports.out.billing.InvoiceGateway;
 import es.upm.miw.exception.NotFoundException;
@@ -23,32 +23,32 @@ public class InvoiceAdapter implements InvoiceGateway {
     }
 
     @Override
-    public void create(Invoice invoice) {
-        this.invoiceRepository.save(new InvoiceEntity(invoice));
+    public void create(InvoiceOld invoiceOld) {
+        this.invoiceRepository.save(new InvoiceEntity(invoiceOld));
     }
 
     @Override
-    public Invoice update(UUID id, Invoice invoice) {
+    public InvoiceOld update(UUID id, InvoiceOld invoiceOld) {
         InvoiceEntity invoiceEntity = this.invoiceRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Invoice id: " + id));
+                .orElseThrow(() -> new NotFoundException("InvoiceOld id: " + id));
 
-        invoiceEntity.setEngagementId(invoice.getEngagementId());
-        invoiceEntity.setDate(invoice.getDate());
-        invoiceEntity.setExpenses(invoice.getExpenses());
-        invoiceEntity.setIncomes(invoice.getIncomes());
+        invoiceEntity.setEngagementId(invoiceOld.getEngagementId());
+        invoiceEntity.setDate(invoiceOld.getDate());
+        invoiceEntity.setExpenses(invoiceOld.getExpenses());
+        invoiceEntity.setIncomes(invoiceOld.getIncomes());
 
         return this.invoiceRepository.save(invoiceEntity).toDomain();
     }
 
     @Override
-    public Invoice readById(UUID id) {
+    public InvoiceOld readById(UUID id) {
         return this.invoiceRepository.findById(id)
                 .map(InvoiceEntity::toDomain)
-                .orElseThrow(() -> new NotFoundException("Invoice id: " + id));
+                .orElseThrow(() -> new NotFoundException("InvoiceOld id: " + id));
     }
 
     @Override
-    public Stream<Invoice> findAll(InvoiceFindCriteria criteria) {
+    public Stream<InvoiceOld> findAll(InvoiceFindCriteria criteria) {
         List<InvoiceEntity> result;
 
         if (criteria.isEmpty()) {
@@ -70,13 +70,13 @@ public class InvoiceAdapter implements InvoiceGateway {
     }
 
     @Override
-    public Invoice findByExpenseId(UUID expenseId) {
+    public InvoiceOld findByExpenseId(UUID expenseId) {
         InvoiceEntity invoiceEntity = this.invoiceRepository.findByExpensesId(expenseId);
         return invoiceEntity == null ? null : invoiceEntity.toDomain();
     }
 
     @Override
-    public Invoice findByIncomeId(UUID incomeId) {
+    public InvoiceOld findByIncomeId(UUID incomeId) {
         InvoiceEntity invoiceEntity = this.invoiceRepository.findByIncomesId(incomeId);
         return invoiceEntity == null ? null : invoiceEntity.toDomain();
     }

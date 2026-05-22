@@ -25,7 +25,7 @@ public class InvoiceSeeder {
     }
 
     public void seedDatabase() {
-        log.warn("------- Invoice Initial Load -----------");
+        log.warn("------- InvoiceOld Initial Load -----------");
         List<InvoiceEntity> invoices = List.of(
                 this.buildInvoice(
                         "cccccccc-dddd-eeee-ffff-aaaabbbb0001",

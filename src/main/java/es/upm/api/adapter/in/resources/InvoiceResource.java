@@ -2,7 +2,7 @@ package es.upm.api.adapter.in.resources;
 
 import es.upm.api.domain.model.Expense;
 import es.upm.api.domain.model.Income;
-import es.upm.api.domain.model.Invoice;
+import es.upm.api.domain.model.InvoiceOld;
 import es.upm.api.domain.model.criteria.InvoiceFindCriteria;
 import es.upm.api.domain.model.InvoiceBreakdown;
 import es.upm.api.domain.services.InvoiceService;
@@ -34,9 +34,9 @@ public class InvoiceResource {
 
     @PostMapping
     @Operation(summary = "Create invoice")
-    public Invoice create(@Valid @RequestBody InvoiceCreationDto request) {
+    public InvoiceOld create(@Valid @RequestBody InvoiceCreationDto request) {
         return this.invoiceService.create(
-                Invoice.builder()
+                InvoiceOld.builder()
                         .engagementId(request.getEngagementId())
                         .date(request.getDate())
                         .expenses(request.getExpenseIds().stream()
@@ -51,10 +51,10 @@ public class InvoiceResource {
 
     @PutMapping("/{id}")
     @Operation(summary = "Update invoice")
-    public Invoice update(@PathVariable UUID id, @Valid @RequestBody InvoiceUpdatingDto request) {
+    public InvoiceOld update(@PathVariable UUID id, @Valid @RequestBody InvoiceUpdatingDto request) {
         return this.invoiceService.update(
                 id,
-                Invoice.builder()
+                InvoiceOld.builder()
                         .engagementId(request.getEngagementId())
                         .date(request.getDate())
                         .expenses(request.getExpenseIds().stream()
@@ -69,13 +69,13 @@ public class InvoiceResource {
 
     @GetMapping
     @Operation(summary = "List invoices")
-    public Stream<Invoice> findAll(@ModelAttribute InvoiceFindCriteria criteria) {
+    public Stream<InvoiceOld> findAll(@ModelAttribute InvoiceFindCriteria criteria) {
         return this.invoiceService.findAll(criteria);
     }
 
     @GetMapping("/{id}")
     @Operation(summary = "Read invoice by id")
-    public Invoice readById(@PathVariable UUID id) {
+    public InvoiceOld readById(@PathVariable UUID id) {
         return this.invoiceService.readById(id);
     }
 
