@@ -4,7 +4,7 @@ import es.upm.api.domain.model.Income;
 import es.upm.api.domain.model.criteria.IncomeFindCriteria;
 import es.upm.api.domain.model.external.UserSnapshot;
 import es.upm.api.domain.ports.out.billing.IncomeGateway;
-import es.upm.api.domain.ports.out.engagement.EngagementWebClient;
+import es.upm.api.adapter.out.engagement.feign.EngagementWebClient;
 import es.upm.api.domain.ports.out.user.UserFinder;
 import es.upm.miw.exception.BadRequestException;
 import es.upm.miw.exception.NotFoundException;

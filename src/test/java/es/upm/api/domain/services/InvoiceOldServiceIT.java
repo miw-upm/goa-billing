@@ -6,7 +6,7 @@ import es.upm.api.domain.model.criteria.InvoiceFindCriteria;
 import es.upm.api.domain.ports.out.billing.ExpenseGateway;
 import es.upm.api.domain.ports.out.billing.IncomeGateway;
 import es.upm.api.domain.ports.out.billing.InvoiceGateway;
-import es.upm.api.domain.ports.out.engagement.EngagementWebClient;
+import es.upm.api.adapter.out.engagement.feign.EngagementWebClient;
 import es.upm.miw.exception.BadRequestException;
 import es.upm.miw.exception.NotFoundException;
 import org.junit.jupiter.api.BeforeEach;

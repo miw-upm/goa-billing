@@ -1,6 +1,7 @@
-package es.upm.api.domain.ports.out.engagement;
+package es.upm.api.adapter.out.engagement.feign;
 
 import es.upm.api.configurations.FeignConfig;
+import es.upm.api.domain.model.external.EngagementSnapshot;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -14,5 +15,5 @@ public interface EngagementWebClient {
     String ID_ID = "/{id}";
 
     @GetMapping(ENGAGEMENT_LETTERS + ID_ID)
-    Object readById(@PathVariable UUID id);
+    EngagementSnapshot read(@PathVariable UUID id);
 }

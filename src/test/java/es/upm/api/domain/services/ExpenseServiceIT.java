@@ -3,7 +3,7 @@ package es.upm.api.domain.services;
 import es.upm.api.domain.model.Expense;
 import es.upm.api.domain.model.criteria.ExpenseFindCriteria;
 import es.upm.api.domain.ports.out.billing.ExpenseGateway;
-import es.upm.api.domain.ports.out.engagement.EngagementWebClient;
+import es.upm.api.adapter.out.engagement.feign.EngagementWebClient;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
