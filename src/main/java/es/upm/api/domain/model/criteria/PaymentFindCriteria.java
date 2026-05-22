@@ -5,16 +5,15 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
-import java.util.UUID;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class PaymentFindCriteria {
-    private UUID engagementId;
-    private LocalDate date;
+    private String client;
+    private LocalDate fromDate;
 
-    public boolean isEmpty() {
-        return this.engagementId == null && this.date == null;
+    public boolean all() {
+        return this.client == null && this.fromDate == null;
     }
 }

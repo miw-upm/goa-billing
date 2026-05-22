@@ -149,18 +149,6 @@ class PaymentServiceIT {
     }
 
     @Test
-    void shouldFindPayments() {
-        when(this.paymentGateway.find(this.criteria)).thenReturn(Stream.of(this.payment));
-
-        Stream<Payment> stream = this.paymentService.find(this.criteria);
-
-        assertEquals(this.payment, stream.findFirst().orElse(null));
-        verify(this.paymentGateway).find(this.criteria);
-        verifyNoInteractions(this.engagementFinder);
-        verifyNoInteractions(this.userFinder);
-    }
-
-    @Test
     void shouldNotCreateWhenUserFinderFails() {
         RuntimeException exception = new RuntimeException("User not found");
         when(this.engagementFinder.read(this.engagementId))

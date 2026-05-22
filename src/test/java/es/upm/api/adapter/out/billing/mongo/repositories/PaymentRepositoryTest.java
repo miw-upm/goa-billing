@@ -14,6 +14,7 @@ import org.springframework.test.context.ActiveProfiles;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -65,5 +66,33 @@ class PaymentRepositoryTest {
         assertEquals(saved.getId(), optional.get().getId());
         assertEquals(saved.getEngagementId(), optional.get().getEngagementId());
         assertEquals(saved.getUserId(), optional.get().getUserId());
+    }
+
+    @Test
+    void shouldFindPaymentsFromDate() {
+        Payment older = Payment.builder()
+                .id(UUID.randomUUID())
+                .engagement(EngagementSnapshot.builder().engagementId(UUID.randomUUID()).build())
+                .user(UserSnapshot.builder().id(UUID.randomUUID()).build())
+                .amount(BigDecimal.valueOf(100))
+                .method(PaymentMethod.CASH)
+                .date(LocalDate.of(2026, 3, 18))
+                .build();
+        Payment newer = Payment.builder()
+                .id(UUID.randomUUID())
+                .engagement(EngagementSnapshot.builder().engagementId(UUID.randomUUID()).build())
+                .user(UserSnapshot.builder().id(UUID.randomUUID()).build())
+                .amount(BigDecimal.valueOf(200))
+                .method(PaymentMethod.TRANSFER)
+                .date(LocalDate.of(2026, 3, 20))
+                .build();
+        this.paymentRepository.save(new PaymentEntity(older));
+        this.paymentRepository.save(new PaymentEntity(newer));
+
+        List<PaymentEntity> result = this.paymentRepository
+                .findByDateGreaterThanEqualOrderByDateDesc(LocalDate.of(2026, 3, 19));
+
+        assertEquals(1, result.size());
+        assertEquals(newer.getId(), result.get(0).getId());
     }
 }

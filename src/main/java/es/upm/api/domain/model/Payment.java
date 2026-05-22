@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import es.upm.api.domain.model.external.EngagementSnapshot;
 import es.upm.api.domain.model.external.UserSnapshot;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Past;
 import jakarta.validation.constraints.Positive;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -24,10 +25,10 @@ public class Payment {
     private UUID id;
 
     @JsonFormat(pattern = "yyyy-MM-dd")
-    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    @NotNull
+    @Past
     private LocalDate date;
 
-    @NotNull
     private EngagementSnapshot engagement;
 
     @NotNull

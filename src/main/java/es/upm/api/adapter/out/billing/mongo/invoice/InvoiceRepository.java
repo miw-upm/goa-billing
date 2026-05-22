@@ -1,20 +1,16 @@
 package es.upm.api.adapter.out.billing.mongo.invoice;
 
-import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.repository.MongoRepository;
+import org.springframework.data.mongodb.repository.Query;
 
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
 public interface InvoiceRepository extends MongoRepository<InvoiceEntity, UUID> {
-    List<InvoiceEntity> findByEngagementId(UUID engagementId, Sort sort);
+    @Query("{'engagementId': ?0}")
+    List<InvoiceEntity> findByEngagementId(UUID engagementId);
 
-    List<InvoiceEntity> findByDate(LocalDate date, Sort sort);
-
-    List<InvoiceEntity> findByEngagementIdAndDate(UUID engagementId, LocalDate date, Sort sort);
-
-    InvoiceEntity findByExpensesId(UUID expenseId);
-
-    InvoiceEntity findByIncomesId(UUID incomeId);
+    @Query("{'emissionDate': ?0}")
+    List<InvoiceEntity> findByEmissionDate(LocalDate emissionDate);
 }

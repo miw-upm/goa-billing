@@ -1,9 +1,13 @@
 package es.upm.api.configurations.seeder;
 
-import es.upm.api.domain.model.Expense;
-import es.upm.api.domain.model.Income;
 import es.upm.api.adapter.out.billing.mongo.invoice.InvoiceEntity;
 import es.upm.api.adapter.out.billing.mongo.invoice.InvoiceRepository;
+import es.upm.api.domain.model.BillingInfo;
+import es.upm.api.domain.model.Invoice;
+import es.upm.api.domain.model.Payment;
+import es.upm.api.domain.model.PaymentMethod;
+import es.upm.api.domain.model.external.EngagementSnapshot;
+import es.upm.api.domain.model.external.UserSnapshot;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Repository;
@@ -25,92 +29,40 @@ public class InvoiceSeeder {
     }
 
     public void seedDatabase() {
-        log.warn("------- InvoiceOld Initial Load -----------");
+        log.warn("------- Invoice Initial Load -----------");
         List<InvoiceEntity> invoices = List.of(
-                this.buildInvoice(
+                new InvoiceEntity(this.buildInvoice(
                         "cccccccc-dddd-eeee-ffff-aaaabbbb0001",
                         "aaaaaaa0-bbbb-cccc-dddd-eeeeffff0000",
-                        LocalDate.of(2026, 3, 23),
+                        "aaaaaaaa-bbbb-cccc-dddd-eeeeffff0000",
+                        LocalDate.of(2026, 3, 20),
+                        LocalDate.of(2026, 3, 20),
                         List.of(
-                                this.buildExpense(
-                                        "aaaaaaaa-bbbb-cccc-dddd-eeeeffff1000",
-                                        "aaaaaaa0-bbbb-cccc-dddd-eeeeffff0000",
-                                        "35.50",
-                                        LocalDate.of(2026, 3, 15),
-                                        "Taxi from airport"
-                                )
-                        ),
-                        List.of(
-                                this.buildIncome(
-                                        "bbbbbbbb-cccc-dddd-eeee-ffffaaaab001",
+                                this.buildPayment("bbbbbbbb-cccc-dddd-eeee-ffffaaaab001",
                                         "aaaaaaa0-bbbb-cccc-dddd-eeeeffff0000",
                                         "aaaaaaaa-bbbb-cccc-dddd-eeeeffff0000",
-                                        "500.00",
-                                        LocalDate.of(2026, 3, 20)
-                                )
-                        )
-                ),
-                this.buildInvoice(
+                                        "500.00", PaymentMethod.TRANSFER, LocalDate.of(2026, 3, 20))
+                        ),
+                        List.of(new BigDecimal("50.00"))
+                )),
+                new InvoiceEntity(this.buildInvoice(
                         "cccccccc-dddd-eeee-ffff-aaaabbbb0002",
                         "aaaaaaa0-bbbb-cccc-dddd-eeeeffff0001",
-                        LocalDate.of(2026, 3, 24),
+                        "aaaaaaaa-bbbb-cccc-dddd-eeeeffff0001",
+                        LocalDate.of(2026, 3, 21),
+                        LocalDate.of(2026, 3, 21),
                         List.of(
-                                this.buildExpense(
-                                        "aaaaaaaa-bbbb-cccc-dddd-eeeeffff1001",
-                                        "aaaaaaa0-bbbb-cccc-dddd-eeeeffff0001",
-                                        "120.00",
-                                        LocalDate.of(2026, 3, 16),
-                                        "Hotel accommodation"
-                                )
-                        ),
-                        List.of(
-                                this.buildIncome(
-                                        "bbbbbbbb-cccc-dddd-eeee-ffffaaaab002",
+                                this.buildPayment("bbbbbbbb-cccc-dddd-eeee-ffffaaaab002",
                                         "aaaaaaa0-bbbb-cccc-dddd-eeeeffff0001",
                                         "aaaaaaaa-bbbb-cccc-dddd-eeeeffff0001",
-                                        "1200.00",
-                                        LocalDate.of(2026, 3, 21)
-                                ),
-                                this.buildIncome(
-                                        "bbbbbbbb-cccc-dddd-eeee-ffffaaaab003",
+                                        "1200.00", PaymentMethod.BIZUM, LocalDate.of(2026, 3, 21)),
+                                this.buildPayment("bbbbbbbb-cccc-dddd-eeee-ffffaaaab003",
                                         "aaaaaaa0-bbbb-cccc-dddd-eeeeffff0001",
                                         "aaaaaaaa-bbbb-cccc-dddd-eeeeffff0000",
-                                        "200.00",
-                                        LocalDate.of(2026, 3, 22)
-                                )
-                        )
-                ),
-                this.buildInvoice(
-                        "cccccccc-dddd-eeee-ffff-aaaabbbb0003",
-                        "aaaaaaa0-bbbb-cccc-dddd-eeeeffff0001",
-                        LocalDate.of(2026, 3, 25),
-                        List.of(
-                                this.buildExpense(
-                                        "aaaaaaaa-bbbb-cccc-dddd-eeeeffff1004",
-                                        "aaaaaaa0-bbbb-cccc-dddd-eeeeffff0001",
-                                        "64.80",
-                                        LocalDate.of(2026, 3, 18),
-                                        "Client dinner"
-                                )
+                                        "200.00", PaymentMethod.CASH, LocalDate.of(2026, 3, 22))
                         ),
-                        List.of(
-                                this.buildIncome(
-                                        "bbbbbbbb-cccc-dddd-eeee-ffffaaaab004",
-                                        "aaaaaaa0-bbbb-cccc-dddd-eeeeffff0001",
-                                        "aaaaaaaa-bbbb-cccc-dddd-eeeeffff0001",
-                                        "875.00",
-                                        LocalDate.of(2026, 3, 23)
-                                ),
-                                this.buildIncome(
-                                        "bbbbbbbb-cccc-dddd-eeee-ffffaaaab005",
-                                        "aaaaaaa0-bbbb-cccc-dddd-eeeeffff0001",
-                                        "aaaaaaaa-bbbb-cccc-dddd-eeeeffff0000",
-                                        "325.00",
-                                        LocalDate.of(2026, 3, 24)
-                                )
-                        )
-                )
-
+                        List.of(new BigDecimal("125.00"))
+                ))
         );
         this.invoiceRepository.saveAll(invoices);
     }
@@ -119,33 +71,42 @@ public class InvoiceSeeder {
         this.invoiceRepository.deleteAll();
     }
 
-    private InvoiceEntity buildInvoice(String id, String engagementId, LocalDate date, List<Expense> expenses, List<Income> incomes) {
-        InvoiceEntity invoiceEntity = new InvoiceEntity();
-        invoiceEntity.setId(UUID.fromString(id));
-        invoiceEntity.setEngagementId(UUID.fromString(engagementId));
-        invoiceEntity.setDate(date);
-        invoiceEntity.setExpenses(expenses);
-        invoiceEntity.setIncomes(incomes);
-        return invoiceEntity;
+    private Invoice buildInvoice(String id, String engagementId, String userId,
+                                 LocalDate emissionDate, LocalDate operationDate,
+                                 List<Payment> payments, List<BigDecimal> discounts) {
+        BigDecimal paymentsTotal = payments.stream().map(Payment::getAmount).reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal discountsTotal = discounts.stream().reduce(BigDecimal.ZERO, BigDecimal::add);
+        return Invoice.builder()
+                .id(UUID.fromString(id))
+                .billingInfo(BillingInfo.builder()
+                        .userId(UUID.fromString(userId))
+                        .fullName("User " + userId.substring(0, 4))
+                        .identity("ID-" + userId.substring(0, 8))
+                        .fullAddress("Madrid, Spain")
+                        .build())
+                .emissionDate(emissionDate)
+                .operationDate(operationDate)
+                .series("A")
+                .number(1)
+                .baseAmount(paymentsTotal.subtract(discountsTotal))
+                .vatRate(new BigDecimal("21"))
+                .engagement(EngagementSnapshot.builder().engagementId(UUID.fromString(engagementId)).build())
+                .payments(payments)
+                .discounts(discounts)
+                .pdfPath(null)
+                .rectification(null)
+                .build();
     }
 
-    private Expense buildExpense(String id, String engagementId, String amount, LocalDate date, String description) {
-        Expense expense = new Expense();
-        expense.setId(UUID.fromString(id));
-        expense.setEngagementId(UUID.fromString(engagementId));
-        expense.setAmount(new BigDecimal(amount));
-        expense.setDate(date);
-        expense.setDescription(description);
-        return expense;
-    }
-
-    private Income buildIncome(String id, String engagementId, String userId, String amount, LocalDate date) {
-        Income income = new Income();
-        income.setId(UUID.fromString(id));
-        income.setEngagementId(UUID.fromString(engagementId));
-        income.setUserId(UUID.fromString(userId));
-        income.setAmount(new BigDecimal(amount));
-        income.setDate(date);
-        return income;
+    private Payment buildPayment(String id, String engagementId, String userId,
+                                 String amount, PaymentMethod method, LocalDate date) {
+        return Payment.builder()
+                .id(UUID.fromString(id))
+                .engagement(EngagementSnapshot.builder().engagementId(UUID.fromString(engagementId)).build())
+                .user(UserSnapshot.builder().id(UUID.fromString(userId)).build())
+                .amount(new BigDecimal(amount))
+                .method(method)
+                .date(date)
+                .build();
     }
 }

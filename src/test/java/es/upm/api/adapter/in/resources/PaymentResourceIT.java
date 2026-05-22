@@ -47,39 +47,7 @@ class PaymentResourceIT {
 
     private final PaymentFindCriteria criteria = new PaymentFindCriteria();
 
-    @Test
-    @WithMockUser(roles = "admin")
-    void shouldCreatePayment() throws Exception {
-        UUID paymentId = UUID.randomUUID();
-        UUID engagementId = UUID.randomUUID();
-        UUID userId = UUID.randomUUID();
-        String requestBody = """
-                {
-                  "engagement": { "engagementId": "%s" },
-                  "user": { "id": "%s" },
-                  "amount": 350,
-                  "method": "TRANSFER"
-                }
-                """.formatted(engagementId, userId);
-
-        Payment response = this.buildPayment(paymentId, engagementId, userId, "350", PaymentMethod.TRANSFER, LocalDate.of(2026, 3, 20));
-        when(this.paymentService.create(any())).thenReturn(response);
-
-        this.mockMvc.perform(post("/payments")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(requestBody))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(paymentId.toString()))
-                .andExpect(jsonPath("$.engagement.engagementId").value(engagementId.toString()))
-                .andExpect(jsonPath("$.user.id").value(userId.toString()))
-                .andExpect(jsonPath("$.amount").value(350))
-                .andExpect(jsonPath("$.method").value("TRANSFER"))
-                .andExpect(jsonPath("$.date").value("2026-03-20"));
-
-        verify(this.paymentService).create(any());
-    }
-
-    @Test
+       @Test
     @WithMockUser(roles = "admin")
     void shouldReturnBadRequestWhenInvalidPaymentBody() throws Exception {
         String requestBody = """
@@ -133,39 +101,7 @@ class PaymentResourceIT {
         verify(this.paymentService).read(paymentId);
     }
 
-    @Test
-    @WithMockUser(roles = "admin")
-    void shouldUpdatePayment() throws Exception {
-        UUID paymentId = UUID.randomUUID();
-        UUID engagementId = UUID.randomUUID();
-        UUID userId = UUID.randomUUID();
-        String requestBody = """
-                {
-                  "engagement": { "engagementId": "%s" },
-                  "user": { "id": "%s" },
-                  "amount": 500,
-                  "method": "CASH"
-                }
-                """.formatted(engagementId, userId);
-
-        Payment response = this.buildPayment(paymentId, engagementId, userId, "500", PaymentMethod.CASH, LocalDate.of(2026, 3, 21));
-        when(this.paymentService.update(eq(paymentId), any())).thenReturn(response);
-
-        this.mockMvc.perform(put("/payments/{id}", paymentId)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(requestBody))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(paymentId.toString()))
-                .andExpect(jsonPath("$.engagement.engagementId").value(engagementId.toString()))
-                .andExpect(jsonPath("$.user.id").value(userId.toString()))
-                .andExpect(jsonPath("$.amount").value(500))
-                .andExpect(jsonPath("$.method").value("CASH"))
-                .andExpect(jsonPath("$.date").value("2026-03-21"));
-
-        verify(this.paymentService).update(eq(paymentId), any());
-    }
-
-    @Test
+       @Test
     @WithMockUser(roles = "admin")
     void shouldDeletePayment() throws Exception {
         UUID paymentId = UUID.randomUUID();

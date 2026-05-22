@@ -1,174 +1,91 @@
 package es.upm.api.domain.services;
 
-import es.upm.api.domain.model.*;
-import es.upm.api.domain.model.InvoiceOld;
+import es.upm.api.domain.model.BillingInfo;
+import es.upm.api.domain.model.Invoice;
+import es.upm.api.domain.model.Payment;
 import es.upm.api.domain.model.criteria.InvoiceFindCriteria;
-import es.upm.api.domain.ports.out.billing.ExpenseGateway;
-import es.upm.api.domain.ports.out.billing.IncomeGateway;
 import es.upm.api.domain.ports.out.billing.InvoiceGateway;
-import es.upm.api.adapter.out.engagement.feign.EngagementWebClient;
-import es.upm.miw.exception.BadRequestException;
+import es.upm.api.domain.ports.out.billing.PaymentGateway;
+import es.upm.api.domain.ports.out.engagement.EngagementFinder;
+import es.upm.api.domain.ports.out.user.UserFinder;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Stream;
 
 @Service
+@RequiredArgsConstructor
 public class InvoiceService {
 
-    private static final BigDecimal VAT_RATE = new BigDecimal("0.21");
+    private static final BigDecimal DEFAULT_VAT_RATE = new BigDecimal("21");
 
     private final InvoiceGateway invoiceGateway;
-    private final ExpenseGateway expenseGateway;
-    private final IncomeGateway incomeGateway;
-    private final EngagementWebClient engagementWebClient;
+    private final PaymentGateway paymentGateway;
+    private final EngagementFinder engagementFinder;
+    private final UserFinder userFinder;
 
-    public InvoiceService(InvoiceGateway invoiceGateway,
-                          ExpenseGateway expenseGateway,
-                          IncomeGateway incomeGateway,
-                          EngagementWebClient engagementWebClient) {
-        this.invoiceGateway = invoiceGateway;
-        this.expenseGateway = expenseGateway;
-        this.incomeGateway = incomeGateway;
-        this.engagementWebClient = engagementWebClient;
+    public Invoice create(Invoice invoice) {
+        invoice.setId(UUID.randomUUID());
+        invoice.setEmissionDate(LocalDate.now());
+        this.validateAndHydrate(invoice);
+        this.invoiceGateway.create(invoice);
+        return invoice;
     }
 
-    public InvoiceOld create(InvoiceOld invoiceOld) {
-        invoiceOld.setId(UUID.randomUUID());
-        this.validateInvoice(invoiceOld);
-        this.invoiceGateway.create(invoiceOld);
-        return invoiceOld;
+    public Invoice update(UUID id, Invoice invoice) {
+        Invoice currentInvoice = this.invoiceGateway.read(id);
+        invoice.setId(id);
+        invoice.setEmissionDate(currentInvoice.getEmissionDate());
+        invoice.setPdfPath(currentInvoice.getPdfPath());
+        this.validateAndHydrate(invoice);
+        return this.invoiceGateway.update(id, invoice);
     }
 
-    public InvoiceOld update(UUID id, InvoiceOld invoiceOld) {
-        this.invoiceGateway.readById(id);
-        invoiceOld.setId(id);
-        this.validateInvoice(invoiceOld);
-        return this.invoiceGateway.update(id, invoiceOld);
+    public Invoice read(UUID id) {
+        Invoice invoice = this.invoiceGateway.read(id);
+        invoice.setEngagement(this.engagementFinder.read(invoice.getEngagement().getEngagementId()));
+        invoice.setBillingInfo(this.hydrateBillingInfo(invoice.getBillingInfo()));
+        return invoice;
     }
 
-    public InvoiceOld readById(UUID id) {
-        return this.invoiceGateway.readById(id);
+    public void delete(UUID id) {
+        this.invoiceGateway.delete(id);
     }
 
-    public Stream<InvoiceOld> findAll(InvoiceFindCriteria criteria) {
-        if (criteria.getEngagementId() != null) {
-            this.engagementWebClient.readById(criteria.getEngagementId());
+    public Stream<Invoice> find(InvoiceFindCriteria criteria) {
+        return this.invoiceGateway.find(criteria);
+    }
+
+    private void validateAndHydrate(Invoice invoice) {
+        invoice.setEngagement(this.engagementFinder.read(invoice.getEngagement().getEngagementId()));
+        invoice.setBillingInfo(this.hydrateBillingInfo(invoice.getBillingInfo()));
+
+        if (invoice.getPayments() != null && !invoice.getPayments().isEmpty()) {
+            List<Payment> hydratedPayments = invoice.getPayments().stream()
+                    .map(payment -> this.paymentGateway.read(payment.getId()))
+                    .toList();
+            invoice.setPayments(hydratedPayments);
+
+            BigDecimal paymentsTotal = hydratedPayments.stream()
+                    .map(Payment::getAmount)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+            BigDecimal discountsTotal = invoice.getDiscounts() == null ? BigDecimal.ZERO
+                    : invoice.getDiscounts().stream().reduce(BigDecimal.ZERO, BigDecimal::add);
+            invoice.setBaseAmount(paymentsTotal.subtract(discountsTotal));
         }
-        return this.invoiceGateway.findAll(criteria);
-    }
-
-    public InvoiceBreakdown getInvoiceBreakdown(UUID id) {
-        InvoiceOld invoiceOld = this.readById(id);
-        if (invoiceOld == null) {
-            throw new BadRequestException("InvoiceOld not found");
+        if (invoice.getVatRate() == null) {
+            invoice.setVatRate(DEFAULT_VAT_RATE);
         }
-
-        List<BreakdownItem> incomeBreakdownList = invoiceOld.getIncomes().stream()
-                .map(this::calculateIncomeBreakdown)
-                .toList();
-
-        List<BreakdownItem> expenseBreakdownList = invoiceOld.getExpenses().stream()
-                .map(this::calculateExpenseBreakdown)
-                .toList();
-
-        BigDecimal totalTaxableBase =
-                incomeBreakdownList.stream()
-                        .map(BreakdownItem::getTaxableBase)
-                        .reduce(BigDecimal.ZERO, BigDecimal::add)
-                        .subtract(
-                                expenseBreakdownList.stream()
-                                        .map(BreakdownItem::getTaxableBase)
-                                        .reduce(BigDecimal.ZERO, BigDecimal::add));
-
-        BigDecimal totalVatAmount =
-                incomeBreakdownList.stream()
-                        .map(BreakdownItem::getVatAmount)
-                        .reduce(BigDecimal.ZERO, BigDecimal::add)
-                        .subtract(
-                                expenseBreakdownList.stream()
-                                        .map(BreakdownItem::getVatAmount)
-                                        .reduce(BigDecimal.ZERO, BigDecimal::add));
-
-        BigDecimal totalAmount = totalTaxableBase.add(totalVatAmount);
-
-        return InvoiceBreakdown.builder()
-                .taxableBase(totalTaxableBase)
-                .vatAmount(totalVatAmount)
-                .totalAmount(totalAmount)
-                .incomes(incomeBreakdownList)
-                .expenses(expenseBreakdownList)
-                .build();
     }
 
-    protected BreakdownItem calculateIncomeBreakdown(Income income) {
-        BigDecimal taxableBase = income.getAmount().divide(VAT_RATE.add(BigDecimal.ONE), 2, RoundingMode.HALF_UP);
-        BigDecimal vatAmount = income.getAmount().subtract(taxableBase);
-        return BreakdownItem.builder()
-                .id(income.getId())
-                .amountWithVat(income.getAmount())
-                .taxableBase(taxableBase)
-                .vatAmount(vatAmount)
-                .build();
-    }
-
-    protected BreakdownItem calculateExpenseBreakdown(Expense expense) {
-        BigDecimal taxableBase = expense.getAmount().divide(VAT_RATE.add(BigDecimal.ONE), 2, RoundingMode.HALF_UP);
-        BigDecimal vatAmount = expense.getAmount().subtract(taxableBase);
-        return BreakdownItem.builder()
-                .id(expense.getId())
-                .amountWithVat(expense.getAmount())
-                .taxableBase(taxableBase)
-                .vatAmount(vatAmount)
-                .build();
-    }
-
-    private void validateInvoice(InvoiceOld invoiceOld) {
-        if (invoiceOld.getDate().isAfter(LocalDate.now())) {
-            throw new BadRequestException("InvoiceOld date cannot be in the future");
+    private BillingInfo hydrateBillingInfo(BillingInfo billingInfo) {
+        if (billingInfo == null || billingInfo.getUserId() == null) {
+            return billingInfo;
         }
-        if (this.isNullOrEmpty(invoiceOld.getExpenses()) && this.isNullOrEmpty(invoiceOld.getIncomes())) {
-            throw new BadRequestException("InvoiceOld must contain at least one expense or one income");
-        }
-
-        this.engagementWebClient.readById(invoiceOld.getEngagementId());
-        invoiceOld.setExpenses(this.validateExpenses(invoiceOld));
-        invoiceOld.setIncomes(this.validateIncomes(invoiceOld));
-    }
-
-    private List<Expense> validateExpenses(InvoiceOld invoiceOld) {
-        return invoiceOld.getExpenses().stream().map(expense -> {
-            Expense existingExpense = this.expenseGateway.read(expense.getId());
-            if (!invoiceOld.getEngagementId().equals(existingExpense.getEngagementId())) {
-                throw new BadRequestException("Expense does not belong to the invoiceOld engagement");
-            }
-            InvoiceOld assignedInvoiceOld = this.invoiceGateway.findByExpenseId(expense.getId());
-            if (assignedInvoiceOld != null && !invoiceOld.getId().equals(assignedInvoiceOld.getId())) {
-                throw new BadRequestException("Expense is already assigned to another invoiceOld");
-            }
-            return existingExpense;
-        }).toList();
-    }
-
-    private List<Income> validateIncomes(InvoiceOld invoiceOld) {
-        return invoiceOld.getIncomes().stream().map(income -> {
-            Income existingIncome = this.incomeGateway.readById(income.getId());
-            if (!invoiceOld.getEngagementId().equals(existingIncome.getEngagementId())) {
-                throw new BadRequestException("Income does not belong to the invoiceOld engagement");
-            }
-            InvoiceOld assignedInvoiceOld = this.invoiceGateway.findByIncomeId(income.getId());
-            if (assignedInvoiceOld != null && !invoiceOld.getId().equals(assignedInvoiceOld.getId())) {
-                throw new BadRequestException("Income is already assigned to another invoiceOld");
-            }
-            return existingIncome;
-        }).toList();
-    }
-
-    private boolean isNullOrEmpty(List<?> items) {
-        return items == null || items.isEmpty();
+        return BillingInfo.from(this.userFinder.readById(billingInfo.getUserId()));
     }
 }

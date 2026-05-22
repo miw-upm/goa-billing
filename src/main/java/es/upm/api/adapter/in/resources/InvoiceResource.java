@@ -1,87 +1,51 @@
 package es.upm.api.adapter.in.resources;
 
-import es.upm.api.domain.model.Expense;
-import es.upm.api.domain.model.Income;
-import es.upm.api.domain.model.InvoiceOld;
+import es.upm.api.domain.model.Invoice;
 import es.upm.api.domain.model.criteria.InvoiceFindCriteria;
-import es.upm.api.domain.model.InvoiceBreakdown;
 import es.upm.api.domain.services.InvoiceService;
-import es.upm.api.adapter.in.resources.dtos.InvoiceCreationDto;
-import es.upm.api.adapter.in.resources.dtos.InvoiceUpdatingDto;
 import es.upm.miw.security.Security;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
 import java.util.stream.Stream;
 
+@PreAuthorize(Security.ADMIN_MANAGER_OPERATOR)
 @RestController
 @RequestMapping(InvoiceResource.INVOICES)
-@SecurityRequirement(name = "bearerAuth")
-@PreAuthorize(Security.ADMIN_MANAGER_OPERATOR)
+@RequiredArgsConstructor
 public class InvoiceResource {
-
     public static final String INVOICES = "/invoices";
 
     private final InvoiceService invoiceService;
 
-    public InvoiceResource(InvoiceService invoiceService) {
-        this.invoiceService = invoiceService;
-    }
-
     @PostMapping
-    @Operation(summary = "Create invoice")
-    public InvoiceOld create(@Valid @RequestBody InvoiceCreationDto request) {
-        return this.invoiceService.create(
-                InvoiceOld.builder()
-                        .engagementId(request.getEngagementId())
-                        .date(request.getDate())
-                        .expenses(request.getExpenseIds().stream()
-                                .map(expenseId -> Expense.builder().id(expenseId).build())
-                                .toList())
-                        .incomes(request.getIncomeIds().stream()
-                                .map(incomeId -> Income.builder().id(incomeId).build())
-                                .toList())
-                        .build()
-        );
-    }
-
-    @PutMapping("/{id}")
-    @Operation(summary = "Update invoice")
-    public InvoiceOld update(@PathVariable UUID id, @Valid @RequestBody InvoiceUpdatingDto request) {
-        return this.invoiceService.update(
-                id,
-                InvoiceOld.builder()
-                        .engagementId(request.getEngagementId())
-                        .date(request.getDate())
-                        .expenses(request.getExpenseIds().stream()
-                                .map(expenseId -> Expense.builder().id(expenseId).build())
-                                .toList())
-                        .incomes(request.getIncomeIds().stream()
-                                .map(incomeId -> Income.builder().id(incomeId).build())
-                                .toList())
-                        .build()
-        );
-    }
-
-    @GetMapping
-    @Operation(summary = "List invoices")
-    public Stream<InvoiceOld> findAll(@ModelAttribute InvoiceFindCriteria criteria) {
-        return this.invoiceService.findAll(criteria);
+    public Invoice create(@Valid @RequestBody Invoice request) {
+        return this.invoiceService.create(request);
     }
 
     @GetMapping("/{id}")
-    @Operation(summary = "Read invoice by id")
-    public InvoiceOld readById(@PathVariable UUID id) {
-        return this.invoiceService.readById(id);
+    public Invoice read(@PathVariable UUID id) {
+        return this.invoiceService.read(id);
     }
 
-    @GetMapping("/{id}/breakdown")
-    @Operation(summary = "Get invoice breakdown")
-    public InvoiceBreakdown getInvoiceBreakdown(@PathVariable UUID id) {
-        return this.invoiceService.getInvoiceBreakdown(id);
+    @PutMapping("/{id}")
+    public Invoice update(@PathVariable UUID id, @Valid @RequestBody Invoice request) {
+        return this.invoiceService.update(id, request);
+    }
+
+    @PreAuthorize(Security.ADMIN)
+    @DeleteMapping("/{id}")
+    public void delete(@PathVariable UUID id) {
+        this.invoiceService.delete(id);
+    }
+
+    @GetMapping
+    public Stream<Invoice> find(@ModelAttribute InvoiceFindCriteria criteria) {
+        return this.invoiceService.find(criteria);
     }
 }

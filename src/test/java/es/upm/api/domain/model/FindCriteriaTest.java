@@ -27,10 +27,10 @@ class FindCriteriaTest {
     void shouldDetectEmptyPaymentFindCriteria() {
         PaymentFindCriteria criteria = new PaymentFindCriteria();
 
-        assertTrue(criteria.isEmpty());
+        assertTrue(criteria.all());
 
-        criteria.setEngagementId(UUID.randomUUID());
-        assertFalse(criteria.isEmpty());
+        criteria.setClient("client");
+        assertFalse(criteria.all());
     }
 
     @Test

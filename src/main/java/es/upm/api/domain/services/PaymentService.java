@@ -2,14 +2,20 @@ package es.upm.api.domain.services;
 
 import es.upm.api.domain.model.Payment;
 import es.upm.api.domain.model.criteria.PaymentFindCriteria;
+import es.upm.api.domain.model.external.UserSnapshot;
 import es.upm.api.domain.ports.out.billing.PaymentGateway;
 import es.upm.api.domain.ports.out.engagement.EngagementFinder;
 import es.upm.api.domain.ports.out.user.UserFinder;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import java.time.LocalDate;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Service
@@ -49,6 +55,15 @@ public class PaymentService {
     }
 
     public Stream<Payment> find(PaymentFindCriteria criteria) {
-        return this.paymentGateway.find(criteria);
+        Stream<Payment> payments = this.paymentGateway.find(criteria);
+        if (StringUtils.hasText(criteria.getClient())) {
+            return payments;
+        }
+        List<UUID> clientIds = this.userFinder.find(criteria.getClient()).stream()
+                .map(UserSnapshot::getId)
+                .toList();
+        return payments.filter(payment -> payment.getUser() != null
+                && payment.getUser().getId() != null
+                && clientIds.contains(payment.getUser().getId()));
     }
 }
