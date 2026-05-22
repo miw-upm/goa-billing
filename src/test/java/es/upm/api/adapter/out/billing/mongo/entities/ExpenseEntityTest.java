@@ -2,6 +2,8 @@ package es.upm.api.adapter.out.billing.mongo.entities;
 
 import es.upm.api.adapter.out.billing.mongo.expense.ExpenseEntity;
 import es.upm.api.domain.model.Expense;
+import es.upm.api.domain.model.TaxCategory;
+import es.upm.api.domain.model.external.EngagementSnapshot;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -19,10 +21,14 @@ class ExpenseEntityTest {
     void setUp() {
         this.expense = Expense.builder()
                 .id(UUID.randomUUID())
-                .engagementId(UUID.randomUUID())
-                .amount(BigDecimal.valueOf(25))
+                .engagement(EngagementSnapshot.builder().engagementId(UUID.randomUUID()).build())
+                .baseAmount(BigDecimal.valueOf(25))
+                .vatRate(BigDecimal.valueOf(21))
+                .supplier("Taxi Madrid")
+                .supplierIdentity("A10000000")
+                .taxCategory(TaxCategory.OTROS)
                 .date(LocalDate.of(2026, 3, 20))
-                .description("Taxi")
+                .documentPath("doc/path")
                 .build();
     }
 
@@ -31,28 +37,40 @@ class ExpenseEntityTest {
         ExpenseEntity expenseEntity = new ExpenseEntity(this.expense);
 
         assertEquals(this.expense.getId(), expenseEntity.getId());
-        assertEquals(this.expense.getEngagementId(), expenseEntity.getEngagementId());
-        assertEquals(this.expense.getAmount(), expenseEntity.getAmount());
+        assertEquals(this.expense.getEngagement().getEngagementId(), expenseEntity.getEngagementId());
+        assertEquals(this.expense.getBaseAmount(), expenseEntity.getBaseAmount());
+        assertEquals(this.expense.getVatRate(), expenseEntity.getVatRate());
+        assertEquals(this.expense.getSupplier(), expenseEntity.getSupplier());
+        assertEquals(this.expense.getSupplierIdentity(), expenseEntity.getSupplierIdentity());
+        assertEquals(this.expense.getTaxCategory(), expenseEntity.getTaxCategory());
         assertEquals(this.expense.getDate(), expenseEntity.getDate());
-        assertEquals(this.expense.getDescription(), expenseEntity.getDescription());
+        assertEquals(this.expense.getDocumentPath(), expenseEntity.getDocumentPath());
     }
 
     @Test
     void shouldConvertExpenseEntityToDomain() {
         ExpenseEntity expenseEntity = new ExpenseEntity();
         expenseEntity.setId(this.expense.getId());
-        expenseEntity.setEngagementId(this.expense.getEngagementId());
-        expenseEntity.setAmount(this.expense.getAmount());
+        expenseEntity.setEngagementId(this.expense.getEngagement().getEngagementId());
+        expenseEntity.setBaseAmount(this.expense.getBaseAmount());
+        expenseEntity.setVatRate(this.expense.getVatRate());
+        expenseEntity.setSupplier(this.expense.getSupplier());
+        expenseEntity.setSupplierIdentity(this.expense.getSupplierIdentity());
+        expenseEntity.setTaxCategory(this.expense.getTaxCategory());
         expenseEntity.setDate(this.expense.getDate());
-        expenseEntity.setDescription(this.expense.getDescription());
+        expenseEntity.setDocumentPath(this.expense.getDocumentPath());
 
         Expense mappedExpense = expenseEntity.toDomain();
 
         assertEquals(expenseEntity.getId(), mappedExpense.getId());
-        assertEquals(expenseEntity.getEngagementId(), mappedExpense.getEngagementId());
-        assertEquals(expenseEntity.getAmount(), mappedExpense.getAmount());
+        assertEquals(expenseEntity.getEngagementId(), mappedExpense.getEngagement().getEngagementId());
+        assertEquals(expenseEntity.getBaseAmount(), mappedExpense.getBaseAmount());
+        assertEquals(expenseEntity.getVatRate(), mappedExpense.getVatRate());
+        assertEquals(expenseEntity.getSupplier(), mappedExpense.getSupplier());
+        assertEquals(expenseEntity.getSupplierIdentity(), mappedExpense.getSupplierIdentity());
+        assertEquals(expenseEntity.getTaxCategory(), mappedExpense.getTaxCategory());
         assertEquals(expenseEntity.getDate(), mappedExpense.getDate());
-        assertEquals(expenseEntity.getDescription(), mappedExpense.getDescription());
+        assertEquals(expenseEntity.getDocumentPath(), mappedExpense.getDocumentPath());
     }
 }
 

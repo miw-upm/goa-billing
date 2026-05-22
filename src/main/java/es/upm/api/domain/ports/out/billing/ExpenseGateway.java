@@ -13,7 +13,9 @@ public interface ExpenseGateway {
 
     Expense update(UUID id, Expense expense);
 
-    Expense readById(UUID id);
+    Expense read(UUID id);
 
-    Stream<Expense> findAll(ExpenseFindCriteria criteria);
+    void delete(UUID id);
+
+    Stream<Expense> find(ExpenseFindCriteria criteria);
 }

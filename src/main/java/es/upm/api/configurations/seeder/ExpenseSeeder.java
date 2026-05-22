@@ -2,6 +2,7 @@ package es.upm.api.configurations.seeder;
 
 import es.upm.api.adapter.out.billing.mongo.expense.ExpenseEntity;
 import es.upm.api.adapter.out.billing.mongo.expense.ExpenseRepository;
+import es.upm.api.domain.model.TaxCategory;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Repository;
@@ -28,30 +29,30 @@ public class ExpenseSeeder {
                 this.buildExpense(
                         "aaaaaaaa-bbbb-cccc-dddd-eeeeffff1000",
                         "aaaaaaa0-bbbb-cccc-dddd-eeeeffff0000",
-                        "35.50",
+                        "35.50", "21", "Taxi Madrid", "A10000000", TaxCategory.OTROS,
                         LocalDate.of(2026, 3, 15),
-                        "Taxi from airport"
+                        null
                 ),
                 this.buildExpense(
                         "aaaaaaaa-bbbb-cccc-dddd-eeeeffff1001",
                         "aaaaaaa0-bbbb-cccc-dddd-eeeeffff0001",
-                        "120.00",
+                        "120.00", "21", "Hotel Central", "B20000000", TaxCategory.SERVICIOS_PROFESIONALES,
                         LocalDate.of(2026, 3, 16),
-                        "Hotel accommodation"
+                        null
                 ),
                 this.buildExpense(
                         "aaaaaaaa-bbbb-cccc-dddd-eeeeffff1002",
                         "aaaaaaa0-bbbb-cccc-dddd-eeeeffff0000",
-                        "18.90",
+                        "18.90", "21", "Restaurante Norte", "C30000000", TaxCategory.MANUTENCION,
                         LocalDate.of(2026, 3, 17),
-                        "Team lunch"
+                        null
                 ),
                 this.buildExpense(
                         "aaaaaaaa-bbbb-cccc-dddd-eeeeffff1004",
                         "aaaaaaa0-bbbb-cccc-dddd-eeeeffff0001",
-                        "64.80",
+                        "64.80", "21", "Restaurante Sur", "D40000000", TaxCategory.MANUTENCION,
                         LocalDate.of(2026, 3, 18),
-                        "Client dinner"
+                        null
                 )
         );
         this.expenseRepository.saveAll(expenses);
@@ -61,13 +62,19 @@ public class ExpenseSeeder {
         this.expenseRepository.deleteAll();
     }
 
-    private ExpenseEntity buildExpense(String id, String engagementId, String amount, LocalDate date, String description) {
+    private ExpenseEntity buildExpense(String id, String engagementId, String baseAmount, String vatRate,
+                                       String supplier, String supplierIdentity, TaxCategory taxCategory,
+                                       LocalDate date, String documentPath) {
         ExpenseEntity expenseEntity = new ExpenseEntity();
         expenseEntity.setId(UUID.fromString(id));
         expenseEntity.setEngagementId(UUID.fromString(engagementId));
-        expenseEntity.setAmount(new BigDecimal(amount));
+        expenseEntity.setBaseAmount(new BigDecimal(baseAmount));
+        expenseEntity.setVatRate(new BigDecimal(vatRate));
+        expenseEntity.setSupplier(supplier);
+        expenseEntity.setSupplierIdentity(supplierIdentity);
+        expenseEntity.setTaxCategory(taxCategory);
         expenseEntity.setDate(date);
-        expenseEntity.setDescription(description);
+        expenseEntity.setDocumentPath(documentPath);
         return expenseEntity;
     }
 }

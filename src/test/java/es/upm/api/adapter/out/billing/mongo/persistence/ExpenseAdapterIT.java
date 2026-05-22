@@ -1,10 +1,12 @@
 package es.upm.api.adapter.out.billing.mongo.persistence;
 
 import es.upm.api.adapter.out.billing.mongo.expense.ExpenseAdapter;
-import es.upm.api.domain.model.Expense;
-import es.upm.api.domain.model.criteria.ExpenseFindCriteria;
 import es.upm.api.adapter.out.billing.mongo.expense.ExpenseEntity;
 import es.upm.api.adapter.out.billing.mongo.expense.ExpenseRepository;
+import es.upm.api.domain.model.Expense;
+import es.upm.api.domain.model.TaxCategory;
+import es.upm.api.domain.model.criteria.ExpenseFindCriteria;
+import es.upm.api.domain.model.external.EngagementSnapshot;
 import es.upm.miw.exception.NotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -46,10 +48,14 @@ class ExpenseAdapterIT {
     void setUp() {
         this.expense = Expense.builder()
                 .id(UUID.randomUUID())
-                .engagementId(engagementUuid)
-                .amount(BigDecimal.valueOf(25))
+                .engagement(EngagementSnapshot.builder().engagementId(engagementUuid).build())
+                .baseAmount(BigDecimal.valueOf(25))
+                .vatRate(BigDecimal.valueOf(21))
+                .supplier("Taxi Madrid")
+                .supplierIdentity("A10000000")
+                .taxCategory(TaxCategory.OTROS)
                 .date(date)
-                .description("Taxi")
+                .documentPath("doc/path")
                 .build();
     }
 
@@ -65,10 +71,14 @@ class ExpenseAdapterIT {
 
         ExpenseEntity persistedExpenseEntity = expenseEntityCaptor.getValue();
         assertEquals(this.expense.getId(), persistedExpenseEntity.getId());
-        assertEquals(this.expense.getEngagementId(), persistedExpenseEntity.getEngagementId());
-        assertEquals(this.expense.getAmount(), persistedExpenseEntity.getAmount());
+        assertEquals(this.expense.getEngagement().getEngagementId(), persistedExpenseEntity.getEngagementId());
+        assertEquals(this.expense.getBaseAmount(), persistedExpenseEntity.getBaseAmount());
+        assertEquals(this.expense.getVatRate(), persistedExpenseEntity.getVatRate());
+        assertEquals(this.expense.getSupplier(), persistedExpenseEntity.getSupplier());
+        assertEquals(this.expense.getSupplierIdentity(), persistedExpenseEntity.getSupplierIdentity());
+        assertEquals(this.expense.getTaxCategory(), persistedExpenseEntity.getTaxCategory());
         assertEquals(this.expense.getDate(), persistedExpenseEntity.getDate());
-        assertEquals(this.expense.getDescription(), persistedExpenseEntity.getDescription());
+        assertEquals(this.expense.getDocumentPath(), persistedExpenseEntity.getDocumentPath());
     }
 
     @Test
@@ -88,7 +98,7 @@ class ExpenseAdapterIT {
         when(this.expenseRepository.findById(this.expense.getId()))
                 .thenReturn(Optional.of(new ExpenseEntity(this.expense)));
 
-        Expense readExpense = this.expensePersistenceMongodb.readById(this.expense.getId());
+        Expense readExpense = this.expensePersistenceMongodb.read(this.expense.getId());
 
         assertEquals(this.expense, readExpense);
         verify(this.expenseRepository).findById(this.expense.getId());
@@ -100,18 +110,68 @@ class ExpenseAdapterIT {
                 .thenReturn(Optional.empty());
 
         NotFoundException thrown = assertThrows(NotFoundException.class,
-                () -> this.expensePersistenceMongodb.readById(this.expense.getId()));
+                () -> this.expensePersistenceMongodb.read(this.expense.getId()));
 
         assertEquals("Not Found Exception. Expense id: " + this.expense.getId(), thrown.getMessage());
         verify(this.expenseRepository).findById(this.expense.getId());
     }
 
     @Test
-    void shouldFindAll() {
+    void shouldUpdateExpense() {
+        UUID id = this.expense.getId();
+        when(this.expenseRepository.findById(id)).thenReturn(Optional.of(new ExpenseEntity(this.expense)));
+        when(this.expenseRepository.save(any(ExpenseEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        Expense updateRequest = Expense.builder()
+                .engagement(EngagementSnapshot.builder().engagementId(this.engagementUuid).build())
+                .baseAmount(BigDecimal.valueOf(50))
+                .vatRate(BigDecimal.valueOf(21))
+                .supplier("Proveedor 2")
+                .supplierIdentity("B20000000")
+                .taxCategory(TaxCategory.SUMINISTROS)
+                .date(this.date)
+                .documentPath("new/doc")
+                .build();
+
+        Expense updated = this.expensePersistenceMongodb.update(id, updateRequest);
+
+        assertEquals(id, updated.getId());
+        assertEquals(updateRequest.getBaseAmount(), updated.getBaseAmount());
+        assertEquals(updateRequest.getSupplier(), updated.getSupplier());
+        verify(this.expenseRepository).findById(id);
+        verify(this.expenseRepository).save(any(ExpenseEntity.class));
+    }
+
+    @Test
+    void shouldDeleteExpense() {
+        UUID id = this.expense.getId();
+        ExpenseEntity expenseEntity = new ExpenseEntity(this.expense);
+        when(this.expenseRepository.findById(id)).thenReturn(Optional.of(expenseEntity));
+
+        this.expensePersistenceMongodb.delete(id);
+
+        verify(this.expenseRepository).findById(id);
+        verify(this.expenseRepository).delete(expenseEntity);
+    }
+
+    @Test
+    void shouldThrowNotFoundWhenDeleteMissing() {
+        UUID id = this.expense.getId();
+        when(this.expenseRepository.findById(id)).thenReturn(Optional.empty());
+
+        NotFoundException thrown = assertThrows(NotFoundException.class,
+                () -> this.expensePersistenceMongodb.delete(id));
+
+        assertEquals("Not Found Exception. Expense id: " + id, thrown.getMessage());
+        verify(this.expenseRepository).findById(id);
+    }
+
+    @Test
+    void shouldFind() {
         when(this.expenseRepository.findAll(ExpenseAdapter.DATE))
                 .thenReturn(List.of(new ExpenseEntity(this.expense)));
 
-        Stream<Expense> expenseStream = this.expensePersistenceMongodb.findAll(this.criteria);
+        Stream<Expense> expenseStream = this.expensePersistenceMongodb.find(this.criteria);
 
         verify(this.expenseRepository).findAll(ExpenseAdapter.DATE);
 
@@ -119,12 +179,12 @@ class ExpenseAdapterIT {
     }
 
     @Test
-    void shouldFindAllWithDate() {
+    void shouldFindWithDate() {
         this.criteria.setDate(date);
         when(this.expenseRepository.findByDate(date))
                 .thenReturn(List.of(new ExpenseEntity(this.expense)));
 
-        Stream<Expense> expenseStream = this.expensePersistenceMongodb.findAll(this.criteria);
+        Stream<Expense> expenseStream = this.expensePersistenceMongodb.find(this.criteria);
 
         verify(this.expenseRepository).findByDate(date);
 
@@ -132,12 +192,12 @@ class ExpenseAdapterIT {
     }
 
     @Test
-    void shouldFindAllWithEngagementId() {
+    void shouldFindWithEngagementId() {
         this.criteria.setEngagementId(engagementUuid);
         when(this.expenseRepository.findByEngagementId(engagementUuid))
                 .thenReturn(List.of(new ExpenseEntity(this.expense)));
 
-        Stream<Expense> expenseStream = this.expensePersistenceMongodb.findAll(this.criteria);
+        Stream<Expense> expenseStream = this.expensePersistenceMongodb.find(this.criteria);
 
         verify(this.expenseRepository).findByEngagementId(engagementUuid);
 
@@ -145,13 +205,13 @@ class ExpenseAdapterIT {
     }
 
     @Test
-    void shouldFindAllWithEngagementIdAndDate() {
+    void shouldFindWithEngagementIdAndDate() {
         this.criteria.setEngagementId(engagementUuid);
         this.criteria.setDate(date);
         when(this.expenseRepository.findByEngagementId(engagementUuid))
                 .thenReturn(List.of(new ExpenseEntity(this.expense)));
 
-        Stream<Expense> expenseStream = this.expensePersistenceMongodb.findAll(this.criteria);
+        Stream<Expense> expenseStream = this.expensePersistenceMongodb.find(this.criteria);
 
         verify(this.expenseRepository).findByEngagementId(engagementUuid);
 

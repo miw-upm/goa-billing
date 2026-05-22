@@ -31,22 +31,34 @@ public class ExpenseAdapter implements ExpenseGateway {
         ExpenseEntity expenseEntity = this.expenseRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Expense id: " + id));
 
-        expenseEntity.setEngagementId(expense.getEngagementId());
-        expenseEntity.setAmount(expense.getAmount());
+        expenseEntity.setEngagementId(expense.getEngagement().getEngagementId());
+        expenseEntity.setBaseAmount(expense.getBaseAmount());
+        expenseEntity.setVatRate(expense.getVatRate());
+        expenseEntity.setSupplier(expense.getSupplier());
+        expenseEntity.setSupplierIdentity(expense.getSupplierIdentity());
+        expenseEntity.setTaxCategory(expense.getTaxCategory());
         expenseEntity.setDate(expense.getDate());
-        expenseEntity.setDescription(expense.getDescription());
+        expenseEntity.setDocumentPath(expense.getDocumentPath());
 
         return this.expenseRepository.save(expenseEntity).toDomain();
     }
 
     @Override
-    public Expense readById(UUID id) {
+    public Expense read(UUID id) {
         return this.expenseRepository.findById(id)
                 .map(ExpenseEntity::toDomain)
                 .orElseThrow(() -> new NotFoundException("Expense id: " + id));
     }
 
-    public Stream<Expense> findAll(ExpenseFindCriteria criteria) {
+    @Override
+    public void delete(UUID id) {
+        ExpenseEntity expenseEntity = this.expenseRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Expense id: " + id));
+        this.expenseRepository.delete(expenseEntity);
+    }
+
+    @Override
+    public Stream<Expense> find(ExpenseFindCriteria criteria) {
         List<ExpenseEntity> result;
 
         if (criteria.isEmpty()) {

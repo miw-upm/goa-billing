@@ -1,8 +1,10 @@
 package es.upm.api.adapter.out.billing.mongo.repositories;
 
 import es.upm.api.adapter.out.billing.mongo.expense.ExpenseRepository;
-import es.upm.api.domain.model.Expense;
 import es.upm.api.adapter.out.billing.mongo.expense.ExpenseEntity;
+import es.upm.api.domain.model.Expense;
+import es.upm.api.domain.model.TaxCategory;
+import es.upm.api.domain.model.external.EngagementSnapshot;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,10 +32,14 @@ class ExpenseRepositoryTest {
         this.expenseRepository.deleteAll();
         this.expense = Expense.builder()
                 .id(UUID.randomUUID())
-                .engagementId(UUID.randomUUID())
-                .amount(BigDecimal.valueOf(30))
+                .engagement(EngagementSnapshot.builder().engagementId(UUID.randomUUID()).build())
+                .baseAmount(BigDecimal.valueOf(30))
+                .vatRate(BigDecimal.valueOf(21))
+                .supplier("Court services")
+                .supplierIdentity("E50000000")
+                .taxCategory(TaxCategory.SERVICIOS_PROFESIONALES)
                 .date(LocalDate.of(2026, 3, 20))
-                .description("Court fee")
+                .documentPath("docs/court.pdf")
                 .build();
     }
 
@@ -46,10 +52,14 @@ class ExpenseRepositoryTest {
         assertNotNull(savedExpenseEntity);
         assertNotNull(savedExpenseEntity.getId());
         assertEquals(this.expense.getId(), savedExpenseEntity.getId());
-        assertEquals(this.expense.getEngagementId(), savedExpenseEntity.getEngagementId());
-        assertEquals(this.expense.getAmount(), savedExpenseEntity.getAmount());
+        assertEquals(this.expense.getEngagement().getEngagementId(), savedExpenseEntity.getEngagementId());
+        assertEquals(this.expense.getBaseAmount(), savedExpenseEntity.getBaseAmount());
+        assertEquals(this.expense.getVatRate(), savedExpenseEntity.getVatRate());
+        assertEquals(this.expense.getSupplier(), savedExpenseEntity.getSupplier());
+        assertEquals(this.expense.getSupplierIdentity(), savedExpenseEntity.getSupplierIdentity());
+        assertEquals(this.expense.getTaxCategory(), savedExpenseEntity.getTaxCategory());
         assertEquals(this.expense.getDate(), savedExpenseEntity.getDate());
-        assertEquals(this.expense.getDescription(), savedExpenseEntity.getDescription());
+        assertEquals(this.expense.getDocumentPath(), savedExpenseEntity.getDocumentPath());
     }
 
     @Test
@@ -62,8 +72,12 @@ class ExpenseRepositoryTest {
         ExpenseEntity foundExpenseEntity = optionalExpenseEntity.get();
         assertEquals(savedExpenseEntity.getId(), foundExpenseEntity.getId());
         assertEquals(savedExpenseEntity.getEngagementId(), foundExpenseEntity.getEngagementId());
-        assertEquals(savedExpenseEntity.getAmount(), foundExpenseEntity.getAmount());
+        assertEquals(savedExpenseEntity.getBaseAmount(), foundExpenseEntity.getBaseAmount());
+        assertEquals(savedExpenseEntity.getVatRate(), foundExpenseEntity.getVatRate());
+        assertEquals(savedExpenseEntity.getSupplier(), foundExpenseEntity.getSupplier());
+        assertEquals(savedExpenseEntity.getSupplierIdentity(), foundExpenseEntity.getSupplierIdentity());
+        assertEquals(savedExpenseEntity.getTaxCategory(), foundExpenseEntity.getTaxCategory());
         assertEquals(savedExpenseEntity.getDate(), foundExpenseEntity.getDate());
-        assertEquals(savedExpenseEntity.getDescription(), foundExpenseEntity.getDescription());
+        assertEquals(savedExpenseEntity.getDocumentPath(), foundExpenseEntity.getDocumentPath());
     }
 }

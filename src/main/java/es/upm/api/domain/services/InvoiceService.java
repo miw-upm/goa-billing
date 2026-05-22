@@ -142,7 +142,7 @@ public class InvoiceService {
 
     private List<Expense> validateExpenses(InvoiceOld invoiceOld) {
         return invoiceOld.getExpenses().stream().map(expense -> {
-            Expense existingExpense = this.expenseGateway.readById(expense.getId());
+            Expense existingExpense = this.expenseGateway.read(expense.getId());
             if (!invoiceOld.getEngagementId().equals(existingExpense.getEngagementId())) {
                 throw new BadRequestException("Expense does not belong to the invoiceOld engagement");
             }
