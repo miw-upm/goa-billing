@@ -11,12 +11,12 @@ import org.springframework.stereotype.Service;
 public class DatabaseSeederDev {
 
     private final ExpenseSeeder expenseSeeder;
-    private final IncomeSeeder incomeSeeder;
+    private final PaymentSeeder paymentSeeder;
     private final InvoiceSeeder invoiceSeeder;
 
-    public DatabaseSeederDev(ExpenseSeeder expenseSeeder, IncomeSeeder incomeSeeder, InvoiceSeeder invoiceSeeder) {
+    public DatabaseSeederDev(ExpenseSeeder expenseSeeder, PaymentSeeder paymentSeeder, InvoiceSeeder invoiceSeeder) {
         this.expenseSeeder = expenseSeeder;
-        this.incomeSeeder = incomeSeeder;
+        this.paymentSeeder = paymentSeeder;
         this.invoiceSeeder = invoiceSeeder;
     }
 
@@ -29,13 +29,13 @@ public class DatabaseSeederDev {
     private void deleteAllAndInitialize() {
         this.invoiceSeeder.deleteAll();
         this.expenseSeeder.deleteAll();
-        this.incomeSeeder.deleteAll();
+        this.paymentSeeder.deleteAll();
         log.warn("------- Delete All -----------");
     }
 
     private void seedDataBaseJava() {
         this.expenseSeeder.seedDatabase();
-        this.incomeSeeder.seedDatabase();
+        this.paymentSeeder.seedDatabase();
         this.invoiceSeeder.seedDatabase();
         log.warn("------- Initial Load from JAVA ---------------------------------------------------------------");
     }

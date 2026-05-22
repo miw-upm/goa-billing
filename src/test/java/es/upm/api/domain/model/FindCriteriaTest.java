@@ -1,8 +1,8 @@
 package es.upm.api.domain.model;
 
 import es.upm.api.domain.model.criteria.ExpenseFindCriteria;
-import es.upm.api.domain.model.criteria.IncomeFindCriteria;
 import es.upm.api.domain.model.criteria.InvoiceFindCriteria;
+import es.upm.api.domain.model.criteria.PaymentFindCriteria;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
@@ -24,8 +24,8 @@ class FindCriteriaTest {
     }
 
     @Test
-    void shouldDetectEmptyIncomeFindCriteria() {
-        IncomeFindCriteria criteria = new IncomeFindCriteria();
+    void shouldDetectEmptyPaymentFindCriteria() {
+        PaymentFindCriteria criteria = new PaymentFindCriteria();
 
         assertTrue(criteria.isEmpty());
 

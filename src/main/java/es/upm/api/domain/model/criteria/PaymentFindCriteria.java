@@ -10,7 +10,7 @@ import java.util.UUID;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class IncomeFindCriteria {
+public class PaymentFindCriteria {
     private UUID engagementId;
     private LocalDate date;
 

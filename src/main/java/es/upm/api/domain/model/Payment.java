@@ -1,6 +1,9 @@
 package es.upm.api.domain.model;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import es.upm.api.domain.model.external.EngagementSnapshot;
+import es.upm.api.domain.model.external.UserSnapshot;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import lombok.AllArgsConstructor;
@@ -16,20 +19,24 @@ import java.util.UUID;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class Income {
+public class Payment {
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private UUID id;
 
-    @NotNull
-    private UUID engagementId;
+    @JsonFormat(pattern = "yyyy-MM-dd")
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    private LocalDate date;
 
     @NotNull
-    private UUID userId;
+    private EngagementSnapshot engagement;
+
+    @NotNull
+    private UserSnapshot user;
 
     @NotNull
     @Positive
     private BigDecimal amount;
 
     @NotNull
-    @JsonFormat(pattern = "yyyy-MM-dd")
-    private LocalDate date;
+    private PaymentMethod method;
 }
