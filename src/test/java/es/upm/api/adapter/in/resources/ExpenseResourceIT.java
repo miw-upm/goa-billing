@@ -142,7 +142,7 @@ class ExpenseResourceIT {
                 .description("Taxi")
                 .build();
 
-        when(this.expenseService.readById(expenseId)).thenReturn(response);
+        when(this.expenseService.read(expenseId)).thenReturn(response);
 
         this.mockMvc.perform(get("/expenses/{id}", expenseId))
                 .andExpect(status().isOk())
@@ -152,7 +152,7 @@ class ExpenseResourceIT {
                 .andExpect(jsonPath("$.date").value("2026-03-20"))
                 .andExpect(jsonPath("$.description").value("Taxi"));
 
-        verify(this.expenseService).readById(expenseId);
+        verify(this.expenseService).read(expenseId);
     }
 
     @Test
@@ -216,13 +216,13 @@ class ExpenseResourceIT {
     @WithMockUser(roles = "admin")
     void shouldReturnNotFoundWhenExpenseDoesNotExist() throws Exception {
         UUID expenseId = UUID.randomUUID();
-                when(this.expenseService.readById(expenseId))
+                when(this.expenseService.read(expenseId))
                 .thenThrow(new NotFoundException("Expense id: " + expenseId));
 
         this.mockMvc.perform(get("/expenses/{id}", expenseId))
                 .andExpect(status().isNotFound());
 
-        verify(this.expenseService).readById(expenseId);
+        verify(this.expenseService).read(expenseId);
     }
 
     @Test
@@ -238,7 +238,7 @@ class ExpenseResourceIT {
                 .description("Taxi")
                 .build();
 
-        when(this.expenseService.findAll(this.criteria)).thenReturn(Stream.of(response));
+        when(this.expenseService.find(this.criteria)).thenReturn(Stream.of(response));
 
         this.mockMvc.perform(get("/expenses"))
                 .andExpect(status().isOk())
@@ -248,6 +248,6 @@ class ExpenseResourceIT {
                 .andExpect(jsonPath("$.[0].date").value("2026-03-20"))
                 .andExpect(jsonPath("$.[0].description").value("Taxi"));
 
-        verify(this.expenseService).findAll(this.criteria);
+        verify(this.expenseService).find(this.criteria);
     }
 }

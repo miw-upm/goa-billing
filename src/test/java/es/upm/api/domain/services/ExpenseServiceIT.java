@@ -90,7 +90,7 @@ class ExpenseServiceIT {
         this.expense.setId(UUID.randomUUID());
         when(this.expenseGateway.readById(this.expense.getId())).thenReturn(this.expense);
 
-        Expense readExpense = this.expenseService.readById(this.expense.getId());
+        Expense readExpense = this.expenseService.read(this.expense.getId());
 
         assertEquals(this.expense, readExpense);
         verify(this.expenseGateway).readById(this.expense.getId());
@@ -98,11 +98,11 @@ class ExpenseServiceIT {
     }
 
     @Test
-    void shouldFindAll() {
+    void shouldFind() {
         Stream<Expense> expenseStream = Stream.of(this.expense);
         when(this.expenseGateway.findAll(this.criteria)).thenReturn(expenseStream);
 
-        Stream<Expense> allExpenses = this.expenseService.findAll(this.criteria);
+        Stream<Expense> allExpenses = this.expenseService.find(this.criteria);
 
         verify(this.expenseGateway).findAll(this.criteria);
         assertEquals(this.expense, allExpenses.findFirst().orElse(null));

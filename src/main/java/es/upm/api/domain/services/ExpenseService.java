@@ -32,11 +32,11 @@ public class ExpenseService {
         return this.expenseGateway.update(id, expense);
     }
 
-    public Expense readById(UUID id) {
+    public Expense read(UUID id) {
         return this.expenseGateway.readById(id);
     }
 
-    public Stream<Expense> findAll(ExpenseFindCriteria criteria) {
+    public Stream<Expense> find(ExpenseFindCriteria criteria) {
         return this.expenseGateway.findAll(criteria);
     }
 }
