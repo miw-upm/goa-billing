@@ -1,6 +1,5 @@
-package es.upm.api.domain.model.bill;
+package es.upm.api.domain.model;
 
-import es.upm.api.domain.model.Payment;
 import es.upm.api.domain.model.external.EngagementSnapshot;
 
 import java.math.BigDecimal;

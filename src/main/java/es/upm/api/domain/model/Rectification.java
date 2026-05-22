@@ -1,4 +1,4 @@
-package es.upm.api.domain.model.bill;
+package es.upm.api.domain.model;
 
 public class Rectification {
     private Invoice rectifiedInvoice;
