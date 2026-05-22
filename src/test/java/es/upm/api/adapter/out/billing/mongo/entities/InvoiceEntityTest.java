@@ -40,10 +40,10 @@ class InvoiceEntityTest {
                 .number(1)
                 .baseAmount(BigDecimal.valueOf(90))
                 .vatRate(BigDecimal.valueOf(21))
-                .engagement(EngagementSnapshot.builder().engagementId(engagementId).build())
+                .engagement(EngagementSnapshot.builder().id(engagementId).build())
                 .payments(List.of(Payment.builder()
                         .id(paymentId)
-                        .engagement(EngagementSnapshot.builder().engagementId(engagementId).build())
+                        .engagement(EngagementSnapshot.builder().id(engagementId).build())
                         .user(UserSnapshot.builder().id(userId).build())
                         .amount(BigDecimal.valueOf(100))
                         .method(PaymentMethod.TRANSFER)
@@ -66,7 +66,7 @@ class InvoiceEntityTest {
         assertEquals(this.invoice.getNumber(), entity.getNumber());
         assertEquals(this.invoice.getBaseAmount(), entity.getBaseAmount());
         assertEquals(this.invoice.getVatRate(), entity.getVatRate());
-        assertEquals(this.invoice.getEngagement().getEngagementId(), entity.getEngagementId());
+        assertEquals(this.invoice.getEngagement().getId(), entity.getEngagementId());
         assertEquals(this.invoice.getPayments(), entity.getPayments());
         assertEquals(this.invoice.getDiscounts(), entity.getDiscounts());
         assertEquals(this.invoice.getPdfPath(), entity.getPdfPath());
@@ -86,7 +86,7 @@ class InvoiceEntityTest {
         assertEquals(entity.getNumber(), mapped.getNumber());
         assertEquals(entity.getBaseAmount(), mapped.getBaseAmount());
         assertEquals(entity.getVatRate(), mapped.getVatRate());
-        assertEquals(entity.getEngagementId(), mapped.getEngagement().getEngagementId());
+        assertEquals(entity.getEngagementId(), mapped.getEngagement().getId());
         assertEquals(entity.getPayments(), mapped.getPayments());
         assertEquals(entity.getDiscounts(), mapped.getDiscounts());
         assertEquals(entity.getPdfPath(), mapped.getPdfPath());

@@ -31,7 +31,7 @@ public class PaymentAdapter implements PaymentGateway {
         PaymentEntity paymentEntity = this.paymentRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Payment id: " + id));
 
-        paymentEntity.setEngagementId(payment.getEngagement().getEngagementId());
+        paymentEntity.setEngagementId(payment.getEngagement().getId());
         paymentEntity.setUserId(payment.getUser().getId());
         paymentEntity.setAmount(payment.getAmount());
         paymentEntity.setMethod(payment.getMethod());
@@ -64,3 +64,4 @@ public class PaymentAdapter implements PaymentGateway {
                 .map(PaymentEntity::toDomain);
     }
 }
+

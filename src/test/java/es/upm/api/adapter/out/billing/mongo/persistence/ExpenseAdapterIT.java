@@ -48,7 +48,7 @@ class ExpenseAdapterIT {
     void setUp() {
         this.expense = Expense.builder()
                 .id(UUID.randomUUID())
-                .engagement(EngagementSnapshot.builder().engagementId(engagementUuid).build())
+                .engagement(EngagementSnapshot.builder().id(engagementUuid).build())
                 .baseAmount(BigDecimal.valueOf(25))
                 .vatRate(BigDecimal.valueOf(21))
                 .supplier("Taxi Madrid")
@@ -71,7 +71,7 @@ class ExpenseAdapterIT {
 
         ExpenseEntity persistedExpenseEntity = expenseEntityCaptor.getValue();
         assertEquals(this.expense.getId(), persistedExpenseEntity.getId());
-        assertEquals(this.expense.getEngagement().getEngagementId(), persistedExpenseEntity.getEngagementId());
+        assertEquals(this.expense.getEngagement().getId(), persistedExpenseEntity.getEngagementId());
         assertEquals(this.expense.getBaseAmount(), persistedExpenseEntity.getBaseAmount());
         assertEquals(this.expense.getVatRate(), persistedExpenseEntity.getVatRate());
         assertEquals(this.expense.getSupplier(), persistedExpenseEntity.getSupplier());
@@ -123,7 +123,7 @@ class ExpenseAdapterIT {
         when(this.expenseRepository.save(any(ExpenseEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         Expense updateRequest = Expense.builder()
-                .engagement(EngagementSnapshot.builder().engagementId(this.engagementUuid).build())
+                .engagement(EngagementSnapshot.builder().id(this.engagementUuid).build())
                 .baseAmount(BigDecimal.valueOf(50))
                 .vatRate(BigDecimal.valueOf(21))
                 .supplier("Proveedor 2")

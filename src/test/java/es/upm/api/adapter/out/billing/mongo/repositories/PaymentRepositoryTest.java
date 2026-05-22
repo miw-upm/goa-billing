@@ -36,7 +36,7 @@ class PaymentRepositoryTest {
         this.paymentRepository.deleteAll();
         this.payment = Payment.builder()
                 .id(UUID.randomUUID())
-                .engagement(EngagementSnapshot.builder().engagementId(UUID.randomUUID()).build())
+                .engagement(EngagementSnapshot.builder().id(UUID.randomUUID()).build())
                 .user(UserSnapshot.builder().id(UUID.randomUUID()).build())
                 .amount(BigDecimal.valueOf(300))
                 .method(PaymentMethod.TRANSFER)
@@ -50,7 +50,7 @@ class PaymentRepositoryTest {
 
         assertNotNull(saved);
         assertEquals(this.payment.getId(), saved.getId());
-        assertEquals(this.payment.getEngagement().getEngagementId(), saved.getEngagementId());
+        assertEquals(this.payment.getEngagement().getId(), saved.getEngagementId());
         assertEquals(this.payment.getUser().getId(), saved.getUserId());
         assertEquals(this.payment.getAmount(), saved.getAmount());
         assertEquals(this.payment.getMethod(), saved.getMethod());
@@ -72,7 +72,7 @@ class PaymentRepositoryTest {
     void shouldFindPaymentsFromDate() {
         Payment older = Payment.builder()
                 .id(UUID.randomUUID())
-                .engagement(EngagementSnapshot.builder().engagementId(UUID.randomUUID()).build())
+                .engagement(EngagementSnapshot.builder().id(UUID.randomUUID()).build())
                 .user(UserSnapshot.builder().id(UUID.randomUUID()).build())
                 .amount(BigDecimal.valueOf(100))
                 .method(PaymentMethod.CASH)
@@ -80,7 +80,7 @@ class PaymentRepositoryTest {
                 .build();
         Payment newer = Payment.builder()
                 .id(UUID.randomUUID())
-                .engagement(EngagementSnapshot.builder().engagementId(UUID.randomUUID()).build())
+                .engagement(EngagementSnapshot.builder().id(UUID.randomUUID()).build())
                 .user(UserSnapshot.builder().id(UUID.randomUUID()).build())
                 .amount(BigDecimal.valueOf(200))
                 .method(PaymentMethod.TRANSFER)

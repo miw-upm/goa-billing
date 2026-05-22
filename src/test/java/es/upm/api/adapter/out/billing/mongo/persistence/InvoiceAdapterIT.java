@@ -67,7 +67,7 @@ class InvoiceAdapterIT {
         ArgumentCaptor<InvoiceEntity> captor = ArgumentCaptor.forClass(InvoiceEntity.class);
         verify(this.invoiceRepository).save(captor.capture());
         assertEquals(this.invoice.getId(), captor.getValue().getId());
-        assertEquals(this.invoice.getEngagement().getEngagementId(), captor.getValue().getEngagementId());
+        assertEquals(this.invoice.getEngagement().getId(), captor.getValue().getEngagementId());
         assertEquals(this.invoice.getBaseAmount(), captor.getValue().getBaseAmount());
     }
 
@@ -165,10 +165,10 @@ class InvoiceAdapterIT {
                 .number(1)
                 .baseAmount(baseAmount)
                 .vatRate(BigDecimal.valueOf(21))
-                .engagement(EngagementSnapshot.builder().engagementId(engagementId).build())
+                .engagement(EngagementSnapshot.builder().id(engagementId).build())
                 .payments(List.of(Payment.builder()
                         .id(paymentId)
-                        .engagement(EngagementSnapshot.builder().engagementId(engagementId).build())
+                        .engagement(EngagementSnapshot.builder().id(engagementId).build())
                         .user(UserSnapshot.builder().id(userId).build())
                         .amount(baseAmount.add(BigDecimal.TEN))
                         .method(PaymentMethod.TRANSFER)

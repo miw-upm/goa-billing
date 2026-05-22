@@ -31,7 +31,7 @@ public class ExpenseAdapter implements ExpenseGateway {
         ExpenseEntity expenseEntity = this.expenseRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Expense id: " + id));
 
-        expenseEntity.setEngagementId(expense.getEngagement().getEngagementId());
+        expenseEntity.setEngagementId(expense.getEngagement().getId());
         expenseEntity.setBaseAmount(expense.getBaseAmount());
         expenseEntity.setVatRate(expense.getVatRate());
         expenseEntity.setSupplier(expense.getSupplier());

@@ -47,7 +47,7 @@ public class InvoiceService {
 
     public Invoice read(UUID id) {
         Invoice invoice = this.invoiceGateway.read(id);
-        invoice.setEngagement(this.engagementFinder.read(invoice.getEngagement().getEngagementId()));
+        invoice.setEngagement(this.engagementFinder.read(invoice.getEngagement().getId()));
         invoice.setBillingInfo(this.hydrateBillingInfo(invoice.getBillingInfo()));
         return invoice;
     }
@@ -61,7 +61,7 @@ public class InvoiceService {
     }
 
     private void validateAndHydrate(Invoice invoice) {
-        invoice.setEngagement(this.engagementFinder.read(invoice.getEngagement().getEngagementId()));
+        invoice.setEngagement(this.engagementFinder.read(invoice.getEngagement().getId()));
         invoice.setBillingInfo(this.hydrateBillingInfo(invoice.getBillingInfo()));
 
         if (invoice.getPayments() != null && !invoice.getPayments().isEmpty()) {

@@ -78,7 +78,7 @@ class InvoiceServiceIT {
                 .build();
         this.hydratedPayment = Payment.builder()
                 .id(this.paymentId)
-                .engagement(EngagementSnapshot.builder().engagementId(this.engagementId).build())
+                .engagement(EngagementSnapshot.builder().id(this.engagementId).build())
                 .user(UserSnapshot.builder().id(this.userId).build())
                 .amount(BigDecimal.valueOf(100))
                 .method(PaymentMethod.TRANSFER)
@@ -95,7 +95,7 @@ class InvoiceServiceIT {
                 .series("A")
                 .number(1)
                 .baseAmount(BigDecimal.ONE)
-                .engagement(EngagementSnapshot.builder().engagementId(this.engagementId).build())
+                .engagement(EngagementSnapshot.builder().id(this.engagementId).build())
                 .payments(List.of(Payment.builder().id(this.paymentId).build()))
                 .discounts(List.of(BigDecimal.TEN))
                 .build();
@@ -104,7 +104,7 @@ class InvoiceServiceIT {
     @Test
     void shouldCreateInvoice() {
         when(this.engagementFinder.read(this.engagementId))
-                .thenReturn(EngagementSnapshot.builder().engagementId(this.engagementId).build());
+                .thenReturn(EngagementSnapshot.builder().id(this.engagementId).build());
         when(this.userFinder.readById(this.userId))
                 .thenReturn(this.userSnapshot);
         when(this.paymentGateway.read(this.paymentId)).thenReturn(this.hydratedPayment);
@@ -139,7 +139,7 @@ class InvoiceServiceIT {
                 .number(this.invoice.getNumber())
                 .baseAmount(BigDecimal.valueOf(90))
                 .vatRate(new BigDecimal("21"))
-                .engagement(EngagementSnapshot.builder().engagementId(this.engagementId).build())
+                .engagement(EngagementSnapshot.builder().id(this.engagementId).build())
                 .payments(List.of(this.hydratedPayment))
                 .discounts(this.invoice.getDiscounts())
                 .build();
@@ -169,7 +169,7 @@ class InvoiceServiceIT {
                 .number(1)
                 .baseAmount(BigDecimal.valueOf(90))
                 .vatRate(new BigDecimal("21"))
-                .engagement(EngagementSnapshot.builder().engagementId(this.engagementId).build())
+                .engagement(EngagementSnapshot.builder().id(this.engagementId).build())
                 .payments(List.of(this.hydratedPayment))
                 .discounts(List.of(BigDecimal.TEN))
                 .pdfPath("/tmp/invoice.pdf")
@@ -180,7 +180,7 @@ class InvoiceServiceIT {
                 .series("B")
                 .number(2)
                 .baseAmount(BigDecimal.ONE)
-                .engagement(EngagementSnapshot.builder().engagementId(this.engagementId).build())
+                .engagement(EngagementSnapshot.builder().id(this.engagementId).build())
                 .payments(List.of(Payment.builder().id(this.paymentId).build()))
                 .discounts(List.of(BigDecimal.valueOf(5)))
                 .build();
@@ -230,7 +230,7 @@ class InvoiceServiceIT {
         this.invoice.setPayments(List.of());
         this.invoice.setBaseAmount(BigDecimal.valueOf(123));
         when(this.engagementFinder.read(this.engagementId))
-                .thenReturn(EngagementSnapshot.builder().engagementId(this.engagementId).build());
+                .thenReturn(EngagementSnapshot.builder().id(this.engagementId).build());
         when(this.userFinder.readById(this.userId)).thenReturn(this.userSnapshot);
 
         Invoice created = this.invoiceService.create(this.invoice);
@@ -246,7 +246,7 @@ class InvoiceServiceIT {
         this.invoice.setPayments(null);
         this.invoice.setBaseAmount(BigDecimal.valueOf(321));
         when(this.engagementFinder.read(this.engagementId))
-                .thenReturn(EngagementSnapshot.builder().engagementId(this.engagementId).build());
+                .thenReturn(EngagementSnapshot.builder().id(this.engagementId).build());
         when(this.userFinder.readById(this.userId)).thenReturn(this.userSnapshot);
 
         Invoice created = this.invoiceService.create(this.invoice);
@@ -261,7 +261,7 @@ class InvoiceServiceIT {
         this.invoice.setPayments(List.of());
         RuntimeException exception = new RuntimeException("User not found");
         when(this.engagementFinder.read(this.engagementId))
-                .thenReturn(EngagementSnapshot.builder().engagementId(this.engagementId).build());
+                .thenReturn(EngagementSnapshot.builder().id(this.engagementId).build());
         when(this.userFinder.readById(this.userId)).thenThrow(exception);
 
         try {

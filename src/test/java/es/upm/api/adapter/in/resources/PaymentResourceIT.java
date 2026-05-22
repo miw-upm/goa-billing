@@ -52,7 +52,7 @@ class PaymentResourceIT {
     void shouldReturnBadRequestWhenInvalidPaymentBody() throws Exception {
         String requestBody = """
                 {
-                  "engagement": { "engagementId": "%s" },
+                  "engagement": { "id": "%s" },
                   "user": { "id": "%s" },
                   "amount": 0,
                   "method": "TRANSFER"
@@ -79,7 +79,7 @@ class PaymentResourceIT {
         this.mockMvc.perform(get("/payments/{id}", paymentId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(paymentId.toString()))
-                .andExpect(jsonPath("$.engagement.engagementId").value(engagementId.toString()))
+                .andExpect(jsonPath("$.engagement.id").value(engagementId.toString()))
                 .andExpect(jsonPath("$.user.id").value(userId.toString()))
                 .andExpect(jsonPath("$.amount").value(350))
                 .andExpect(jsonPath("$.method").value("BIZUM"))
@@ -125,7 +125,7 @@ class PaymentResourceIT {
         this.mockMvc.perform(get("/payments"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].id").value(paymentId.toString()))
-                .andExpect(jsonPath("$[0].engagement.engagementId").value(engagementId.toString()))
+                .andExpect(jsonPath("$[0].engagement.id").value(engagementId.toString()))
                 .andExpect(jsonPath("$[0].user.id").value(userId.toString()))
                 .andExpect(jsonPath("$[0].amount").value(200))
                 .andExpect(jsonPath("$[0].method").value("OTHER"))
@@ -138,7 +138,7 @@ class PaymentResourceIT {
                                  PaymentMethod method, LocalDate date) {
         return Payment.builder()
                 .id(paymentId)
-                .engagement(EngagementSnapshot.builder().engagementId(engagementId).build())
+                .engagement(EngagementSnapshot.builder().id(engagementId).build())
                 .user(UserSnapshot.builder().id(userId).build())
                 .amount(new BigDecimal(amount))
                 .method(method)
@@ -146,3 +146,4 @@ class PaymentResourceIT {
                 .build();
     }
 }
+

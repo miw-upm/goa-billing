@@ -53,10 +53,10 @@ class InvoiceRepositoryTest {
                 .number(1)
                 .baseAmount(BigDecimal.valueOf(90))
                 .vatRate(BigDecimal.valueOf(21))
-                .engagement(EngagementSnapshot.builder().engagementId(engagementId).build())
+                .engagement(EngagementSnapshot.builder().id(engagementId).build())
                 .payments(List.of(Payment.builder()
                         .id(paymentId)
-                        .engagement(EngagementSnapshot.builder().engagementId(engagementId).build())
+                        .engagement(EngagementSnapshot.builder().id(engagementId).build())
                         .user(UserSnapshot.builder().id(userId).build())
                         .amount(BigDecimal.valueOf(100))
                         .method(PaymentMethod.TRANSFER)
@@ -73,7 +73,7 @@ class InvoiceRepositoryTest {
 
         assertNotNull(saved);
         assertEquals(this.invoice.getId(), saved.getId());
-        assertEquals(this.invoice.getEngagement().getEngagementId(), saved.getEngagementId());
+        assertEquals(this.invoice.getEngagement().getId(), saved.getEngagementId());
         assertEquals(this.invoice.getBillingInfo(), saved.getBillingInfo());
         assertEquals(this.invoice.getPayments(), saved.getPayments());
     }

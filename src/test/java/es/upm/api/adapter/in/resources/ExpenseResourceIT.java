@@ -52,7 +52,7 @@ class ExpenseResourceIT {
         UUID engagementId = UUID.randomUUID();
         String requestBody = """
                 {
-                  "engagement": { "engagementId": "%s" },
+                  "engagement": { "id": "%s" },
                   "baseAmount": 50,
                   "supplier": "Taxi Madrid",
                   "supplierIdentity": "A10000000",
@@ -62,7 +62,7 @@ class ExpenseResourceIT {
 
         Expense response = Expense.builder()
                 .id(expenseId)
-                .engagement(EngagementSnapshot.builder().engagementId(engagementId).build())
+                .engagement(EngagementSnapshot.builder().id(engagementId).build())
                 .baseAmount(BigDecimal.valueOf(50))
                 .vatRate(BigDecimal.valueOf(21))
                 .supplier("Taxi Madrid")
@@ -78,7 +78,7 @@ class ExpenseResourceIT {
                         .content(requestBody))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(expenseId.toString()))
-                .andExpect(jsonPath("$.engagement.engagementId").value(engagementId.toString()))
+                .andExpect(jsonPath("$.engagement.id").value(engagementId.toString()))
                 .andExpect(jsonPath("$.baseAmount").value(50))
                 .andExpect(jsonPath("$.vatRate").value(21))
                 .andExpect(jsonPath("$.supplier").value("Taxi Madrid"))
@@ -150,7 +150,7 @@ class ExpenseResourceIT {
         UUID engagementId = UUID.randomUUID();
         Expense response = Expense.builder()
                 .id(expenseId)
-                .engagement(EngagementSnapshot.builder().engagementId(engagementId).build())
+                .engagement(EngagementSnapshot.builder().id(engagementId).build())
                 .baseAmount(BigDecimal.valueOf(50))
                 .vatRate(BigDecimal.valueOf(21))
                 .supplier("Taxi Madrid")
@@ -164,7 +164,7 @@ class ExpenseResourceIT {
         this.mockMvc.perform(get("/expenses/{id}", expenseId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(expenseId.toString()))
-                .andExpect(jsonPath("$.engagement.engagementId").value(engagementId.toString()))
+                .andExpect(jsonPath("$.engagement.id").value(engagementId.toString()))
                 .andExpect(jsonPath("$.baseAmount").value(50))
                 .andExpect(jsonPath("$.vatRate").value(21))
                 .andExpect(jsonPath("$.supplier").value("Taxi Madrid"))
@@ -182,7 +182,7 @@ class ExpenseResourceIT {
         UUID engagementId = UUID.randomUUID();
         Expense response = Expense.builder()
                 .id(expenseId)
-                .engagement(EngagementSnapshot.builder().engagementId(engagementId).build())
+                .engagement(EngagementSnapshot.builder().id(engagementId).build())
                 .baseAmount(BigDecimal.valueOf(65))
                 .vatRate(BigDecimal.valueOf(21))
                 .supplier("Taxi Updated")
@@ -193,7 +193,7 @@ class ExpenseResourceIT {
 
         String requestBody = """
                 {
-                  "engagement": { "engagementId": "%s" },
+                  "engagement": { "id": "%s" },
                   "baseAmount": 65,
                   "supplier": "Taxi Updated",
                   "supplierIdentity": "A10000000",
@@ -208,7 +208,7 @@ class ExpenseResourceIT {
                         .content(requestBody))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(expenseId.toString()))
-                .andExpect(jsonPath("$.engagement.engagementId").value(engagementId.toString()))
+                .andExpect(jsonPath("$.engagement.id").value(engagementId.toString()))
                 .andExpect(jsonPath("$.baseAmount").value(65))
                 .andExpect(jsonPath("$.vatRate").value(21))
                 .andExpect(jsonPath("$.supplier").value("Taxi Updated"))
@@ -225,7 +225,7 @@ class ExpenseResourceIT {
         UUID expenseId = UUID.randomUUID();
         String requestBody = """
                 {
-                  "engagement": { "engagementId": "aaaaaaaa-bbbb-cccc-dddd-eeeeffff2000" },
+                  "engagement": { "id": "aaaaaaaa-bbbb-cccc-dddd-eeeeffff2000" },
                   "baseAmount": 0,
                   "supplier": "Taxi Updated",
                   "supplierIdentity": "A10000000",
@@ -261,7 +261,7 @@ class ExpenseResourceIT {
         UUID engagementId = UUID.randomUUID();
         Expense response = Expense.builder()
                 .id(expenseId)
-                .engagement(EngagementSnapshot.builder().engagementId(engagementId).build())
+                .engagement(EngagementSnapshot.builder().id(engagementId).build())
                 .baseAmount(BigDecimal.valueOf(10))
                 .vatRate(BigDecimal.valueOf(21))
                 .supplier("Taxi Madrid")
@@ -275,7 +275,7 @@ class ExpenseResourceIT {
         this.mockMvc.perform(get("/expenses"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.[0].id").value(expenseId.toString()))
-                .andExpect(jsonPath("$.[0].engagement.engagementId").value(engagementId.toString()))
+                .andExpect(jsonPath("$.[0].engagement.id").value(engagementId.toString()))
                 .andExpect(jsonPath("$.[0].baseAmount").value(10))
                 .andExpect(jsonPath("$.[0].vatRate").value(21))
                 .andExpect(jsonPath("$.[0].supplier").value("Taxi Madrid"))
@@ -297,3 +297,4 @@ class ExpenseResourceIT {
         verify(this.expenseService).delete(expenseId);
     }
 }
+

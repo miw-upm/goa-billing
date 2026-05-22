@@ -19,7 +19,6 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.UUID;
-import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -27,7 +26,6 @@ import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 @SpringBootTest
@@ -55,7 +53,7 @@ class PaymentServiceIT {
         this.engagementId = UUID.randomUUID();
         this.userId = UUID.randomUUID();
         this.payment = Payment.builder()
-                .engagement(EngagementSnapshot.builder().engagementId(this.engagementId).build())
+                .engagement(EngagementSnapshot.builder().id(this.engagementId).build())
                 .user(UserSnapshot.builder().id(this.userId).build())
                 .amount(BigDecimal.valueOf(250))
                 .method(PaymentMethod.TRANSFER)
@@ -66,14 +64,14 @@ class PaymentServiceIT {
     @Test
     void shouldCreatePayment() {
         when(this.engagementFinder.read(this.engagementId))
-                .thenReturn(EngagementSnapshot.builder().engagementId(this.engagementId).build());
+                .thenReturn(EngagementSnapshot.builder().id(this.engagementId).build());
         when(this.userFinder.readById(this.userId))
                 .thenReturn(UserSnapshot.builder().id(this.userId).build());
 
         Payment created = this.paymentService.create(this.payment);
 
         assertNotNull(created.getId());
-        assertEquals(this.engagementId, created.getEngagement().getEngagementId());
+        assertEquals(this.engagementId, created.getEngagement().getId());
         assertEquals(this.userId, created.getUser().getId());
         assertEquals(this.payment.getAmount(), created.getAmount());
         verify(this.engagementFinder).read(this.engagementId);
@@ -105,14 +103,14 @@ class PaymentServiceIT {
         UUID id = UUID.randomUUID();
         Payment existing = Payment.builder()
                 .id(id)
-                .engagement(EngagementSnapshot.builder().engagementId(this.engagementId).build())
+                .engagement(EngagementSnapshot.builder().id(this.engagementId).build())
                 .user(UserSnapshot.builder().id(this.userId).build())
                 .amount(BigDecimal.valueOf(100))
                 .method(PaymentMethod.BIZUM)
                 .date(LocalDate.of(2026, 3, 18))
                 .build();
         Payment update = Payment.builder()
-                .engagement(EngagementSnapshot.builder().engagementId(this.engagementId).build())
+                .engagement(EngagementSnapshot.builder().id(this.engagementId).build())
                 .user(UserSnapshot.builder().id(this.userId).build())
                 .amount(BigDecimal.valueOf(300))
                 .method(PaymentMethod.CASH)
@@ -152,7 +150,7 @@ class PaymentServiceIT {
     void shouldNotCreateWhenUserFinderFails() {
         RuntimeException exception = new RuntimeException("User not found");
         when(this.engagementFinder.read(this.engagementId))
-                .thenReturn(EngagementSnapshot.builder().engagementId(this.engagementId).build());
+                .thenReturn(EngagementSnapshot.builder().id(this.engagementId).build());
         when(this.userFinder.readById(this.userId)).thenThrow(exception);
 
         try {

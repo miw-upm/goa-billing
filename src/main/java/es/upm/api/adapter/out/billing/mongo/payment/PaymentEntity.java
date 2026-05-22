@@ -32,7 +32,7 @@ public class PaymentEntity {
 
     public PaymentEntity(Payment payment) {
         BeanUtils.copyProperties(payment, this);
-        this.engagementId = payment.getEngagement() == null ? null : payment.getEngagement().getEngagementId();
+        this.engagementId = payment.getEngagement() == null ? null : payment.getEngagement().getId();
         this.userId = payment.getUser() == null ? null : payment.getUser().getId();
     }
 
@@ -40,9 +40,10 @@ public class PaymentEntity {
         Payment payment = new Payment();
         BeanUtils.copyProperties(this, payment);
         payment.setEngagement(this.engagementId == null ? null
-                : EngagementSnapshot.builder().engagementId(this.engagementId).build());
+                : EngagementSnapshot.builder().id(this.engagementId).build());
         payment.setUser(this.userId == null ? null
                 : UserSnapshot.builder().id(this.userId).build());
         return payment;
     }
 }
+

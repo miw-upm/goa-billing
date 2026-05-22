@@ -21,7 +21,7 @@ class ExpenseEntityTest {
     void setUp() {
         this.expense = Expense.builder()
                 .id(UUID.randomUUID())
-                .engagement(EngagementSnapshot.builder().engagementId(UUID.randomUUID()).build())
+                .engagement(EngagementSnapshot.builder().id(UUID.randomUUID()).build())
                 .baseAmount(BigDecimal.valueOf(25))
                 .vatRate(BigDecimal.valueOf(21))
                 .supplier("Taxi Madrid")
@@ -37,7 +37,7 @@ class ExpenseEntityTest {
         ExpenseEntity expenseEntity = new ExpenseEntity(this.expense);
 
         assertEquals(this.expense.getId(), expenseEntity.getId());
-        assertEquals(this.expense.getEngagement().getEngagementId(), expenseEntity.getEngagementId());
+        assertEquals(this.expense.getEngagement().getId(), expenseEntity.getEngagementId());
         assertEquals(this.expense.getBaseAmount(), expenseEntity.getBaseAmount());
         assertEquals(this.expense.getVatRate(), expenseEntity.getVatRate());
         assertEquals(this.expense.getSupplier(), expenseEntity.getSupplier());
@@ -51,7 +51,7 @@ class ExpenseEntityTest {
     void shouldConvertExpenseEntityToDomain() {
         ExpenseEntity expenseEntity = new ExpenseEntity();
         expenseEntity.setId(this.expense.getId());
-        expenseEntity.setEngagementId(this.expense.getEngagement().getEngagementId());
+        expenseEntity.setEngagementId(this.expense.getEngagement().getId());
         expenseEntity.setBaseAmount(this.expense.getBaseAmount());
         expenseEntity.setVatRate(this.expense.getVatRate());
         expenseEntity.setSupplier(this.expense.getSupplier());
@@ -63,7 +63,7 @@ class ExpenseEntityTest {
         Expense mappedExpense = expenseEntity.toDomain();
 
         assertEquals(expenseEntity.getId(), mappedExpense.getId());
-        assertEquals(expenseEntity.getEngagementId(), mappedExpense.getEngagement().getEngagementId());
+        assertEquals(expenseEntity.getEngagementId(), mappedExpense.getEngagement().getId());
         assertEquals(expenseEntity.getBaseAmount(), mappedExpense.getBaseAmount());
         assertEquals(expenseEntity.getVatRate(), mappedExpense.getVatRate());
         assertEquals(expenseEntity.getSupplier(), mappedExpense.getSupplier());

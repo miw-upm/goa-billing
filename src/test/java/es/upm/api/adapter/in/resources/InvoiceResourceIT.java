@@ -69,11 +69,11 @@ class InvoiceResourceIT {
                   "series": "A",
                   "number": 1,
                   "baseAmount": 100,
-                  "engagement": { "engagementId": "%s" },
+                  "engagement": { "id": "%s" },
                   "payments": [
                     {
                       "id": "%s",
-                      "engagement": { "engagementId": "%s" },
+                      "engagement": { "id": "%s" },
                       "user": { "id": "%s" },
                       "amount": 100,
                       "method": "TRANSFER"
@@ -91,7 +91,7 @@ class InvoiceResourceIT {
                         .content(requestBody))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(invoiceId.toString()))
-                .andExpect(jsonPath("$.engagement.engagementId").value(engagementId.toString()))
+                .andExpect(jsonPath("$.engagement.id").value(engagementId.toString()))
                 .andExpect(jsonPath("$.billingInfo.userId").value(userId.toString()))
                 .andExpect(jsonPath("$.payments[0].id").value(paymentId.toString()))
                 .andExpect(jsonPath("$.baseAmount").value(90))
@@ -109,7 +109,7 @@ class InvoiceResourceIT {
                 {
                   "operationDate": "2026-03-20",
                   "baseAmount": 100,
-                  "engagement": { "engagementId": "%s" },
+                  "engagement": { "id": "%s" },
                   "payments": []
                 }
                 """.formatted(engagementId);
@@ -135,7 +135,7 @@ class InvoiceResourceIT {
         this.mockMvc.perform(get("/invoices/{id}", invoiceId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(invoiceId.toString()))
-                .andExpect(jsonPath("$.engagement.engagementId").value(engagementId.toString()))
+                .andExpect(jsonPath("$.engagement.id").value(engagementId.toString()))
                 .andExpect(jsonPath("$.billingInfo.userId").value(userId.toString()))
                 .andExpect(jsonPath("$.payments[0].id").value(paymentId.toString()))
                 .andExpect(jsonPath("$.baseAmount").value(90))
@@ -176,11 +176,11 @@ class InvoiceResourceIT {
                   "series": "B",
                   "number": 2,
                   "baseAmount": 120,
-                  "engagement": { "engagementId": "%s" },
+                  "engagement": { "id": "%s" },
                   "payments": [
                     {
                       "id": "%s",
-                      "engagement": { "engagementId": "%s" },
+                      "engagement": { "id": "%s" },
                       "user": { "id": "%s" },
                       "amount": 120,
                       "method": "CASH"
@@ -234,7 +234,7 @@ class InvoiceResourceIT {
         this.mockMvc.perform(get("/invoices"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].id").value(invoiceId.toString()))
-                .andExpect(jsonPath("$[0].engagement.engagementId").value(engagementId.toString()))
+                .andExpect(jsonPath("$[0].engagement.id").value(engagementId.toString()))
                 .andExpect(jsonPath("$[0].billingInfo.userId").value(userId.toString()))
                 .andExpect(jsonPath("$[0].payments[0].id").value(paymentId.toString()))
                 .andExpect(jsonPath("$[0].baseAmount").value(90));
@@ -258,10 +258,10 @@ class InvoiceResourceIT {
                 .number(1)
                 .baseAmount(new BigDecimal(baseAmount))
                 .vatRate(vatRate)
-                .engagement(EngagementSnapshot.builder().engagementId(engagementId).build())
+                .engagement(EngagementSnapshot.builder().id(engagementId).build())
                 .payments(List.of(Payment.builder()
                         .id(paymentId)
-                        .engagement(EngagementSnapshot.builder().engagementId(engagementId).build())
+                        .engagement(EngagementSnapshot.builder().id(engagementId).build())
                         .user(UserSnapshot.builder().id(userId).build())
                         .amount(new BigDecimal(baseAmount))
                         .method(PaymentMethod.TRANSFER)
@@ -271,3 +271,4 @@ class InvoiceResourceIT {
                 .build();
     }
 }
+

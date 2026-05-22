@@ -1,10 +1,13 @@
 package es.upm.api.domain.model.external;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
+import java.util.List;
 import java.util.UUID;
 
 @Builder
@@ -12,5 +15,9 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 public class EngagementSnapshot {
-    private UUID engagementId;
+    private UUID id;
+    private UserSnapshot owner;
+    private List<LegalProcedureSnapshot> legalProcedures;
+    @JsonFormat(pattern = "yyyy-MM-dd")
+    private LocalDate lastUpdatedDate;
 }

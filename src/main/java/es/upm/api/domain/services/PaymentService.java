@@ -12,10 +12,7 @@ import org.springframework.util.StringUtils;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Objects;
-import java.util.Set;
 import java.util.UUID;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Service
@@ -28,7 +25,7 @@ public class PaymentService {
     public Payment create(Payment payment) {
         payment.setId(UUID.randomUUID());
         payment.setDate(LocalDate.now());
-        payment.setEngagement(this.engagementFinder.read(payment.getEngagement().getEngagementId()));
+        this.hydrateEngagement(payment);
         payment.setUser(this.userFinder.readById(payment.getUser().getId()));
         this.paymentGateway.create(payment);
         return payment;
@@ -36,7 +33,7 @@ public class PaymentService {
 
     public Payment read(UUID id) {
         Payment payment = this.paymentGateway.read(id);
-        payment.setEngagement(this.engagementFinder.read(payment.getEngagement().getEngagementId()));
+        this.hydrateEngagement(payment);
         payment.setUser(this.userFinder.readById(payment.getUser().getId()));
         return payment;
     }
@@ -45,7 +42,7 @@ public class PaymentService {
         Payment currentPayment = this.paymentGateway.read(id);
         payment.setId(id);
         payment.setDate(currentPayment.getDate());
-        payment.setEngagement(this.engagementFinder.read(payment.getEngagement().getEngagementId()));
+        this.hydrateEngagement(payment);
         payment.setUser(this.userFinder.readById(payment.getUser().getId()));
         return this.paymentGateway.update(id, payment);
     }
@@ -56,14 +53,27 @@ public class PaymentService {
 
     public Stream<Payment> find(PaymentFindCriteria criteria) {
         Stream<Payment> payments = this.paymentGateway.find(criteria);
-        if (StringUtils.hasText(criteria.getClient())) {
-            return payments;
+        if (criteria == null || !StringUtils.hasText(criteria.getClient())) {
+            return payments.map(this::hydrate);
         }
         List<UUID> clientIds = this.userFinder.find(criteria.getClient()).stream()
                 .map(UserSnapshot::getId)
                 .toList();
         return payments.filter(payment -> payment.getUser() != null
                 && payment.getUser().getId() != null
-                && clientIds.contains(payment.getUser().getId()));
+                && clientIds.contains(payment.getUser().getId()))
+                .map(this::hydrate);
+    }
+
+    private Payment hydrate(Payment payment) {
+        this.hydrateEngagement(payment);
+        payment.setUser(this.userFinder.readById(payment.getUser().getId()));
+        return payment;
+    }
+
+    private void hydrateEngagement(Payment payment) {
+        if (payment.getEngagement() != null && payment.getEngagement().getId() != null) {
+            payment.setEngagement(this.engagementFinder.read(payment.getEngagement().getId()));
+        }
     }
 }

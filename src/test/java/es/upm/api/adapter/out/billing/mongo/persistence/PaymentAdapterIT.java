@@ -50,7 +50,7 @@ class PaymentAdapterIT {
     void setUp() {
         this.payment = Payment.builder()
                 .id(UUID.randomUUID())
-                .engagement(EngagementSnapshot.builder().engagementId(this.engagementId).build())
+                .engagement(EngagementSnapshot.builder().id(this.engagementId).build())
                 .user(UserSnapshot.builder().id(this.userId).build())
                 .amount(BigDecimal.valueOf(25))
                 .method(PaymentMethod.TRANSFER)
@@ -90,7 +90,7 @@ class PaymentAdapterIT {
         when(this.paymentRepository.save(any(PaymentEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         Payment update = Payment.builder()
-                .engagement(EngagementSnapshot.builder().engagementId(this.engagementId).build())
+                .engagement(EngagementSnapshot.builder().id(this.engagementId).build())
                 .user(UserSnapshot.builder().id(this.userId).build())
                 .amount(BigDecimal.valueOf(100))
                 .method(PaymentMethod.CASH)

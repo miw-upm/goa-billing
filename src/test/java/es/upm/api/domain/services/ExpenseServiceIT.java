@@ -43,7 +43,7 @@ class ExpenseServiceIT {
     @BeforeEach
     void setUp() {
         this.engagementId = UUID.randomUUID();
-        this.engagement = EngagementSnapshot.builder().engagementId(this.engagementId).build();
+        this.engagement = EngagementSnapshot.builder().id(this.engagementId).build();
         this.expense = Expense.builder()
                 .engagement(this.engagement)
                 .baseAmount(BigDecimal.valueOf(25))
@@ -64,7 +64,7 @@ class ExpenseServiceIT {
 
         assertNotNull(createdExpense);
         assertNotNull(createdExpense.getId());
-        assertEquals(this.engagementId, createdExpense.getEngagement().getEngagementId());
+        assertEquals(this.engagementId, createdExpense.getEngagement().getId());
         assertEquals(this.expense.getBaseAmount(), createdExpense.getBaseAmount());
         assertEquals(this.expense.getDate(), createdExpense.getDate());
         assertEquals(this.expense.getSupplier(), createdExpense.getSupplier());
@@ -76,7 +76,7 @@ class ExpenseServiceIT {
         Expense persistedExpense = expenseCaptor.getValue();
         assertNotNull(persistedExpense.getId());
         assertEquals(createdExpense.getId(), persistedExpense.getId());
-        assertEquals(this.engagementId, persistedExpense.getEngagement().getEngagementId());
+        assertEquals(this.engagementId, persistedExpense.getEngagement().getId());
         assertEquals(this.expense.getBaseAmount(), persistedExpense.getBaseAmount());
         assertEquals(this.expense.getDate(), persistedExpense.getDate());
         assertEquals(this.expense.getSupplier(), persistedExpense.getSupplier());

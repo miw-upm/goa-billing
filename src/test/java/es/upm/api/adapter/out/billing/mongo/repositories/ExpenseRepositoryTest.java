@@ -32,7 +32,7 @@ class ExpenseRepositoryTest {
         this.expenseRepository.deleteAll();
         this.expense = Expense.builder()
                 .id(UUID.randomUUID())
-                .engagement(EngagementSnapshot.builder().engagementId(UUID.randomUUID()).build())
+                .engagement(EngagementSnapshot.builder().id(UUID.randomUUID()).build())
                 .baseAmount(BigDecimal.valueOf(30))
                 .vatRate(BigDecimal.valueOf(21))
                 .supplier("Court services")
@@ -52,7 +52,7 @@ class ExpenseRepositoryTest {
         assertNotNull(savedExpenseEntity);
         assertNotNull(savedExpenseEntity.getId());
         assertEquals(this.expense.getId(), savedExpenseEntity.getId());
-        assertEquals(this.expense.getEngagement().getEngagementId(), savedExpenseEntity.getEngagementId());
+        assertEquals(this.expense.getEngagement().getId(), savedExpenseEntity.getEngagementId());
         assertEquals(this.expense.getBaseAmount(), savedExpenseEntity.getBaseAmount());
         assertEquals(this.expense.getVatRate(), savedExpenseEntity.getVatRate());
         assertEquals(this.expense.getSupplier(), savedExpenseEntity.getSupplier());

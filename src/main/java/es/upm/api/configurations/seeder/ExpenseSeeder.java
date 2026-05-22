@@ -28,28 +28,28 @@ public class ExpenseSeeder {
         List<ExpenseEntity> expenses = List.of(
                 this.buildExpense(
                         "aaaaaaaa-bbbb-cccc-dddd-eeeeffff1000",
-                        "aaaaaaa0-bbbb-cccc-dddd-eeeeffff0000",
+                        "aaaaaaaa-bbbb-cccc-dddd-eeeeffff0000",
                         "35.50", "21", "Taxi Madrid", "A10000000", TaxCategory.OTROS,
                         LocalDate.of(2026, 3, 15),
                         null
                 ),
                 this.buildExpense(
                         "aaaaaaaa-bbbb-cccc-dddd-eeeeffff1001",
-                        "aaaaaaa0-bbbb-cccc-dddd-eeeeffff0001",
+                        "aaaaaaaa-bbbb-cccc-dddd-eeeeffff0001",
                         "120.00", "21", "Hotel Central", "B20000000", TaxCategory.SERVICIOS_PROFESIONALES,
                         LocalDate.of(2026, 3, 16),
                         null
                 ),
                 this.buildExpense(
                         "aaaaaaaa-bbbb-cccc-dddd-eeeeffff1002",
-                        "aaaaaaa0-bbbb-cccc-dddd-eeeeffff0000",
+                        "aaaaaaaa-bbbb-cccc-dddd-eeeeffff0000",
                         "18.90", "21", "Restaurante Norte", "C30000000", TaxCategory.MANUTENCION,
                         LocalDate.of(2026, 3, 17),
                         null
                 ),
                 this.buildExpense(
                         "aaaaaaaa-bbbb-cccc-dddd-eeeeffff1004",
-                        "aaaaaaa0-bbbb-cccc-dddd-eeeeffff0001",
+                        "aaaaaaaa-bbbb-cccc-dddd-eeeeffff0001",
                         "64.80", "21", "Restaurante Sur", "D40000000", TaxCategory.MANUTENCION,
                         LocalDate.of(2026, 3, 18),
                         null

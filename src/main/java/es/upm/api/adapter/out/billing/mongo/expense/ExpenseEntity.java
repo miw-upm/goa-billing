@@ -34,14 +34,14 @@ public class ExpenseEntity {
 
     public ExpenseEntity(Expense expense) {
         BeanUtils.copyProperties(expense, this);
-        this.engagementId = expense.getEngagement() == null ? null : expense.getEngagement().getEngagementId();
+        this.engagementId = expense.getEngagement() == null ? null : expense.getEngagement().getId();
     }
 
     public Expense toDomain() {
         Expense expense = new Expense();
         BeanUtils.copyProperties(this, expense);
         expense.setEngagement(this.engagementId == null ? null
-                : EngagementSnapshot.builder().engagementId(this.engagementId).build());
+                : EngagementSnapshot.builder().id(this.engagementId).build());
         return expense;
     }
 }

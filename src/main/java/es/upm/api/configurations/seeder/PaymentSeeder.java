@@ -28,7 +28,7 @@ public class PaymentSeeder {
         List<PaymentEntity> payments = List.of(
                 this.buildPayment(
                         "bbbbbbbb-cccc-dddd-eeee-ffffaaaab001",
-                        "aaaaaaa0-bbbb-cccc-dddd-eeeeffff0000",
+                        "aaaaaaaa-bbbb-cccc-dddd-eeeeffff0000",
                         "aaaaaaaa-bbbb-cccc-dddd-eeeeffff0000",
                         "500.00",
                         PaymentMethod.TRANSFER,
@@ -36,7 +36,7 @@ public class PaymentSeeder {
                 ),
                 this.buildPayment(
                         "bbbbbbbb-cccc-dddd-eeee-ffffaaaab002",
-                        "aaaaaaa0-bbbb-cccc-dddd-eeeeffff0001",
+                        "aaaaaaaa-bbbb-cccc-dddd-eeeeffff0001",
                         "aaaaaaaa-bbbb-cccc-dddd-eeeeffff0001",
                         "1200.00",
                         PaymentMethod.BIZUM,
@@ -44,7 +44,7 @@ public class PaymentSeeder {
                 ),
                 this.buildPayment(
                         "bbbbbbbb-cccc-dddd-eeee-ffffaaaab003",
-                        "aaaaaaa0-bbbb-cccc-dddd-eeeeffff0001",
+                        "aaaaaaaa-bbbb-cccc-dddd-eeeeffff0001",
                         "aaaaaaaa-bbbb-cccc-dddd-eeeeffff0000",
                         "200.00",
                         PaymentMethod.CASH,

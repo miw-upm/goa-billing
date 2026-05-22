@@ -20,7 +20,7 @@ public class ExpenseService {
     public Expense create(Expense expense) {
         expense.setId(UUID.randomUUID());
         expense.setDate(LocalDate.now());
-        expense.setEngagement(this.engagementFinder.read(expense.getEngagement().getEngagementId()));
+        expense.setEngagement(this.engagementFinder.read(expense.getEngagement().getId()));
         expense.setDocumentPath(null); //TODO
         this.expenseGateway.create(expense);
         return expense;
@@ -28,7 +28,7 @@ public class ExpenseService {
 
     public Expense read(UUID id) {
         Expense expense = this.expenseGateway.read(id);
-        expense.setEngagement(this.engagementFinder.read(expense.getEngagement().getEngagementId()));
+        expense.setEngagement(this.engagementFinder.read(expense.getEngagement().getId()));
         return expense;
     }
 
@@ -37,7 +37,7 @@ public class ExpenseService {
         expense.setId(id);
         expense.setDate(currentExpense.getDate());
         expense.setDocumentPath(currentExpense.getDocumentPath());
-        expense.setEngagement(this.engagementFinder.read(expense.getEngagement().getEngagementId()));
+        expense.setEngagement(this.engagementFinder.read(expense.getEngagement().getId()));
         return this.expenseGateway.update(id, expense);
     }
 

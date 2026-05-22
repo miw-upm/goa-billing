@@ -33,13 +33,13 @@ public class InvoiceSeeder {
         List<InvoiceEntity> invoices = List.of(
                 new InvoiceEntity(this.buildInvoice(
                         "cccccccc-dddd-eeee-ffff-aaaabbbb0001",
-                        "aaaaaaa0-bbbb-cccc-dddd-eeeeffff0000",
+                        "aaaaaaaa-bbbb-cccc-dddd-eeeeffff0000",
                         "aaaaaaaa-bbbb-cccc-dddd-eeeeffff0000",
                         LocalDate.of(2026, 3, 20),
                         LocalDate.of(2026, 3, 20),
                         List.of(
                                 this.buildPayment("bbbbbbbb-cccc-dddd-eeee-ffffaaaab001",
-                                        "aaaaaaa0-bbbb-cccc-dddd-eeeeffff0000",
+                                        "aaaaaaaa-bbbb-cccc-dddd-eeeeffff0000",
                                         "aaaaaaaa-bbbb-cccc-dddd-eeeeffff0000",
                                         "500.00", PaymentMethod.TRANSFER, LocalDate.of(2026, 3, 20))
                         ),
@@ -47,17 +47,17 @@ public class InvoiceSeeder {
                 )),
                 new InvoiceEntity(this.buildInvoice(
                         "cccccccc-dddd-eeee-ffff-aaaabbbb0002",
-                        "aaaaaaa0-bbbb-cccc-dddd-eeeeffff0001",
+                        "aaaaaaaa-bbbb-cccc-dddd-eeeeffff0001",
                         "aaaaaaaa-bbbb-cccc-dddd-eeeeffff0001",
                         LocalDate.of(2026, 3, 21),
                         LocalDate.of(2026, 3, 21),
                         List.of(
                                 this.buildPayment("bbbbbbbb-cccc-dddd-eeee-ffffaaaab002",
-                                        "aaaaaaa0-bbbb-cccc-dddd-eeeeffff0001",
+                                        "aaaaaaaa-bbbb-cccc-dddd-eeeeffff0001",
                                         "aaaaaaaa-bbbb-cccc-dddd-eeeeffff0001",
                                         "1200.00", PaymentMethod.BIZUM, LocalDate.of(2026, 3, 21)),
                                 this.buildPayment("bbbbbbbb-cccc-dddd-eeee-ffffaaaab003",
-                                        "aaaaaaa0-bbbb-cccc-dddd-eeeeffff0001",
+                                        "aaaaaaaa-bbbb-cccc-dddd-eeeeffff0001",
                                         "aaaaaaaa-bbbb-cccc-dddd-eeeeffff0000",
                                         "200.00", PaymentMethod.CASH, LocalDate.of(2026, 3, 22))
                         ),
@@ -90,7 +90,7 @@ public class InvoiceSeeder {
                 .number(1)
                 .baseAmount(paymentsTotal.subtract(discountsTotal))
                 .vatRate(new BigDecimal("21"))
-                .engagement(EngagementSnapshot.builder().engagementId(UUID.fromString(engagementId)).build())
+                .engagement(EngagementSnapshot.builder().id(UUID.fromString(engagementId)).build())
                 .payments(payments)
                 .discounts(discounts)
                 .pdfPath(null)
@@ -102,7 +102,7 @@ public class InvoiceSeeder {
                                  String amount, PaymentMethod method, LocalDate date) {
         return Payment.builder()
                 .id(UUID.fromString(id))
-                .engagement(EngagementSnapshot.builder().engagementId(UUID.fromString(engagementId)).build())
+                .engagement(EngagementSnapshot.builder().id(UUID.fromString(engagementId)).build())
                 .user(UserSnapshot.builder().id(UUID.fromString(userId)).build())
                 .amount(new BigDecimal(amount))
                 .method(method)

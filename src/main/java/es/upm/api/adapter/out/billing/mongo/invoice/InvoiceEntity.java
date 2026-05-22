@@ -41,14 +41,14 @@ public class InvoiceEntity {
 
     public InvoiceEntity(Invoice invoice) {
         BeanUtils.copyProperties(invoice, this);
-        this.engagementId = invoice.getEngagement() == null ? null : invoice.getEngagement().getEngagementId();
+        this.engagementId = invoice.getEngagement() == null ? null : invoice.getEngagement().getId();
     }
 
     public Invoice toDomain() {
         Invoice invoice = new Invoice();
         BeanUtils.copyProperties(this, invoice);
         invoice.setEngagement(this.engagementId == null ? null
-                : EngagementSnapshot.builder().engagementId(this.engagementId).build());
+                : EngagementSnapshot.builder().id(this.engagementId).build());
         return invoice;
     }
 }
