@@ -27,7 +27,7 @@ class ExpenseEntityTest {
                 .supplier("Taxi Madrid")
                 .supplierIdentity("A10000000")
                 .taxCategory(TaxCategory.OTROS)
-                .date(LocalDate.of(2026, 3, 20))
+                .issueDate(LocalDate.of(2026, 3, 20))
                 .documentPath("doc/path")
                 .build();
     }
@@ -43,7 +43,7 @@ class ExpenseEntityTest {
         assertEquals(this.expense.getSupplier(), expenseEntity.getSupplier());
         assertEquals(this.expense.getSupplierIdentity(), expenseEntity.getSupplierIdentity());
         assertEquals(this.expense.getTaxCategory(), expenseEntity.getTaxCategory());
-        assertEquals(this.expense.getDate(), expenseEntity.getDate());
+        assertEquals(this.expense.getIssueDate(), expenseEntity.getDate());
         assertEquals(this.expense.getDocumentPath(), expenseEntity.getDocumentPath());
     }
 
@@ -57,7 +57,7 @@ class ExpenseEntityTest {
         expenseEntity.setSupplier(this.expense.getSupplier());
         expenseEntity.setSupplierIdentity(this.expense.getSupplierIdentity());
         expenseEntity.setTaxCategory(this.expense.getTaxCategory());
-        expenseEntity.setDate(this.expense.getDate());
+        expenseEntity.setDate(this.expense.getIssueDate());
         expenseEntity.setDocumentPath(this.expense.getDocumentPath());
 
         Expense mappedExpense = expenseEntity.toDomain();
@@ -69,7 +69,7 @@ class ExpenseEntityTest {
         assertEquals(expenseEntity.getSupplier(), mappedExpense.getSupplier());
         assertEquals(expenseEntity.getSupplierIdentity(), mappedExpense.getSupplierIdentity());
         assertEquals(expenseEntity.getTaxCategory(), mappedExpense.getTaxCategory());
-        assertEquals(expenseEntity.getDate(), mappedExpense.getDate());
+        assertEquals(expenseEntity.getDate(), mappedExpense.getIssueDate());
         assertEquals(expenseEntity.getDocumentPath(), mappedExpense.getDocumentPath());
     }
 }

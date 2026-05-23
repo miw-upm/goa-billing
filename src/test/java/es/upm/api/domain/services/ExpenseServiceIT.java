@@ -51,7 +51,7 @@ class ExpenseServiceIT {
                 .supplier("Taxi Madrid")
                 .supplierIdentity("A10000000")
                 .taxCategory(TaxCategory.OTROS)
-                .date(LocalDate.of(2026, 3, 20))
+                .issueDate(LocalDate.of(2026, 3, 20))
                 .documentPath("doc/path")
                 .build();
     }
@@ -66,7 +66,7 @@ class ExpenseServiceIT {
         assertNotNull(createdExpense.getId());
         assertEquals(this.engagementId, createdExpense.getEngagement().getId());
         assertEquals(this.expense.getBaseAmount(), createdExpense.getBaseAmount());
-        assertEquals(this.expense.getDate(), createdExpense.getDate());
+        assertEquals(this.expense.getIssueDate(), createdExpense.getIssueDate());
         assertEquals(this.expense.getSupplier(), createdExpense.getSupplier());
 
         ArgumentCaptor<Expense> expenseCaptor = ArgumentCaptor.forClass(Expense.class);
@@ -78,7 +78,7 @@ class ExpenseServiceIT {
         assertEquals(createdExpense.getId(), persistedExpense.getId());
         assertEquals(this.engagementId, persistedExpense.getEngagement().getId());
         assertEquals(this.expense.getBaseAmount(), persistedExpense.getBaseAmount());
-        assertEquals(this.expense.getDate(), persistedExpense.getDate());
+        assertEquals(this.expense.getIssueDate(), persistedExpense.getIssueDate());
         assertEquals(this.expense.getSupplier(), persistedExpense.getSupplier());
     }
 
@@ -130,7 +130,7 @@ class ExpenseServiceIT {
                 .supplier("Old")
                 .supplierIdentity("OLD")
                 .taxCategory(TaxCategory.OTROS)
-                .date(LocalDate.of(2026, 3, 20))
+                .issueDate(LocalDate.of(2026, 3, 20))
                 .documentPath("old/doc")
                 .build();
 
@@ -152,7 +152,7 @@ class ExpenseServiceIT {
                 .supplier(updateData.getSupplier())
                 .supplierIdentity(updateData.getSupplierIdentity())
                 .taxCategory(updateData.getTaxCategory())
-                .date(existing.getDate())
+                .issueDate(existing.getIssueDate())
                 .documentPath(existing.getDocumentPath())
                 .build();
 
@@ -179,7 +179,7 @@ class ExpenseServiceIT {
                 .supplier("Old")
                 .supplierIdentity("OLD")
                 .taxCategory(TaxCategory.OTROS)
-                .date(LocalDate.of(2026, 3, 20))
+                .issueDate(LocalDate.of(2026, 3, 20))
                 .documentPath("old/doc")
                 .build();
         Expense updateData = Expense.builder()

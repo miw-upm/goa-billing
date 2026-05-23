@@ -19,7 +19,7 @@ class FindCriteriaTest {
 
         assertTrue(criteria.isEmpty());
 
-        criteria.setDate(LocalDate.now());
+        criteria.setFromDate(LocalDate.now());
         assertFalse(criteria.isEmpty());
     }
 

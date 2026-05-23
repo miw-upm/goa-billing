@@ -68,7 +68,7 @@ class ExpenseResourceIT {
                 .supplier("Taxi Madrid")
                 .supplierIdentity("A10000000")
                 .taxCategory(TaxCategory.OTROS)
-                .date(LocalDate.of(2026, 3, 20))
+                .issueDate(LocalDate.of(2026, 3, 20))
                 .build();
 
         when(this.expenseService.create(any())).thenReturn(response);
@@ -156,7 +156,7 @@ class ExpenseResourceIT {
                 .supplier("Taxi Madrid")
                 .supplierIdentity("A10000000")
                 .taxCategory(TaxCategory.OTROS)
-                .date(LocalDate.of(2026, 3, 20))
+                .issueDate(LocalDate.of(2026, 3, 20))
                 .build();
 
         when(this.expenseService.read(expenseId)).thenReturn(response);
@@ -188,7 +188,7 @@ class ExpenseResourceIT {
                 .supplier("Taxi Updated")
                 .supplierIdentity("A10000000")
                 .taxCategory(TaxCategory.OTROS)
-                .date(LocalDate.of(2026, 3, 21))
+                .issueDate(LocalDate.of(2026, 3, 21))
                 .build();
 
         String requestBody = """
@@ -267,7 +267,7 @@ class ExpenseResourceIT {
                 .supplier("Taxi Madrid")
                 .supplierIdentity("A10000000")
                 .taxCategory(TaxCategory.OTROS)
-                .date(LocalDate.of(2026, 3, 20))
+                .issueDate(LocalDate.of(2026, 3, 20))
                 .build();
 
         when(this.expenseService.find(this.criteria)).thenReturn(Stream.of(response));

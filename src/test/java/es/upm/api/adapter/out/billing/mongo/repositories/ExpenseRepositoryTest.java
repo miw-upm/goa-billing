@@ -38,7 +38,7 @@ class ExpenseRepositoryTest {
                 .supplier("Court services")
                 .supplierIdentity("E50000000")
                 .taxCategory(TaxCategory.SERVICIOS_PROFESIONALES)
-                .date(LocalDate.of(2026, 3, 20))
+                .issueDate(LocalDate.of(2026, 3, 20))
                 .documentPath("docs/court.pdf")
                 .build();
     }
@@ -58,7 +58,7 @@ class ExpenseRepositoryTest {
         assertEquals(this.expense.getSupplier(), savedExpenseEntity.getSupplier());
         assertEquals(this.expense.getSupplierIdentity(), savedExpenseEntity.getSupplierIdentity());
         assertEquals(this.expense.getTaxCategory(), savedExpenseEntity.getTaxCategory());
-        assertEquals(this.expense.getDate(), savedExpenseEntity.getDate());
+        assertEquals(this.expense.getIssueDate(), savedExpenseEntity.getDate());
         assertEquals(this.expense.getDocumentPath(), savedExpenseEntity.getDocumentPath());
     }
 

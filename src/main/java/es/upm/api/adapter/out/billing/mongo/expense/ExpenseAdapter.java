@@ -37,7 +37,7 @@ public class ExpenseAdapter implements ExpenseGateway {
         expenseEntity.setSupplier(expense.getSupplier());
         expenseEntity.setSupplierIdentity(expense.getSupplierIdentity());
         expenseEntity.setTaxCategory(expense.getTaxCategory());
-        expenseEntity.setDate(expense.getDate());
+        expenseEntity.setDate(expense.getIssueDate());
         expenseEntity.setDocumentPath(expense.getDocumentPath());
 
         return this.expenseRepository.save(expenseEntity).toDomain();
@@ -65,13 +65,13 @@ public class ExpenseAdapter implements ExpenseGateway {
             result = this.expenseRepository.findAll(DATE);
         } else if (criteria.getEngagementId() != null) {
             result = this.expenseRepository.findByEngagementId(criteria.getEngagementId());
-            if (criteria.getDate() != null) {
+            if (criteria.getFromDate() != null) {
                 result = result.stream()
-                        .filter(expenseEntity -> expenseEntity.getDate().equals(criteria.getDate()))
+                        .filter(expenseEntity -> expenseEntity.getDate().equals(criteria.getFromDate()))
                         .toList();
             }
         } else {
-            result = this.expenseRepository.findByDate(criteria.getDate());
+            result = this.expenseRepository.findByDate(criteria.getFromDate());
         }
 
         return result.stream()

@@ -12,9 +12,9 @@ import java.util.UUID;
 @AllArgsConstructor
 public class ExpenseFindCriteria {
     private UUID engagementId;
-    private LocalDate date;
+    private LocalDate fromDate;
 
     public boolean isEmpty() {
-        return engagementId == null && date == null;
+        return engagementId == null && fromDate == null;
     }
 }

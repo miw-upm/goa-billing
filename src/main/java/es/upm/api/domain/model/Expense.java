@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import es.upm.api.domain.model.external.EngagementSnapshot;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Past;
 import jakarta.validation.constraints.Positive;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -13,6 +14,7 @@ import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Builder
@@ -23,19 +25,23 @@ public class Expense {
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private UUID id;
 
-    @JsonFormat(pattern = "yyyy-MM-dd")
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
-    private LocalDate date;
+    private LocalDateTime recordedAt;
 
-    @NotNull
     private EngagementSnapshot engagement;
+
+    @JsonFormat(pattern = "yyyy-MM-dd")
+    @NotNull
+    @Past
+    private LocalDate issueDate;
 
     @NotNull
     @Positive
     private BigDecimal baseAmount;
 
-    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
-    private BigDecimal vatRate = new BigDecimal("21");
+    @NotNull
+    @Positive
+    private Integer vatRate;
 
     @NotBlank
     private String supplier;
@@ -45,6 +51,11 @@ public class Expense {
 
     @NotNull
     private TaxCategory taxCategory;
+
+    private String description;
+
+    @Positive
+    private BigDecimal withholdingTax = BigDecimal.ZERO;
 
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private String documentPath;

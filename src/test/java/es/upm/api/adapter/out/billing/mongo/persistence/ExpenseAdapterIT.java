@@ -54,7 +54,7 @@ class ExpenseAdapterIT {
                 .supplier("Taxi Madrid")
                 .supplierIdentity("A10000000")
                 .taxCategory(TaxCategory.OTROS)
-                .date(date)
+                .issueDate(date)
                 .documentPath("doc/path")
                 .build();
     }
@@ -77,7 +77,7 @@ class ExpenseAdapterIT {
         assertEquals(this.expense.getSupplier(), persistedExpenseEntity.getSupplier());
         assertEquals(this.expense.getSupplierIdentity(), persistedExpenseEntity.getSupplierIdentity());
         assertEquals(this.expense.getTaxCategory(), persistedExpenseEntity.getTaxCategory());
-        assertEquals(this.expense.getDate(), persistedExpenseEntity.getDate());
+        assertEquals(this.expense.getIssueDate(), persistedExpenseEntity.getDate());
         assertEquals(this.expense.getDocumentPath(), persistedExpenseEntity.getDocumentPath());
     }
 
@@ -129,7 +129,7 @@ class ExpenseAdapterIT {
                 .supplier("Proveedor 2")
                 .supplierIdentity("B20000000")
                 .taxCategory(TaxCategory.SUMINISTROS)
-                .date(this.date)
+                .issueDate(this.date)
                 .documentPath("new/doc")
                 .build();
 
@@ -180,7 +180,7 @@ class ExpenseAdapterIT {
 
     @Test
     void shouldFindWithDate() {
-        this.criteria.setDate(date);
+        this.criteria.setFromDate(date);
         when(this.expenseRepository.findByDate(date))
                 .thenReturn(List.of(new ExpenseEntity(this.expense)));
 
@@ -207,7 +207,7 @@ class ExpenseAdapterIT {
     @Test
     void shouldFindWithEngagementIdAndDate() {
         this.criteria.setEngagementId(engagementUuid);
-        this.criteria.setDate(date);
+        this.criteria.setFromDate(date);
         when(this.expenseRepository.findByEngagementId(engagementUuid))
                 .thenReturn(List.of(new ExpenseEntity(this.expense)));
 
