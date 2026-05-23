@@ -8,4 +8,8 @@ import java.util.UUID;
 
 public interface PaymentRepository extends MongoRepository<PaymentEntity, UUID> {
     List<PaymentEntity> findByDateGreaterThanEqualOrderByDateDesc(LocalDate fromDate);
+
+    List<PaymentEntity> findByInvoicedOrderByDateDesc(Boolean invoiced);
+
+    List<PaymentEntity> findByDateGreaterThanEqualAndInvoicedOrderByDateDesc(LocalDate fromDate, Boolean invoiced);
 }

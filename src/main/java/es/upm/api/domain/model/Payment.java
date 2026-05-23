@@ -40,4 +40,7 @@ public class Payment {
 
     @NotNull
     private PaymentMethod method;
+
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    private Boolean invoiced;
 }

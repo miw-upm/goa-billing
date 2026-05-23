@@ -32,7 +32,8 @@ public class PaymentSeeder {
                         "aaaaaaaa-bbbb-cccc-dddd-eeeeffff0000",
                         "500.00",
                         PaymentMethod.TRANSFER,
-                        LocalDate.of(2026, 3, 20)
+                        LocalDate.of(2026, 3, 20),
+                        false
                 ),
                 this.buildPayment(
                         "bbbbbbbb-cccc-dddd-eeee-ffffaaaab002",
@@ -40,7 +41,8 @@ public class PaymentSeeder {
                         "aaaaaaaa-bbbb-cccc-dddd-eeeeffff0001",
                         "1200.00",
                         PaymentMethod.BIZUM,
-                        LocalDate.of(2026, 3, 21)
+                        LocalDate.of(2026, 3, 21),
+                        false
                 ),
                 this.buildPayment(
                         "bbbbbbbb-cccc-dddd-eeee-ffffaaaab003",
@@ -48,7 +50,8 @@ public class PaymentSeeder {
                         "aaaaaaaa-bbbb-cccc-dddd-eeeeffff0000",
                         "200.00",
                         PaymentMethod.CASH,
-                        LocalDate.of(2026, 3, 22)
+                        LocalDate.of(2026, 3, 22),
+                        true
                 )
         );
         this.paymentRepository.saveAll(payments);
@@ -59,14 +62,15 @@ public class PaymentSeeder {
     }
 
     private PaymentEntity buildPayment(String id, String engagementId, String userId, String amount,
-                                       PaymentMethod method, LocalDate date) {
-        PaymentEntity paymentEntity = new PaymentEntity();
-        paymentEntity.setId(UUID.fromString(id));
-        paymentEntity.setEngagementId(UUID.fromString(engagementId));
-        paymentEntity.setUserId(UUID.fromString(userId));
-        paymentEntity.setAmount(new BigDecimal(amount));
-        paymentEntity.setMethod(method);
-        paymentEntity.setDate(date);
-        return paymentEntity;
+                                       PaymentMethod method, LocalDate date, boolean invoiced) {
+        return PaymentEntity.builder()
+                .id(UUID.fromString(id))
+                .engagementId(UUID.fromString(engagementId))
+                .userId(UUID.fromString(userId))
+                .amount(new BigDecimal(amount))
+                .method(method)
+                .date(date)
+                .invoiced(invoiced)
+                .build();
     }
 }

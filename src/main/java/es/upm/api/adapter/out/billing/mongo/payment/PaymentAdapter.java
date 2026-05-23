@@ -56,9 +56,20 @@ public class PaymentAdapter implements PaymentGateway {
 
     @Override
     public Stream<Payment> find(PaymentFindCriteria criteria) {
-        List<PaymentEntity> result = (criteria != null && criteria.getFromDate() != null)
-                ? this.paymentRepository.findByDateGreaterThanEqualOrderByDateDesc(criteria.getFromDate())
-                : this.paymentRepository.findAll(DATE);
+        List<PaymentEntity> result;
+        if (criteria == null || criteria.all()) {
+            result = this.paymentRepository.findAll(DATE);
+        } else if (criteria.getFromDate() != null && criteria.getInvoiced() != null) {
+            result = this.paymentRepository.findByDateGreaterThanEqualAndInvoicedOrderByDateDesc(
+                    criteria.getFromDate(), criteria.getInvoiced()
+            );
+        } else if (criteria.getFromDate() != null) {
+            result = this.paymentRepository.findByDateGreaterThanEqualOrderByDateDesc(criteria.getFromDate());
+        } else if (criteria.getInvoiced() != null) {
+            result = this.paymentRepository.findByInvoicedOrderByDateDesc(criteria.getInvoiced());
+        } else {
+            result = this.paymentRepository.findAll(DATE);
+        }
 
         return result.stream()
                 .map(PaymentEntity::toDomain);

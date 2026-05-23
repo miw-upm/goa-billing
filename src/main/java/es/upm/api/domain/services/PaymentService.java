@@ -25,6 +25,7 @@ public class PaymentService {
     public Payment create(Payment payment) {
         payment.setId(UUID.randomUUID());
         payment.setDate(LocalDate.now());
+        payment.setInvoiced(false);
         this.hydrateEngagement(payment);
         payment.setUser(this.userFinder.readById(payment.getUser().getId()));
         this.paymentGateway.create(payment);

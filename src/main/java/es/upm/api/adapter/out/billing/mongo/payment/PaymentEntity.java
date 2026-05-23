@@ -29,6 +29,7 @@ public class PaymentEntity {
     private BigDecimal amount;
     private PaymentMethod method;
     private LocalDate date;
+    private Boolean invoiced;
 
     public PaymentEntity(Payment payment) {
         BeanUtils.copyProperties(payment, this);

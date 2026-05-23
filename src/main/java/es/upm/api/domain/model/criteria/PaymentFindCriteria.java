@@ -10,10 +10,11 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @AllArgsConstructor
 public class PaymentFindCriteria {
+    private Boolean invoiced;
     private String client;
     private LocalDate fromDate;
 
     public boolean all() {
-        return this.client == null && this.fromDate == null;
+        return this.invoiced == null && this.client == null && this.fromDate == null;
     }
 }
