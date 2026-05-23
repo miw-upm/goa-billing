@@ -9,6 +9,10 @@ import java.util.UUID;
 public interface ExpenseRepository extends MongoRepository<ExpenseEntity, UUID> {
     List<ExpenseEntity> findAllByOrderByIssueDateDesc();
 
+    List<ExpenseEntity> findBySupplierNameContainingIgnoreCaseOrSupplierIdentityContainingIgnoreCase(
+            String supplierName, String supplierIdentity
+    );
+
     List<ExpenseEntity> findByIssueDateGreaterThanEqualOrderByIssueDateDesc(LocalDate issueDate);
 
     List<ExpenseEntity> findByEngagementIdOrderByIssueDateDesc(UUID engagementId);

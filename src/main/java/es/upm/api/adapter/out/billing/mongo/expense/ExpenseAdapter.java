@@ -1,6 +1,7 @@
 package es.upm.api.adapter.out.billing.mongo.expense;
 
 import es.upm.api.domain.model.Expense;
+import es.upm.api.domain.model.SupplierInfo;
 import es.upm.api.domain.model.criteria.ExpenseFindCriteria;
 import es.upm.api.domain.ports.out.billing.ExpenseGateway;
 import es.upm.miw.exception.BadRequestException;
@@ -8,6 +9,7 @@ import es.upm.miw.exception.NotFoundException;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Stream;
@@ -66,5 +68,16 @@ public class ExpenseAdapter implements ExpenseGateway {
         }
         return result.stream()
                 .map(ExpenseEntity::toDomain);
+    }
+
+    @Override
+    public Stream<SupplierInfo> findSuppliers(String supplier) {
+        String normalizedSupplier = Objects.toString(supplier, "").toLowerCase(Locale.ROOT);
+        return this.expenseRepository.findBySupplierNameContainingIgnoreCaseOrSupplierIdentityContainingIgnoreCase(
+                        normalizedSupplier, normalizedSupplier
+                ).stream()
+                .map(ExpenseEntity::getSupplier)
+                .filter(Objects::nonNull)
+                .distinct();
     }
 }

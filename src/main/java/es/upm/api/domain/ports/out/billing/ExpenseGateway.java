@@ -1,9 +1,11 @@
 package es.upm.api.domain.ports.out.billing;
 
 import es.upm.api.domain.model.Expense;
+import es.upm.api.domain.model.SupplierInfo;
 import es.upm.api.domain.model.criteria.ExpenseFindCriteria;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.UUID;
 import java.util.stream.Stream;
 
@@ -18,4 +20,6 @@ public interface ExpenseGateway {
     void delete(UUID id);
 
     Stream<Expense> find(ExpenseFindCriteria criteria);
+
+    Stream<SupplierInfo> findSuppliers(String supplier);
 }

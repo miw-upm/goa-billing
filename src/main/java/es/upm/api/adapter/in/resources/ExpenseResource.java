@@ -1,6 +1,7 @@
 package es.upm.api.adapter.in.resources;
 
 import es.upm.api.domain.model.Expense;
+import es.upm.api.domain.model.SupplierInfo;
 import es.upm.api.domain.model.TaxCategory;
 import es.upm.api.domain.model.criteria.ExpenseFindCriteria;
 import es.upm.api.domain.services.ExpenseService;
@@ -54,5 +55,10 @@ public class ExpenseResource {
         return new CategoryResponseDto(Arrays.stream(TaxCategory.values())
                 .map(TaxCategory::name)
                 .toList());
+    }
+
+    @GetMapping("/suppliers")
+    public List<SupplierInfo> suppliers(@RequestParam String supplier) {
+        return this.expenseService.findSuppliers(supplier).toList();
     }
 }

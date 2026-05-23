@@ -1,6 +1,7 @@
 package es.upm.api.domain.services;
 
 import es.upm.api.domain.model.Expense;
+import es.upm.api.domain.model.SupplierInfo;
 import es.upm.api.domain.model.criteria.ExpenseFindCriteria;
 import es.upm.api.domain.ports.out.billing.ExpenseGateway;
 import es.upm.api.domain.ports.out.engagement.EngagementFinder;
@@ -8,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 import java.util.stream.Stream;
 
@@ -52,5 +54,9 @@ public class ExpenseService {
 
     public Stream<Expense> find(ExpenseFindCriteria criteria) {
         return this.expenseGateway.find(criteria);
+    }
+
+    public Stream<SupplierInfo> findSuppliers(String supplier) {
+        return this.expenseGateway.findSuppliers(supplier);
     }
 }

@@ -183,4 +183,44 @@ class ExpenseAdapterIT {
 
         assertEquals(this.expense, expenseStream.findFirst().orElse(null));
     }
+
+    @Test
+    void shouldFindSuppliersByNameOrIdentityContains() {
+        SupplierInfo supplierInfo = SupplierInfo.builder()
+                .name("Taxi Madrid")
+                .identity("A10000000")
+                .build();
+        Expense first = Expense.builder()
+                .id(UUID.randomUUID())
+                .engagement(EngagementSnapshot.builder().id(this.engagementUuid).build())
+                .baseAmount(BigDecimal.valueOf(25))
+                .vatRate(21)
+                .supplier(supplierInfo)
+                .taxCategory(TaxCategory.OTROS)
+                .issueDate(this.date)
+                .withholdingTax(BigDecimal.ZERO)
+                .documentPath("doc/path")
+                .build();
+        Expense second = Expense.builder()
+                .id(UUID.randomUUID())
+                .engagement(EngagementSnapshot.builder().id(this.engagementUuid).build())
+                .baseAmount(BigDecimal.valueOf(30))
+                .vatRate(21)
+                .supplier(supplierInfo)
+                .taxCategory(TaxCategory.OTROS)
+                .issueDate(this.date.plusDays(1))
+                .withholdingTax(BigDecimal.ZERO)
+                .documentPath("doc/path")
+                .build();
+
+        when(this.expenseRepository.findBySupplierNameContainingIgnoreCaseOrSupplierIdentityContainingIgnoreCase("100", "100"))
+                .thenReturn(List.of(new ExpenseEntity(first), new ExpenseEntity(second)));
+
+        List<SupplierInfo> suppliers = this.expensePersistenceMongodb.findSuppliers("100").toList();
+
+        assertEquals(1, suppliers.size());
+        assertEquals("Taxi Madrid", suppliers.get(0).getName());
+        assertEquals("A10000000", suppliers.get(0).getIdentity());
+        verify(this.expenseRepository).findBySupplierNameContainingIgnoreCaseOrSupplierIdentityContainingIgnoreCase("100", "100");
+    }
 }

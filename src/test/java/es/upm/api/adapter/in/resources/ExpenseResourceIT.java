@@ -19,6 +19,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.UUID;
 import java.util.stream.Stream;
 
@@ -202,6 +203,7 @@ class ExpenseResourceIT {
 
         verify(this.expenseService).find(this.criteria);
     }
+
 
     @Test
     @WithMockUser(roles = "admin")
