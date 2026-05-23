@@ -3,6 +3,7 @@ package es.upm.api.adapter.out.billing.mongo.repositories;
 import es.upm.api.adapter.out.billing.mongo.expense.ExpenseRepository;
 import es.upm.api.adapter.out.billing.mongo.expense.ExpenseEntity;
 import es.upm.api.domain.model.Expense;
+import es.upm.api.domain.model.SupplierInfo;
 import es.upm.api.domain.model.TaxCategory;
 import es.upm.api.domain.model.external.EngagementSnapshot;
 import org.junit.jupiter.api.BeforeEach;
@@ -35,8 +36,7 @@ class ExpenseRepositoryTest {
                 .engagement(EngagementSnapshot.builder().id(UUID.randomUUID()).build())
                 .baseAmount(BigDecimal.valueOf(30))
                 .vatRate(21)
-                .supplier("Court services")
-                .supplierIdentity("E50000000")
+                .supplier(SupplierInfo.builder().name("Court services").identity("E50000000").build())
                 .taxCategory(TaxCategory.SERVICIOS_PROFESIONALES)
                 .issueDate(LocalDate.of(2026, 3, 20))
                 .withholdingTax(BigDecimal.ZERO)
@@ -57,7 +57,6 @@ class ExpenseRepositoryTest {
         assertEquals(this.expense.getBaseAmount(), savedExpenseEntity.getBaseAmount());
         assertEquals(this.expense.getVatRate(), savedExpenseEntity.getVatRate());
         assertEquals(this.expense.getSupplier(), savedExpenseEntity.getSupplier());
-        assertEquals(this.expense.getSupplierIdentity(), savedExpenseEntity.getSupplierIdentity());
         assertEquals(this.expense.getTaxCategory(), savedExpenseEntity.getTaxCategory());
         assertEquals(this.expense.getIssueDate(), savedExpenseEntity.getIssueDate());
         assertEquals(this.expense.getDocumentPath(), savedExpenseEntity.getDocumentPath());
@@ -76,7 +75,6 @@ class ExpenseRepositoryTest {
         assertEquals(savedExpenseEntity.getBaseAmount(), foundExpenseEntity.getBaseAmount());
         assertEquals(savedExpenseEntity.getVatRate(), foundExpenseEntity.getVatRate());
         assertEquals(savedExpenseEntity.getSupplier(), foundExpenseEntity.getSupplier());
-        assertEquals(savedExpenseEntity.getSupplierIdentity(), foundExpenseEntity.getSupplierIdentity());
         assertEquals(savedExpenseEntity.getTaxCategory(), foundExpenseEntity.getTaxCategory());
         assertEquals(savedExpenseEntity.getIssueDate(), foundExpenseEntity.getIssueDate());
         assertEquals(savedExpenseEntity.getDocumentPath(), foundExpenseEntity.getDocumentPath());

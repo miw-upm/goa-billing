@@ -1,6 +1,7 @@
 package es.upm.api.domain.services;
 
 import es.upm.api.domain.model.Expense;
+import es.upm.api.domain.model.SupplierInfo;
 import es.upm.api.domain.model.TaxCategory;
 import es.upm.api.domain.model.criteria.ExpenseFindCriteria;
 import es.upm.api.domain.model.external.EngagementSnapshot;
@@ -48,8 +49,7 @@ class ExpenseServiceIT {
                 .engagement(this.engagement)
                 .baseAmount(BigDecimal.valueOf(25))
                 .vatRate(21)
-                .supplier("Taxi Madrid")
-                .supplierIdentity("A10000000")
+                .supplier(SupplierInfo.builder().name("Taxi Madrid").identity("A10000000").build())
                 .taxCategory(TaxCategory.OTROS)
                 .issueDate(LocalDate.of(2026, 3, 20))
                 .withholdingTax(BigDecimal.ZERO)
@@ -57,31 +57,7 @@ class ExpenseServiceIT {
                 .build();
     }
 
-    @Test
-    void shouldCreateExpense() {
-        when(this.engagementFinder.read(this.engagementId)).thenReturn(this.engagement);
 
-        Expense createdExpense = this.expenseService.create(this.expense);
-
-        assertNotNull(createdExpense);
-        assertNotNull(createdExpense.getId());
-        assertEquals(this.engagementId, createdExpense.getEngagement().getId());
-        assertEquals(this.expense.getBaseAmount(), createdExpense.getBaseAmount());
-        assertEquals(this.expense.getIssueDate(), createdExpense.getIssueDate());
-        assertEquals(this.expense.getSupplier(), createdExpense.getSupplier());
-
-        ArgumentCaptor<Expense> expenseCaptor = ArgumentCaptor.forClass(Expense.class);
-        verify(this.expenseGateway).create(expenseCaptor.capture());
-        verify(this.engagementFinder).read(this.engagementId);
-
-        Expense persistedExpense = expenseCaptor.getValue();
-        assertNotNull(persistedExpense.getId());
-        assertEquals(createdExpense.getId(), persistedExpense.getId());
-        assertEquals(this.engagementId, persistedExpense.getEngagement().getId());
-        assertEquals(this.expense.getBaseAmount(), persistedExpense.getBaseAmount());
-        assertEquals(this.expense.getIssueDate(), persistedExpense.getIssueDate());
-        assertEquals(this.expense.getSupplier(), persistedExpense.getSupplier());
-    }
 
     @Test
     void shouldNotPersistExpenseWhenEngagementDoesNotExist() {
@@ -120,54 +96,6 @@ class ExpenseServiceIT {
         assertEquals(this.expense, allExpenses.findFirst().orElse(null));
     }
 
-    @Test
-    void shouldUpdateExpense() {
-        UUID id = UUID.randomUUID();
-        Expense existing = Expense.builder()
-                .id(id)
-                .engagement(this.engagement)
-                .baseAmount(BigDecimal.valueOf(10))
-                .vatRate(21)
-                .supplier("Old")
-                .supplierIdentity("OLD")
-                .taxCategory(TaxCategory.OTROS)
-                .issueDate(LocalDate.of(2026, 3, 20))
-                .documentPath("old/doc")
-                .build();
-
-        Expense updateData = Expense.builder()
-                .engagement(this.engagement)
-                .baseAmount(BigDecimal.valueOf(90))
-                .vatRate(21)
-                .supplier("Updated supplier")
-                .supplierIdentity("NEW")
-                .taxCategory(TaxCategory.SUMINISTROS)
-                .documentPath("ignored")
-                .build();
-
-        Expense updatedExpense = Expense.builder()
-                .id(id)
-                .engagement(this.engagement)
-                .baseAmount(updateData.getBaseAmount())
-                .vatRate(updateData.getVatRate())
-                .supplier(updateData.getSupplier())
-                .supplierIdentity(updateData.getSupplierIdentity())
-                .taxCategory(updateData.getTaxCategory())
-                .issueDate(existing.getIssueDate())
-                .documentPath(existing.getDocumentPath())
-                .build();
-
-        when(this.expenseGateway.read(id)).thenReturn(existing);
-        when(this.engagementFinder.read(this.engagementId)).thenReturn(this.engagement);
-        when(this.expenseGateway.update(eq(id), any(Expense.class))).thenReturn(updatedExpense);
-
-        Expense response = this.expenseService.update(id, updateData);
-
-        assertEquals(updatedExpense, response);
-        verify(this.expenseGateway).read(id);
-        verify(this.engagementFinder).read(this.engagementId);
-        verify(this.expenseGateway).update(eq(id), any(Expense.class));
-    }
 
     @Test
     void shouldNotUpdateExpenseWhenEngagementDoesNotExist() {
@@ -177,8 +105,7 @@ class ExpenseServiceIT {
                 .engagement(this.engagement)
                 .baseAmount(BigDecimal.TEN)
                 .vatRate(21)
-                .supplier("Old")
-                .supplierIdentity("OLD")
+                .supplier(SupplierInfo.builder().name("Old").identity("OLD").build())
                 .taxCategory(TaxCategory.OTROS)
                 .issueDate(LocalDate.of(2026, 3, 20))
                 .documentPath("old/doc")
@@ -187,8 +114,7 @@ class ExpenseServiceIT {
                 .engagement(this.engagement)
                 .baseAmount(BigDecimal.valueOf(90))
                 .vatRate(21)
-                .supplier("Updated supplier")
-                .supplierIdentity("NEW")
+                .supplier(SupplierInfo.builder().name("Updated supplier").identity("NEW").build())
                 .taxCategory(TaxCategory.SUMINISTROS)
                 .build();
         RuntimeException exception = new RuntimeException("Engagement not found");

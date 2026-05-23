@@ -1,6 +1,7 @@
 package es.upm.api.adapter.out.billing.mongo.expense;
 
 import es.upm.api.domain.model.Expense;
+import es.upm.api.domain.model.SupplierInfo;
 import es.upm.api.domain.model.TaxCategory;
 import es.upm.api.domain.model.external.EngagementSnapshot;
 import lombok.AllArgsConstructor;
@@ -29,10 +30,8 @@ public class ExpenseEntity {
     private UUID engagementId;
     private BigDecimal baseAmount;
     private Integer vatRate;
-    private String supplier;
-    private String supplierIdentity;
+    private SupplierInfo supplier;
     private TaxCategory taxCategory;
-    @Field("date")
     private LocalDate issueDate;
     private String description;
     private BigDecimal withholdingTax;

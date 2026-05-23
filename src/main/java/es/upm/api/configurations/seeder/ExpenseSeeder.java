@@ -2,6 +2,7 @@ package es.upm.api.configurations.seeder;
 
 import es.upm.api.adapter.out.billing.mongo.expense.ExpenseEntity;
 import es.upm.api.adapter.out.billing.mongo.expense.ExpenseRepository;
+import es.upm.api.domain.model.SupplierInfo;
 import es.upm.api.domain.model.TaxCategory;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.context.annotation.Profile;
@@ -70,8 +71,10 @@ public class ExpenseSeeder {
         expenseEntity.setEngagementId(UUID.fromString(engagementId));
         expenseEntity.setBaseAmount(new BigDecimal(baseAmount));
         expenseEntity.setVatRate(vatRate);
-        expenseEntity.setSupplier(supplier);
-        expenseEntity.setSupplierIdentity(supplierIdentity);
+        expenseEntity.setSupplier(SupplierInfo.builder()
+                .name(supplier)
+                .identity(supplierIdentity)
+                .build());
         expenseEntity.setTaxCategory(taxCategory);
         expenseEntity.setIssueDate(date);
         expenseEntity.setWithholdingTax(BigDecimal.ZERO);

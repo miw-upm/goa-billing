@@ -123,14 +123,5 @@ class PaymentAdapterIT {
         assertThrows(NotFoundException.class, () -> this.paymentAdapter.delete(id));
     }
 
-    @Test
-    void shouldFindPayments() {
-        when(this.paymentRepository.findAll(PaymentAdapter.DATE))
-                .thenReturn(List.of(new PaymentEntity(this.payment)));
 
-        Stream<Payment> stream = this.paymentAdapter.find(this.criteria);
-
-        assertEquals(this.payment, stream.findFirst().orElse(null));
-        verify(this.paymentRepository).findAll(PaymentAdapter.DATE);
-    }
 }

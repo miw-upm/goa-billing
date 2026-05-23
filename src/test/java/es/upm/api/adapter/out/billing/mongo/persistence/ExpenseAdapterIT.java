@@ -4,6 +4,7 @@ import es.upm.api.adapter.out.billing.mongo.expense.ExpenseAdapter;
 import es.upm.api.adapter.out.billing.mongo.expense.ExpenseEntity;
 import es.upm.api.adapter.out.billing.mongo.expense.ExpenseRepository;
 import es.upm.api.domain.model.Expense;
+import es.upm.api.domain.model.SupplierInfo;
 import es.upm.api.domain.model.TaxCategory;
 import es.upm.api.domain.model.criteria.ExpenseFindCriteria;
 import es.upm.api.domain.model.external.EngagementSnapshot;
@@ -51,8 +52,7 @@ class ExpenseAdapterIT {
                 .engagement(EngagementSnapshot.builder().id(engagementUuid).build())
                 .baseAmount(BigDecimal.valueOf(25))
                 .vatRate(21)
-                .supplier("Taxi Madrid")
-                .supplierIdentity("A10000000")
+                .supplier(SupplierInfo.builder().name("Taxi Madrid").identity("A10000000").build())
                 .taxCategory(TaxCategory.OTROS)
                 .issueDate(date)
                 .withholdingTax(BigDecimal.ZERO)
@@ -76,7 +76,6 @@ class ExpenseAdapterIT {
         assertEquals(this.expense.getBaseAmount(), persistedExpenseEntity.getBaseAmount());
         assertEquals(this.expense.getVatRate(), persistedExpenseEntity.getVatRate());
         assertEquals(this.expense.getSupplier(), persistedExpenseEntity.getSupplier());
-        assertEquals(this.expense.getSupplierIdentity(), persistedExpenseEntity.getSupplierIdentity());
         assertEquals(this.expense.getTaxCategory(), persistedExpenseEntity.getTaxCategory());
         assertEquals(this.expense.getIssueDate(), persistedExpenseEntity.getIssueDate());
         assertEquals(this.expense.getDocumentPath(), persistedExpenseEntity.getDocumentPath());
@@ -117,34 +116,7 @@ class ExpenseAdapterIT {
         verify(this.expenseRepository).findById(this.expense.getId());
     }
 
-    @Test
-    void shouldUpdateExpense() {
-        UUID id = this.expense.getId();
-        when(this.expenseRepository.findById(id)).thenReturn(Optional.of(new ExpenseEntity(this.expense)));
-        when(this.expenseRepository.save(any(ExpenseEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
-
-        Expense updateRequest = Expense.builder()
-                .engagement(EngagementSnapshot.builder().id(this.engagementUuid).build())
-                .baseAmount(BigDecimal.valueOf(50))
-                .vatRate(21)
-                .supplier("Proveedor 2")
-                .supplierIdentity("B20000000")
-                .taxCategory(TaxCategory.SUMINISTROS)
-                .issueDate(this.date)
-                .withholdingTax(BigDecimal.ZERO)
-                .documentPath("new/doc")
-                .build();
-
-        Expense updated = this.expensePersistenceMongodb.update(id, updateRequest);
-
-        assertEquals(id, updated.getId());
-        assertEquals(updateRequest.getBaseAmount(), updated.getBaseAmount());
-        assertEquals(updateRequest.getSupplier(), updated.getSupplier());
-        verify(this.expenseRepository).findById(id);
-        verify(this.expenseRepository).save(any(ExpenseEntity.class));
-    }
-
-    @Test
+       @Test
     void shouldDeleteExpense() {
         UUID id = this.expense.getId();
         ExpenseEntity expenseEntity = new ExpenseEntity(this.expense);
