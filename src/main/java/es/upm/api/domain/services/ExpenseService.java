@@ -7,7 +7,7 @@ import es.upm.api.domain.ports.out.engagement.EngagementFinder;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.UUID;
 import java.util.stream.Stream;
 
@@ -17,28 +17,33 @@ public class ExpenseService {
     private final ExpenseGateway expenseGateway;
     private final EngagementFinder engagementFinder;
 
-    public Expense create(Expense expense) {
+    public void create(Expense expense) {
         expense.setId(UUID.randomUUID());
-        expense.setIssueDate(LocalDate.now());
-        expense.setEngagement(this.engagementFinder.read(expense.getEngagement().getId()));
+        expense.setRecordedAt(LocalDateTime.now());
+        if (expense.getEngagement() != null){
+            expense.setEngagement(this.engagementFinder.read(expense.getEngagement().getId()));
+        }
         expense.setDocumentPath(null); //TODO
         this.expenseGateway.create(expense);
-        return expense;
     }
 
     public Expense read(UUID id) {
         Expense expense = this.expenseGateway.read(id);
-        expense.setEngagement(this.engagementFinder.read(expense.getEngagement().getId()));
+        if (expense.getEngagement() != null){
+            expense.setEngagement(this.engagementFinder.read(expense.getEngagement().getId()));
+        }
         return expense;
     }
 
-    public Expense update(UUID id, Expense expense) {
+    public void update(UUID id, Expense expense) {
         Expense currentExpense = this.expenseGateway.read(id);
         expense.setId(id);
-        expense.setIssueDate(currentExpense.getIssueDate());
+        expense.setRecordedAt(LocalDateTime.now());
         expense.setDocumentPath(currentExpense.getDocumentPath());
-        expense.setEngagement(this.engagementFinder.read(expense.getEngagement().getId()));
-        return this.expenseGateway.update(id, expense);
+        if (expense.getEngagement() != null){
+            expense.setEngagement(this.engagementFinder.read(expense.getEngagement().getId()));
+        }
+        this.expenseGateway.update(id, expense);
     }
 
     public void delete(UUID id) {

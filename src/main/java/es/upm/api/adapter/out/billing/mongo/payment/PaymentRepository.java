@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.UUID;
 
 public interface PaymentRepository extends MongoRepository<PaymentEntity, UUID> {
+    List<PaymentEntity> findAllByOrderByDateDesc();
+
     List<PaymentEntity> findByDateGreaterThanEqualOrderByDateDesc(LocalDate fromDate);
 
     List<PaymentEntity> findByInvoicedOrderByDateDesc(Boolean invoiced);

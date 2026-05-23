@@ -4,8 +4,6 @@ import es.upm.api.domain.model.Invoice;
 import es.upm.api.domain.model.criteria.InvoiceFindCriteria;
 import es.upm.api.domain.services.InvoiceService;
 import es.upm.miw.security.Security;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;

@@ -50,11 +50,12 @@ class ExpenseAdapterIT {
                 .id(UUID.randomUUID())
                 .engagement(EngagementSnapshot.builder().id(engagementUuid).build())
                 .baseAmount(BigDecimal.valueOf(25))
-                .vatRate(BigDecimal.valueOf(21))
+                .vatRate(21)
                 .supplier("Taxi Madrid")
                 .supplierIdentity("A10000000")
                 .taxCategory(TaxCategory.OTROS)
                 .issueDate(date)
+                .withholdingTax(BigDecimal.ZERO)
                 .documentPath("doc/path")
                 .build();
     }
@@ -77,7 +78,7 @@ class ExpenseAdapterIT {
         assertEquals(this.expense.getSupplier(), persistedExpenseEntity.getSupplier());
         assertEquals(this.expense.getSupplierIdentity(), persistedExpenseEntity.getSupplierIdentity());
         assertEquals(this.expense.getTaxCategory(), persistedExpenseEntity.getTaxCategory());
-        assertEquals(this.expense.getIssueDate(), persistedExpenseEntity.getDate());
+        assertEquals(this.expense.getIssueDate(), persistedExpenseEntity.getIssueDate());
         assertEquals(this.expense.getDocumentPath(), persistedExpenseEntity.getDocumentPath());
     }
 
@@ -125,11 +126,12 @@ class ExpenseAdapterIT {
         Expense updateRequest = Expense.builder()
                 .engagement(EngagementSnapshot.builder().id(this.engagementUuid).build())
                 .baseAmount(BigDecimal.valueOf(50))
-                .vatRate(BigDecimal.valueOf(21))
+                .vatRate(21)
                 .supplier("Proveedor 2")
                 .supplierIdentity("B20000000")
                 .taxCategory(TaxCategory.SUMINISTROS)
                 .issueDate(this.date)
+                .withholdingTax(BigDecimal.ZERO)
                 .documentPath("new/doc")
                 .build();
 
@@ -167,26 +169,14 @@ class ExpenseAdapterIT {
     }
 
     @Test
-    void shouldFind() {
-        when(this.expenseRepository.findAll(ExpenseAdapter.DATE))
-                .thenReturn(List.of(new ExpenseEntity(this.expense)));
-
-        Stream<Expense> expenseStream = this.expensePersistenceMongodb.find(this.criteria);
-
-        verify(this.expenseRepository).findAll(ExpenseAdapter.DATE);
-
-        assertEquals(this.expense, expenseStream.findFirst().orElse(null));
-    }
-
-    @Test
     void shouldFindWithDate() {
         this.criteria.setFromDate(date);
-        when(this.expenseRepository.findByDate(date))
+        when(this.expenseRepository.findByIssueDateGreaterThanEqualOrderByIssueDateDesc(date))
                 .thenReturn(List.of(new ExpenseEntity(this.expense)));
 
         Stream<Expense> expenseStream = this.expensePersistenceMongodb.find(this.criteria);
 
-        verify(this.expenseRepository).findByDate(date);
+        verify(this.expenseRepository).findByIssueDateGreaterThanEqualOrderByIssueDateDesc(date);
 
         assertEquals(this.expense, expenseStream.findFirst().orElse(null));
     }
@@ -194,12 +184,12 @@ class ExpenseAdapterIT {
     @Test
     void shouldFindWithEngagementId() {
         this.criteria.setEngagementId(engagementUuid);
-        when(this.expenseRepository.findByEngagementId(engagementUuid))
+        when(this.expenseRepository.findByEngagementIdOrderByIssueDateDesc(engagementUuid))
                 .thenReturn(List.of(new ExpenseEntity(this.expense)));
 
         Stream<Expense> expenseStream = this.expensePersistenceMongodb.find(this.criteria);
 
-        verify(this.expenseRepository).findByEngagementId(engagementUuid);
+        verify(this.expenseRepository).findByEngagementIdOrderByIssueDateDesc(engagementUuid);
 
         assertEquals(this.expense, expenseStream.findFirst().orElse(null));
     }
@@ -208,12 +198,16 @@ class ExpenseAdapterIT {
     void shouldFindWithEngagementIdAndDate() {
         this.criteria.setEngagementId(engagementUuid);
         this.criteria.setFromDate(date);
-        when(this.expenseRepository.findByEngagementId(engagementUuid))
+        when(this.expenseRepository.findByEngagementIdAndIssueDateGreaterThanEqualOrderByIssueDateDesc(
+                engagementUuid, date
+        ))
                 .thenReturn(List.of(new ExpenseEntity(this.expense)));
 
         Stream<Expense> expenseStream = this.expensePersistenceMongodb.find(this.criteria);
 
-        verify(this.expenseRepository).findByEngagementId(engagementUuid);
+        verify(this.expenseRepository).findByEngagementIdAndIssueDateGreaterThanEqualOrderByIssueDateDesc(
+                engagementUuid, date
+        );
 
         assertEquals(this.expense, expenseStream.findFirst().orElse(null));
     }

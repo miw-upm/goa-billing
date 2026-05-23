@@ -7,6 +7,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Past;
 import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.PositiveOrZero;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -54,7 +55,7 @@ public class Expense {
 
     private String description;
 
-    @Positive
+    @PositiveOrZero
     private BigDecimal withholdingTax = BigDecimal.ZERO;
 
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)

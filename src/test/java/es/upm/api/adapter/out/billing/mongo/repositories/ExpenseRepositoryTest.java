@@ -34,11 +34,12 @@ class ExpenseRepositoryTest {
                 .id(UUID.randomUUID())
                 .engagement(EngagementSnapshot.builder().id(UUID.randomUUID()).build())
                 .baseAmount(BigDecimal.valueOf(30))
-                .vatRate(BigDecimal.valueOf(21))
+                .vatRate(21)
                 .supplier("Court services")
                 .supplierIdentity("E50000000")
                 .taxCategory(TaxCategory.SERVICIOS_PROFESIONALES)
                 .issueDate(LocalDate.of(2026, 3, 20))
+                .withholdingTax(BigDecimal.ZERO)
                 .documentPath("docs/court.pdf")
                 .build();
     }
@@ -58,7 +59,7 @@ class ExpenseRepositoryTest {
         assertEquals(this.expense.getSupplier(), savedExpenseEntity.getSupplier());
         assertEquals(this.expense.getSupplierIdentity(), savedExpenseEntity.getSupplierIdentity());
         assertEquals(this.expense.getTaxCategory(), savedExpenseEntity.getTaxCategory());
-        assertEquals(this.expense.getIssueDate(), savedExpenseEntity.getDate());
+        assertEquals(this.expense.getIssueDate(), savedExpenseEntity.getIssueDate());
         assertEquals(this.expense.getDocumentPath(), savedExpenseEntity.getDocumentPath());
     }
 
@@ -77,7 +78,7 @@ class ExpenseRepositoryTest {
         assertEquals(savedExpenseEntity.getSupplier(), foundExpenseEntity.getSupplier());
         assertEquals(savedExpenseEntity.getSupplierIdentity(), foundExpenseEntity.getSupplierIdentity());
         assertEquals(savedExpenseEntity.getTaxCategory(), foundExpenseEntity.getTaxCategory());
-        assertEquals(savedExpenseEntity.getDate(), foundExpenseEntity.getDate());
+        assertEquals(savedExpenseEntity.getIssueDate(), foundExpenseEntity.getIssueDate());
         assertEquals(savedExpenseEntity.getDocumentPath(), foundExpenseEntity.getDocumentPath());
     }
 }

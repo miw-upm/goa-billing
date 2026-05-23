@@ -4,7 +4,7 @@ import es.upm.api.domain.model.Payment;
 import es.upm.api.domain.model.criteria.PaymentFindCriteria;
 import es.upm.api.domain.ports.out.billing.PaymentGateway;
 import es.upm.miw.exception.NotFoundException;
-import org.springframework.data.domain.Sort;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -12,14 +12,9 @@ import java.util.UUID;
 import java.util.stream.Stream;
 
 @Repository
+@RequiredArgsConstructor
 public class PaymentAdapter implements PaymentGateway {
-    public static final Sort DATE = Sort.by(Sort.Direction.DESC, "date");
-
     private final PaymentRepository paymentRepository;
-
-    public PaymentAdapter(PaymentRepository paymentRepository) {
-        this.paymentRepository = paymentRepository;
-    }
 
     @Override
     public void create(Payment payment) {
@@ -57,8 +52,8 @@ public class PaymentAdapter implements PaymentGateway {
     @Override
     public Stream<Payment> find(PaymentFindCriteria criteria) {
         List<PaymentEntity> result;
-        if (criteria == null || criteria.all()) {
-            result = this.paymentRepository.findAll(DATE);
+        if (criteria.all()) {
+            result = this.paymentRepository.findAllByOrderByDateDesc();
         } else if (criteria.getFromDate() != null && criteria.getInvoiced() != null) {
             result = this.paymentRepository.findByDateGreaterThanEqualAndInvoicedOrderByDateDesc(
                     criteria.getFromDate(), criteria.getInvoiced()
@@ -68,11 +63,10 @@ public class PaymentAdapter implements PaymentGateway {
         } else if (criteria.getInvoiced() != null) {
             result = this.paymentRepository.findByInvoicedOrderByDateDesc(criteria.getInvoiced());
         } else {
-            result = this.paymentRepository.findAll(DATE);
+            result = this.paymentRepository.findAllByOrderByDateDesc();
         }
 
         return result.stream()
                 .map(PaymentEntity::toDomain);
     }
 }
-

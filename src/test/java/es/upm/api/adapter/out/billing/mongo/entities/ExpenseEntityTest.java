@@ -23,11 +23,13 @@ class ExpenseEntityTest {
                 .id(UUID.randomUUID())
                 .engagement(EngagementSnapshot.builder().id(UUID.randomUUID()).build())
                 .baseAmount(BigDecimal.valueOf(25))
-                .vatRate(BigDecimal.valueOf(21))
+                .vatRate(21)
                 .supplier("Taxi Madrid")
                 .supplierIdentity("A10000000")
                 .taxCategory(TaxCategory.OTROS)
                 .issueDate(LocalDate.of(2026, 3, 20))
+                .description("Gasto taxi")
+                .withholdingTax(BigDecimal.ZERO)
                 .documentPath("doc/path")
                 .build();
     }
@@ -43,7 +45,9 @@ class ExpenseEntityTest {
         assertEquals(this.expense.getSupplier(), expenseEntity.getSupplier());
         assertEquals(this.expense.getSupplierIdentity(), expenseEntity.getSupplierIdentity());
         assertEquals(this.expense.getTaxCategory(), expenseEntity.getTaxCategory());
-        assertEquals(this.expense.getIssueDate(), expenseEntity.getDate());
+        assertEquals(this.expense.getIssueDate(), expenseEntity.getIssueDate());
+        assertEquals(this.expense.getDescription(), expenseEntity.getDescription());
+        assertEquals(this.expense.getWithholdingTax(), expenseEntity.getWithholdingTax());
         assertEquals(this.expense.getDocumentPath(), expenseEntity.getDocumentPath());
     }
 
@@ -57,7 +61,9 @@ class ExpenseEntityTest {
         expenseEntity.setSupplier(this.expense.getSupplier());
         expenseEntity.setSupplierIdentity(this.expense.getSupplierIdentity());
         expenseEntity.setTaxCategory(this.expense.getTaxCategory());
-        expenseEntity.setDate(this.expense.getIssueDate());
+        expenseEntity.setIssueDate(this.expense.getIssueDate());
+        expenseEntity.setDescription(this.expense.getDescription());
+        expenseEntity.setWithholdingTax(this.expense.getWithholdingTax());
         expenseEntity.setDocumentPath(this.expense.getDocumentPath());
 
         Expense mappedExpense = expenseEntity.toDomain();
@@ -69,8 +75,9 @@ class ExpenseEntityTest {
         assertEquals(expenseEntity.getSupplier(), mappedExpense.getSupplier());
         assertEquals(expenseEntity.getSupplierIdentity(), mappedExpense.getSupplierIdentity());
         assertEquals(expenseEntity.getTaxCategory(), mappedExpense.getTaxCategory());
-        assertEquals(expenseEntity.getDate(), mappedExpense.getIssueDate());
+        assertEquals(expenseEntity.getIssueDate(), mappedExpense.getIssueDate());
+        assertEquals(expenseEntity.getDescription(), mappedExpense.getDescription());
+        assertEquals(expenseEntity.getWithholdingTax(), mappedExpense.getWithholdingTax());
         assertEquals(expenseEntity.getDocumentPath(), mappedExpense.getDocumentPath());
     }
 }
-

@@ -29,28 +29,28 @@ public class ExpenseSeeder {
                 this.buildExpense(
                         "aaaaaaaa-bbbb-cccc-dddd-eeeeffff1000",
                         "aaaaaaaa-bbbb-cccc-dddd-eeeeffff0000",
-                        "35.50", "21", "Taxi Madrid", "A10000000", TaxCategory.OTROS,
+                        "35.50", 21, "Taxi Madrid", "A10000000", TaxCategory.OTROS,
                         LocalDate.of(2026, 3, 15),
                         null
                 ),
                 this.buildExpense(
                         "aaaaaaaa-bbbb-cccc-dddd-eeeeffff1001",
                         "aaaaaaaa-bbbb-cccc-dddd-eeeeffff0001",
-                        "120.00", "21", "Hotel Central", "B20000000", TaxCategory.SERVICIOS_PROFESIONALES,
+                        "120.00", 21, "Hotel Central", "B20000000", TaxCategory.SERVICIOS_PROFESIONALES,
                         LocalDate.of(2026, 3, 16),
                         null
                 ),
                 this.buildExpense(
                         "aaaaaaaa-bbbb-cccc-dddd-eeeeffff1002",
                         "aaaaaaaa-bbbb-cccc-dddd-eeeeffff0000",
-                        "18.90", "21", "Restaurante Norte", "C30000000", TaxCategory.MANUTENCION,
+                        "18.90", 21, "Restaurante Norte", "C30000000", TaxCategory.MANUTENCION,
                         LocalDate.of(2026, 3, 17),
                         null
                 ),
                 this.buildExpense(
                         "aaaaaaaa-bbbb-cccc-dddd-eeeeffff1004",
                         "aaaaaaaa-bbbb-cccc-dddd-eeeeffff0001",
-                        "64.80", "21", "Restaurante Sur", "D40000000", TaxCategory.MANUTENCION,
+                        "64.80", 21, "Restaurante Sur", "D40000000", TaxCategory.MANUTENCION,
                         LocalDate.of(2026, 3, 18),
                         null
                 )
@@ -62,18 +62,19 @@ public class ExpenseSeeder {
         this.expenseRepository.deleteAll();
     }
 
-    private ExpenseEntity buildExpense(String id, String engagementId, String baseAmount, String vatRate,
+    private ExpenseEntity buildExpense(String id, String engagementId, String baseAmount, Integer vatRate,
                                        String supplier, String supplierIdentity, TaxCategory taxCategory,
                                        LocalDate date, String documentPath) {
         ExpenseEntity expenseEntity = new ExpenseEntity();
         expenseEntity.setId(UUID.fromString(id));
         expenseEntity.setEngagementId(UUID.fromString(engagementId));
         expenseEntity.setBaseAmount(new BigDecimal(baseAmount));
-        expenseEntity.setVatRate(new BigDecimal(vatRate));
+        expenseEntity.setVatRate(vatRate);
         expenseEntity.setSupplier(supplier);
         expenseEntity.setSupplierIdentity(supplierIdentity);
         expenseEntity.setTaxCategory(taxCategory);
-        expenseEntity.setDate(date);
+        expenseEntity.setIssueDate(date);
+        expenseEntity.setWithholdingTax(BigDecimal.ZERO);
         expenseEntity.setDocumentPath(documentPath);
         return expenseEntity;
     }

@@ -22,14 +22,13 @@ public class PaymentService {
     private final EngagementFinder engagementFinder;
     private final UserFinder userFinder;
 
-    public Payment create(Payment payment) {
+    public void create(Payment payment) {
         payment.setId(UUID.randomUUID());
         payment.setDate(LocalDate.now());
         payment.setInvoiced(false);
         this.hydrateEngagement(payment);
         payment.setUser(this.userFinder.readById(payment.getUser().getId()));
         this.paymentGateway.create(payment);
-        return payment;
     }
 
     public Payment read(UUID id) {
@@ -39,13 +38,13 @@ public class PaymentService {
         return payment;
     }
 
-    public Payment update(UUID id, Payment payment) {
+    public void update(UUID id, Payment payment) {
         Payment currentPayment = this.paymentGateway.read(id);
         payment.setId(id);
         payment.setDate(currentPayment.getDate());
         this.hydrateEngagement(payment);
         payment.setUser(this.userFinder.readById(payment.getUser().getId()));
-        return this.paymentGateway.update(id, payment);
+        this.paymentGateway.update(id, payment);
     }
 
     public void delete(UUID id) {

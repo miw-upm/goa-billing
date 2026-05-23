@@ -53,7 +53,9 @@ class ExpenseResourceIT {
         String requestBody = """
                 {
                   "engagement": { "id": "%s" },
+                  "issueDate": "2026-03-20",
                   "baseAmount": 50,
+                  "vatRate": 21,
                   "supplier": "Taxi Madrid",
                   "supplierIdentity": "A10000000",
                   "taxCategory": "OTROS"
@@ -64,7 +66,7 @@ class ExpenseResourceIT {
                 .id(expenseId)
                 .engagement(EngagementSnapshot.builder().id(engagementId).build())
                 .baseAmount(BigDecimal.valueOf(50))
-                .vatRate(BigDecimal.valueOf(21))
+                .vatRate(21)
                 .supplier("Taxi Madrid")
                 .supplierIdentity("A10000000")
                 .taxCategory(TaxCategory.OTROS)
@@ -84,7 +86,7 @@ class ExpenseResourceIT {
                 .andExpect(jsonPath("$.supplier").value("Taxi Madrid"))
                 .andExpect(jsonPath("$.supplierIdentity").value("A10000000"))
                 .andExpect(jsonPath("$.taxCategory").value("OTROS"))
-                .andExpect(jsonPath("$.date").value("2026-03-20"));
+                .andExpect(jsonPath("$.issueDate").value("2026-03-20"));
 
         verify(this.expenseService).create(any());
     }
@@ -106,7 +108,9 @@ class ExpenseResourceIT {
                 """
                 {
                   \"engagement\": { \"engagementId\": \"%s\" },
+                  \"issueDate\": \"2026-03-20\",
                   \"baseAmount\": 0,
+                  \"vatRate\": 21,
                   \"supplier\": \"Taxi\",
                   \"supplierIdentity\": \"A10000000\",
                   \"taxCategory\": \"OTROS\"
@@ -116,7 +120,9 @@ class ExpenseResourceIT {
                 """
                 {
                   \"engagement\": { \"engagementId\": \"%s\" },
+                  \"issueDate\": \"2026-03-20\",
                   \"baseAmount\": 10,
+                  \"vatRate\": 21,
                   \"supplier\": \"\",
                   \"supplierIdentity\": \"A10000000\",
                   \"taxCategory\": \"OTROS\"
@@ -126,6 +132,7 @@ class ExpenseResourceIT {
                 """
                 {
                   \"baseAmount\": 10,
+                  \"vatRate\": 21,
                   \"supplier\": \"Taxi\",
                   \"supplierIdentity\": \"A10000000\",
                   \"taxCategory\": \"OTROS\"
@@ -135,7 +142,9 @@ class ExpenseResourceIT {
                 """
                 {
                   \"engagement\": { \"engagementId\": \"%s\" },
+                  \"issueDate\": \"2026-03-20\",
                   \"baseAmount\": 10,
+                  \"vatRate\": 21,
                   \"supplier\": \"Taxi\",
                   \"supplierIdentity\": \"A10000000\"
                 }
@@ -152,7 +161,7 @@ class ExpenseResourceIT {
                 .id(expenseId)
                 .engagement(EngagementSnapshot.builder().id(engagementId).build())
                 .baseAmount(BigDecimal.valueOf(50))
-                .vatRate(BigDecimal.valueOf(21))
+                .vatRate(21)
                 .supplier("Taxi Madrid")
                 .supplierIdentity("A10000000")
                 .taxCategory(TaxCategory.OTROS)
@@ -170,7 +179,7 @@ class ExpenseResourceIT {
                 .andExpect(jsonPath("$.supplier").value("Taxi Madrid"))
                 .andExpect(jsonPath("$.supplierIdentity").value("A10000000"))
                 .andExpect(jsonPath("$.taxCategory").value("OTROS"))
-                .andExpect(jsonPath("$.date").value("2026-03-20"));
+                .andExpect(jsonPath("$.issueDate").value("2026-03-20"));
 
         verify(this.expenseService).read(expenseId);
     }
@@ -184,7 +193,7 @@ class ExpenseResourceIT {
                 .id(expenseId)
                 .engagement(EngagementSnapshot.builder().id(engagementId).build())
                 .baseAmount(BigDecimal.valueOf(65))
-                .vatRate(BigDecimal.valueOf(21))
+                .vatRate(21)
                 .supplier("Taxi Updated")
                 .supplierIdentity("A10000000")
                 .taxCategory(TaxCategory.OTROS)
@@ -194,7 +203,9 @@ class ExpenseResourceIT {
         String requestBody = """
                 {
                   "engagement": { "id": "%s" },
+                  "issueDate": "2026-03-21",
                   "baseAmount": 65,
+                  "vatRate": 21,
                   "supplier": "Taxi Updated",
                   "supplierIdentity": "A10000000",
                   "taxCategory": "OTROS"
@@ -214,7 +225,7 @@ class ExpenseResourceIT {
                 .andExpect(jsonPath("$.supplier").value("Taxi Updated"))
                 .andExpect(jsonPath("$.supplierIdentity").value("A10000000"))
                 .andExpect(jsonPath("$.taxCategory").value("OTROS"))
-                .andExpect(jsonPath("$.date").value("2026-03-21"));
+                .andExpect(jsonPath("$.issueDate").value("2026-03-21"));
 
         verify(this.expenseService).update(eq(expenseId), any());
     }
@@ -226,7 +237,9 @@ class ExpenseResourceIT {
         String requestBody = """
                 {
                   "engagement": { "id": "aaaaaaaa-bbbb-cccc-dddd-eeeeffff2000" },
+                  "issueDate": "2026-03-21",
                   "baseAmount": 0,
+                  "vatRate": 21,
                   "supplier": "Taxi Updated",
                   "supplierIdentity": "A10000000",
                   "taxCategory": "OTROS"
@@ -263,7 +276,7 @@ class ExpenseResourceIT {
                 .id(expenseId)
                 .engagement(EngagementSnapshot.builder().id(engagementId).build())
                 .baseAmount(BigDecimal.valueOf(10))
-                .vatRate(BigDecimal.valueOf(21))
+                .vatRate(21)
                 .supplier("Taxi Madrid")
                 .supplierIdentity("A10000000")
                 .taxCategory(TaxCategory.OTROS)
@@ -281,7 +294,7 @@ class ExpenseResourceIT {
                 .andExpect(jsonPath("$.[0].supplier").value("Taxi Madrid"))
                 .andExpect(jsonPath("$.[0].supplierIdentity").value("A10000000"))
                 .andExpect(jsonPath("$.[0].taxCategory").value("OTROS"))
-                .andExpect(jsonPath("$.[0].date").value("2026-03-20"));
+                .andExpect(jsonPath("$.[0].issueDate").value("2026-03-20"));
 
         verify(this.expenseService).find(this.criteria);
     }
@@ -297,4 +310,3 @@ class ExpenseResourceIT {
         verify(this.expenseService).delete(expenseId);
     }
 }
-

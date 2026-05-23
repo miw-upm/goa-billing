@@ -10,9 +10,11 @@ import lombok.NoArgsConstructor;
 import org.springframework.beans.BeanUtils;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.Field;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Builder
@@ -23,13 +25,17 @@ import java.util.UUID;
 public class ExpenseEntity {
     @Id
     private UUID id;
+    private LocalDateTime recordedAt;
     private UUID engagementId;
     private BigDecimal baseAmount;
-    private BigDecimal vatRate;
+    private Integer vatRate;
     private String supplier;
     private String supplierIdentity;
     private TaxCategory taxCategory;
-    private LocalDate date;
+    @Field("date")
+    private LocalDate issueDate;
+    private String description;
+    private BigDecimal withholdingTax;
     private String documentPath;
 
     public ExpenseEntity(Expense expense) {
