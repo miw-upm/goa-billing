@@ -8,6 +8,7 @@ import es.upm.miw.exception.BadRequestException;
 import es.upm.miw.exception.NotFoundException;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
@@ -55,24 +56,30 @@ public class ExpenseAdapter implements ExpenseGateway {
     @Override
     public Stream<Expense> find(ExpenseFindCriteria criteria) {
         List<ExpenseEntity> result;
-        if (criteria.isEmpty()) {
+        if (criteria.getSupplier() == null) {
             result = this.expenseRepository.findAllByOrderByIssueDateDesc();
-        } else if (criteria.getEngagementId() != null && criteria.getFromDate() != null) {
-            result = this.expenseRepository.findByEngagementIdAndIssueDateGreaterThanEqualOrderByIssueDateDesc(
-                    criteria.getEngagementId(), criteria.getFromDate()
-            );
-        } else if (criteria.getEngagementId() != null) {
-            result = this.expenseRepository.findByEngagementIdOrderByIssueDateDesc(criteria.getEngagementId());
         } else {
-            result = this.expenseRepository.findByIssueDateGreaterThanEqualOrderByIssueDateDesc(criteria.getFromDate());
+            result = this.expenseRepository.findBySupplierNameContainingIgnoreCaseOrSupplierIdentityContainingIgnoreCaseOrderByIssueDateDesc(
+                    criteria.getSupplier(), criteria.getSupplier()
+            );
         }
-        return result.stream()
-                .map(ExpenseEntity::toDomain);
+        Stream<ExpenseEntity> stream = result.stream();
+        if (criteria.getCategory() != null) {
+            String category = criteria.getCategory().toLowerCase(Locale.ROOT);
+            stream = stream.filter(expenseEntity -> expenseEntity.getTaxCategory() != null
+                    && expenseEntity.getTaxCategory().name().toLowerCase(Locale.ROOT).contains(category));
+        }
+        if (criteria.getFromDate() != null) {
+            LocalDate fromDate = criteria.getFromDate();
+            stream = stream.filter(expenseEntity -> expenseEntity.getIssueDate() != null
+                    && !expenseEntity.getIssueDate().isBefore(fromDate));
+        }
+        return stream.map(ExpenseEntity::toDomain);
     }
 
     @Override
     public Stream<SupplierInfo> findSuppliers(String supplier) {
-        String normalizedSupplier = Objects.toString(supplier, "").toLowerCase(Locale.ROOT);
+        String normalizedSupplier = Objects.toString(supplier, "");
         return this.expenseRepository.findBySupplierNameContainingIgnoreCaseOrSupplierIdentityContainingIgnoreCase(
                         normalizedSupplier, normalizedSupplier
                 ).stream()

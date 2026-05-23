@@ -5,16 +5,16 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
-import java.util.UUID;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class ExpenseFindCriteria {
-    private UUID engagementId;
+    private String category;
+    private String supplier;
     private LocalDate fromDate;
 
     public boolean isEmpty() {
-        return engagementId == null && fromDate == null;
+        return this.category == null && this.supplier == null && this.fromDate == null;
     }
 }

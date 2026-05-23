@@ -21,6 +21,14 @@ class FindCriteriaTest {
 
         criteria.setFromDate(LocalDate.now());
         assertFalse(criteria.isEmpty());
+
+        criteria = new ExpenseFindCriteria();
+        criteria.setCategory("OTROS");
+        assertFalse(criteria.isEmpty());
+
+        criteria = new ExpenseFindCriteria();
+        criteria.setSupplier("Taxi");
+        assertFalse(criteria.isEmpty());
     }
 
     @Test
