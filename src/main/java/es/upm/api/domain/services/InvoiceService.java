@@ -16,7 +16,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Stream;
@@ -73,8 +75,8 @@ public class InvoiceService {
         return this.invoiceGateway.update(id, invoice);
     }
 
-   public void delete(UUID id) {
-       this.invoiceGateway.delete(id);
+    public void delete(UUID id) {
+        this.invoiceGateway.delete(id);
     }
 
     public Stream<Invoice> find(InvoiceFindCriteria criteria) { //TODO No tengo claro las queries utiles
@@ -124,15 +126,50 @@ public class InvoiceService {
     }
 
     public byte[] generatePdf(UUID id) {
-        Invoice invoice = this.invoiceGateway.read(id);
+        Invoice invoice = this.read(id);
+
+        BigDecimal vatRate = invoice.getVatRate() == null ? DEFAULT_VAT_RATE : invoice.getVatRate();
+        BigDecimal baseAmount = invoice.getBaseAmount().setScale(2, RoundingMode.HALF_UP);
+        BigDecimal vatAmount = baseAmount.multiply(vatRate)
+                .divide(new BigDecimal("100"), 2, RoundingMode.HALF_UP);
+        BigDecimal totalAmount = baseAmount.add(vatAmount).setScale(2, RoundingMode.HALF_UP);
+
+        String title = invoice.isIssued() ? "FACTURA" : "FACTURA PROFORMA";
+        String invoiceNumber = invoice.isIssued()
+                ? invoice.getSeries() + "-" + invoice.getNumber()
+                : "—";
+        String issueDate = invoice.isIssued()
+                ? invoice.getEmissionDate().toString()
+                : "—";
+
         PdfBuilder pdf = new PdfBuilder()
                 .header()
+                .space(2)
+                .title(title)
+                .paragraph("Nº " + invoiceNumber + "   ·   " + issueDate)
                 .space(2);
-        if (invoice.isIssued()){
-            pdf.title("FACTURA --- PROFORMA ---");
-        }else{
-            pdf.title("FACTURA");
-        }
-        return pdf.build();
+
+        pdf.section("FACTURAR A")
+                .paragraphBold(invoice.getBillingInfo().getFullName())
+                .paragraph("N.I.F. " + invoice.getBillingInfo().getIdentity())
+                .paragraph(invoice.getBillingInfo().getFullAddress())
+                .space();
+
+        pdf.section("CONCEPTO")
+                .paragraph(invoice.getBillingInfo().getConcept())
+                .space();
+
+        pdf.section("IMPORTES");
+        List<String[]> amountRows = List.of(
+                new String[]{"Base imponible", baseAmount.toPlainString() + " €"},
+                new String[]{"IVA (" + vatRate.toPlainString() + "%)", vatAmount.toPlainString() + " €"},
+                new String[]{"TOTAL", totalAmount.toPlainString() + " €"}
+        );
+        pdf.table(new String[]{"Concepto", "Importe"}, amountRows);
+
+        pdf.space(3)
+                .signatureLine("Doña Nuria Ocaña Pérez");
+
+        return pdf.footer().build();
     }
 }

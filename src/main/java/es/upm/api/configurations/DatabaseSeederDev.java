@@ -2,9 +2,11 @@ package es.upm.api.configurations;
 
 import es.upm.api.adapter.out.billing.mongo.expense.ExpenseEntity;
 import es.upm.api.adapter.out.billing.mongo.expense.ExpenseRepository;
+import es.upm.api.adapter.out.billing.mongo.invoice.InvoiceEntity;
+import es.upm.api.adapter.out.billing.mongo.invoice.InvoiceRepository;
 import es.upm.api.adapter.out.billing.mongo.payment.PaymentEntity;
 import es.upm.api.adapter.out.billing.mongo.payment.PaymentRepository;
-import es.upm.api.configurations.seeder.InvoiceSeeder;
+import es.upm.api.domain.model.BillingInfo;
 import es.upm.api.domain.model.PaymentMethod;
 import es.upm.api.domain.model.SupplierInfo;
 import es.upm.api.domain.model.TaxCategory;
@@ -25,12 +27,12 @@ import java.util.UUID;
 public class DatabaseSeederDev {
 
     private final ExpenseRepository expenseRepository;
-    private final InvoiceSeeder invoiceSeeder;
+    private final InvoiceRepository invoiceRepository;
     private final PaymentRepository paymentRepository;
 
-    public DatabaseSeederDev(ExpenseRepository expenseRepository, InvoiceSeeder invoiceSeeder, PaymentRepository paymentRepository) {
+    public DatabaseSeederDev(ExpenseRepository expenseRepository, InvoiceRepository invoiceRepository, PaymentRepository paymentRepository) {
         this.expenseRepository = expenseRepository;
-        this.invoiceSeeder = invoiceSeeder;
+        this.invoiceRepository = invoiceRepository;
         this.paymentRepository = paymentRepository;
     }
 
@@ -66,7 +68,7 @@ public class DatabaseSeederDev {
     }
 
     private void deleteAllAndInitialize() {
-        this.invoiceSeeder.deleteAll();
+        this.invoiceRepository.deleteAll();
         this.expenseRepository.deleteAll();
         this.paymentRepository.deleteAll();
         log.warn("------- Delete All -----------");
@@ -168,7 +170,46 @@ public class DatabaseSeederDev {
                         .invoiced(true)
                         .build()
         ));
-        this.invoiceSeeder.seedDatabase();
+        this.invoiceRepository.saveAll(List.of(
+                InvoiceEntity.builder()
+                        .id(ID_14)
+                        .billingInfo(BillingInfo.builder()
+                                .userId(C_0)
+                                .fullName("User 0000")
+                                .identity("ID-00000000A")
+                                .fullAddress("Madrid, Spain")
+                                .concept("Servicios")
+                                .build())
+                        .emissionDate(LocalDate.of(2026, 3, 20))
+                        .operationDate(LocalDate.of(2026, 3, 20))
+                        .series("2026")
+                        .number(30)
+                        .baseAmount(new BigDecimal("450.00"))
+                        .vatRate(new BigDecimal("21"))
+                        .engagementId(null)
+                        .payments(null)
+                        .discounts(List.of(new BigDecimal("50.00")))
+                        .pdfPath(null)
+                        .rectification(null)
+                        .build(),
+                InvoiceEntity.builder()
+                        .id(ID_15)
+                        .billingInfo(BillingInfo.builder()
+                                .userId(C_1)
+                                .fullName("User 0001")
+                                .identity("ID-00000001B")
+                                .fullAddress("Madrid, Spain")
+                                .concept("Consultoria")
+                                .build())
+                        .baseAmount(new BigDecimal("1075.00"))
+                        .vatRate(new BigDecimal("21"))
+                        .engagementId(null)
+                        .payments(null)
+                        .discounts(List.of(new BigDecimal("125.00")))
+                        .pdfPath(null)
+                        .rectification(null)
+                        .build()
+        ));
         log.warn("------- Initial Load from JAVA ---------------------------------------------------------------");
     }
 

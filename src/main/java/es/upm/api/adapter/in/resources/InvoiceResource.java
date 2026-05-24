@@ -57,6 +57,11 @@ public class InvoiceResource {
         this.invoiceService.emission(id);
     }
 
+    @GetMapping(value = "/{id}/view", produces = {"application/pdf"})
+    public byte[] view(@PathVariable UUID id) {
+        return this.invoiceService.generatePdf(id);
+    }
+
     @GetMapping
     public Stream<Invoice> find(@ModelAttribute InvoiceFindCriteria criteria) {
         return this.invoiceService.find(criteria);

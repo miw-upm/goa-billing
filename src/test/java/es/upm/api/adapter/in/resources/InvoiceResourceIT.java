@@ -17,6 +17,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.util.UUID;
 import java.util.stream.Stream;
@@ -27,6 +28,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -179,6 +181,21 @@ class InvoiceResourceIT {
                 .andExpect(jsonPath("$[0].baseAmount").value(100));
 
         verify(this.invoiceService).find(this.criteria);
+    }
+
+    @Test
+    @WithMockUser(roles = "admin")
+    void shouldViewInvoicePdf() throws Exception {
+        UUID invoiceId = UUID.randomUUID();
+        byte[] pdf = "%PDF-1.4".getBytes(StandardCharsets.UTF_8);
+        when(this.invoiceService.generatePdf(invoiceId)).thenReturn(pdf);
+
+        this.mockMvc.perform(get("/invoices/{id}/view", invoiceId))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType("application/pdf"))
+                .andExpect(content().bytes(pdf));
+
+        verify(this.invoiceService).generatePdf(invoiceId);
     }
 
     private Invoice buildInvoice(UUID invoiceId, UUID userId, String baseAmount) {
