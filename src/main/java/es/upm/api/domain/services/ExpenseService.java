@@ -53,7 +53,13 @@ public class ExpenseService {
     }
 
     public Stream<Expense> find(ExpenseFindCriteria criteria) {
-        return this.expenseGateway.find(criteria);
+        return this.expenseGateway.find(criteria)
+                .map(expense -> {
+                    if (expense.getEngagement() != null){
+                        expense.setEngagement(this.engagementFinder.read(expense.getEngagement().getId()));
+                    }
+                    return expense;
+                });
     }
 
     public Stream<SupplierInfo> findSuppliers(String supplier) {

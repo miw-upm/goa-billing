@@ -1,10 +1,13 @@
 package es.upm.api.configurations;
 
+import es.upm.api.adapter.out.billing.mongo.expense.ExpenseEntity;
+import es.upm.api.adapter.out.billing.mongo.expense.ExpenseRepository;
 import es.upm.api.adapter.out.billing.mongo.payment.PaymentEntity;
 import es.upm.api.adapter.out.billing.mongo.payment.PaymentRepository;
-import es.upm.api.configurations.seeder.ExpenseSeeder;
 import es.upm.api.configurations.seeder.InvoiceSeeder;
 import es.upm.api.domain.model.PaymentMethod;
+import es.upm.api.domain.model.SupplierInfo;
+import es.upm.api.domain.model.TaxCategory;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.context.annotation.Profile;
@@ -12,6 +15,7 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -20,12 +24,12 @@ import java.util.UUID;
 @Profile({"dev", "test"})
 public class DatabaseSeederDev {
 
-    private final ExpenseSeeder expenseSeeder;
+    private final ExpenseRepository expenseRepository;
     private final InvoiceSeeder invoiceSeeder;
     private final PaymentRepository paymentRepository;
 
-    public DatabaseSeederDev(ExpenseSeeder expenseSeeder, InvoiceSeeder invoiceSeeder, PaymentRepository paymentRepository) {
-        this.expenseSeeder = expenseSeeder;
+    public DatabaseSeederDev(ExpenseRepository expenseRepository, InvoiceSeeder invoiceSeeder, PaymentRepository paymentRepository) {
+        this.expenseRepository = expenseRepository;
         this.invoiceSeeder = invoiceSeeder;
         this.paymentRepository = paymentRepository;
     }
@@ -63,13 +67,78 @@ public class DatabaseSeederDev {
 
     private void deleteAllAndInitialize() {
         this.invoiceSeeder.deleteAll();
-        this.expenseSeeder.deleteAll();
+        this.expenseRepository.deleteAll();
         this.paymentRepository.deleteAll();
         log.warn("------- Delete All -----------");
     }
 
     private void seedDataBaseJava() {
-        this.expenseSeeder.seedDatabase();
+        this.expenseRepository.saveAll(List.of(
+                ExpenseEntity.builder()
+                        .id(ID_10)
+                        .recordedAt(LocalDateTime.of(2026, 3, 15, 9, 0))
+                        .engagementId(EL_0)
+                        .baseAmount(new BigDecimal("35.50"))
+                        .vatRate(21)
+                        .supplier(SupplierInfo.builder()
+                                .name("Taxi Madrid")
+                                .identity("A10000000")
+                                .build())
+                        .taxCategory(TaxCategory.OTROS)
+                        .issueDate(LocalDate.of(2026, 3, 15))
+                        .description("Taxi")
+                        .withholdingTax(BigDecimal.ZERO)
+                        .documentPath(null)
+                        .build(),
+                ExpenseEntity.builder()
+                        .id(ID_11)
+                        .recordedAt(LocalDateTime.of(2026, 3, 16, 9, 0))
+                        .engagementId(EL_1)
+                        .baseAmount(new BigDecimal("120.00"))
+                        .vatRate(21)
+                        .supplier(SupplierInfo.builder()
+                                .name("Hotel Central")
+                                .identity("B20000000")
+                                .build())
+                        .taxCategory(TaxCategory.SERVICIOS_PROFESIONALES)
+                        .issueDate(LocalDate.of(2026, 3, 16))
+                        .description("Hotel")
+                        .withholdingTax(BigDecimal.ZERO)
+                        .documentPath(null)
+                        .build(),
+                ExpenseEntity.builder()
+                        .id(ID_12)
+                        .recordedAt(LocalDateTime.of(2026, 3, 17, 9, 0))
+                        .engagementId(null)
+                        .baseAmount(new BigDecimal("18.90"))
+                        .vatRate(21)
+                        .supplier(SupplierInfo.builder()
+                                .name("Restaurante Norte")
+                                .identity("C30000000")
+                                .build())
+                        .taxCategory(TaxCategory.MANUTENCION)
+                        .issueDate(LocalDate.of(2026, 3, 17))
+                        .description("Comida")
+                        .withholdingTax(BigDecimal.ZERO)
+                        .documentPath(null)
+                        .build(),
+                ExpenseEntity.builder()
+                        .id(ID_13)
+                        .recordedAt(LocalDateTime.of(2026, 3, 18, 9, 0))
+                        .engagementId(null)
+                        .baseAmount(new BigDecimal("64.80"))
+                        .vatRate(21)
+                        .supplier(SupplierInfo.builder()
+                                .name("Restaurante Sur")
+                                .identity("D40000000")
+                                .build())
+                        .taxCategory(TaxCategory.MANUTENCION)
+                        .issueDate(LocalDate.of(2026, 3, 18))
+                        .description("Cena")
+                        .withholdingTax(BigDecimal.ZERO)
+                        .documentPath(null)
+                        .build()
+        ));
         this.paymentRepository.saveAll(List.of(
                 PaymentEntity.builder()
                         .id(ID_0)
