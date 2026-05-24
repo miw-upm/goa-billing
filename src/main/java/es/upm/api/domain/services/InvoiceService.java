@@ -3,7 +3,9 @@ package es.upm.api.domain.services;
 import es.upm.api.domain.model.BillingInfo;
 import es.upm.api.domain.model.Invoice;
 import es.upm.api.domain.model.Payment;
+import es.upm.api.domain.model.UserShare;
 import es.upm.api.domain.model.criteria.InvoiceFindCriteria;
+import es.upm.api.domain.model.external.EngagementSnapshot;
 import es.upm.api.domain.model.external.UserSnapshot;
 import es.upm.api.domain.ports.out.billing.InvoiceGateway;
 import es.upm.api.domain.ports.out.billing.PaymentGateway;
@@ -11,6 +13,7 @@ import es.upm.api.domain.ports.out.engagement.EngagementFinder;
 import es.upm.api.domain.ports.out.user.UserFinder;
 import es.upm.miw.exception.InvalidTransitionException;
 import es.upm.miw.pdf.PdfBuilder;
+import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -44,6 +47,11 @@ public class InvoiceService {
         invoice.getBillingInfo().updateFrom(user);
         invoice.setVatRate(DEFAULT_VAT_RATE);
         this.invoiceGateway.create(invoice);
+    }
+
+    public void createFromPayments(UUID engagementId) {
+        EngagementSnapshot engagementSnapshot = this.engagementFinder.read(engagementId);
+       //TODO
     }
 
     public void emission(UUID id) {
@@ -176,4 +184,6 @@ public class InvoiceService {
 
         return pdf.build();
     }
+
+
 }

@@ -1,6 +1,7 @@
 package es.upm.api.adapter.in.resources;
 
 import es.upm.api.adapter.in.resources.dtos.InvoiceCreationDto;
+import es.upm.api.adapter.in.resources.dtos.InvoiceCreationFromPaymentsDto;
 import es.upm.api.domain.model.BillingInfo;
 import es.upm.api.domain.model.Invoice;
 import es.upm.api.domain.model.criteria.InvoiceFindCriteria;
@@ -16,10 +17,12 @@ import java.util.stream.Stream;
 
 @PreAuthorize(Security.ADMIN_MANAGER_OPERATOR)
 @RestController
-@RequestMapping(InvoiceResource.INVOICES)
+@RequestMapping(InvoiceResource.FROM_PAYMENTS)
 @RequiredArgsConstructor
 public class InvoiceResource {
     public static final String INVOICES = "/invoices";
+    public static final String FROM_PAYMENTS = "/from-payments";
+
 
     private final InvoiceService invoiceService;
 
@@ -35,6 +38,12 @@ public class InvoiceResource {
                 .build();
         this.invoiceService.create(invoice);
     }
+
+    @PostMapping(FROM_PAYMENTS)
+    public void createFromPayments(@RequestBody @Valid InvoiceCreationFromPaymentsDto creation) {
+        this.invoiceService.createFromPayments(creation.getEngagementId(),creation.getUserShares());
+    }
+
 
     @GetMapping("/{id}")
     public Invoice read(@PathVariable UUID id) {
