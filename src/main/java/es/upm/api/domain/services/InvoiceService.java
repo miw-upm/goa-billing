@@ -32,7 +32,9 @@ public class InvoiceService {
 
     public void create(Invoice invoice) {
         invoice.setId(UUID.randomUUID());
-        invoice.setBillingInfo(BillingInfo.from(this.userFinder.readById(invoice.getBillingInfo().getUserId())));
+        UserSnapshot user = this.userFinder.readById(invoice.getBillingInfo().getUserId());
+        invoice.getBillingInfo().updateFrom(user);
+        invoice.setVatRate(DEFAULT_VAT_RATE);
         this.invoiceGateway.create(invoice);
     }
 
@@ -107,8 +109,8 @@ public class InvoiceService {
         if (billingInfo == null || billingInfo.getUserId() == null) {
             return billingInfo;
         }
-        BillingInfo hydratedBillingInfo = BillingInfo.from(this.userFinder.readById(billingInfo.getUserId()));
-        hydratedBillingInfo.setConcept(billingInfo.getConcept());
-        return hydratedBillingInfo;
+        billingInfo.updateFrom(this.userFinder.readById(billingInfo.getUserId()));
+        billingInfo.setConcept(billingInfo.getConcept());
+        return billingInfo;
     }
 }
