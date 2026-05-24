@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Stream;
@@ -38,6 +39,19 @@ public class InvoiceService {
         this.invoiceGateway.create(invoice);
     }
 
+    public void emission(UUID id) {
+        Invoice invoice = this.read(id);
+        if (invoice.getEmissionDate() != null) {
+            throw new IllegalStateException("Already issued");
+        }
+        String series = String.valueOf(LocalDate.now().getYear());
+        invoice.setSeries(series);
+        invoice.setNumber(invoiceGateway.findNextNumber(series));
+        invoice.setEmissionDate(LocalDate.now());
+        this.invoiceGateway.update(id, invoice);
+        //TODO enviar por email
+    }
+
     public Invoice read(UUID id) {
         Invoice invoice = this.invoiceGateway.read(id);
         if (invoice.getEngagement() != null) {
@@ -59,13 +73,7 @@ public class InvoiceService {
     }
 
    public void delete(UUID id) {
-        this.invoiceGateway.findById(id)
-                .ifPresent(invoice -> {
-                    if (invoice.getEmissionDate() != null) {
-                        throw new InvalidTransitionException("Issued invoices cannot be deleted, id: " + id);
-                    }
-                    this.invoiceGateway.delete(id);
-                });
+       this.invoiceGateway.delete(id);
     }
 
     public Stream<Invoice> find(InvoiceFindCriteria criteria) { //TODO No tengo claro las queries utiles

@@ -52,6 +52,11 @@ public class InvoiceResource {
         this.invoiceService.delete(id);
     }
 
+    @PostMapping("/{id}/emission")
+    public void emission(@PathVariable UUID id) {
+        this.invoiceService.emission(id);
+    }
+
     @GetMapping
     public Stream<Invoice> find(@ModelAttribute InvoiceFindCriteria criteria) {
         return this.invoiceService.find(criteria);

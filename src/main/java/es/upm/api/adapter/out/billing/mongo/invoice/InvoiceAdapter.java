@@ -13,6 +13,7 @@ import java.util.stream.Stream;
 
 @Repository
 public class InvoiceAdapter implements InvoiceGateway {
+    public static final int FIRST_SERIES_NUMBER  = 30;
     private final InvoiceRepository invoiceRepository;
 
     public InvoiceAdapter(InvoiceRepository invoiceRepository) {
@@ -77,5 +78,13 @@ public class InvoiceAdapter implements InvoiceGateway {
     public Optional<Invoice> findById(UUID id) {
         return this.invoiceRepository.findById(id)
                 .map(InvoiceEntity::toDomain);
+    }
+
+    @Override
+    public Integer findNextNumber(String series) {
+        return invoiceRepository.findFirstBySeriesOrderByNumberDesc(series)
+                .map(InvoiceEntity::getNumber)
+                .map(n -> n + 1)
+                .orElse(FIRST_SERIES_NUMBER);
     }
 }

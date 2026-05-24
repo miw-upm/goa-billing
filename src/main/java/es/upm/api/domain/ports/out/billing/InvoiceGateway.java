@@ -21,4 +21,6 @@ public interface InvoiceGateway {
     Stream<Invoice> find(InvoiceFindCriteria criteria);
 
     Optional<Invoice> findById(UUID id);
+
+    Integer findNextNumber(String series);
 }
