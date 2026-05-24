@@ -1,5 +1,7 @@
 package es.upm.api.adapter.in.resources;
 
+import es.upm.api.adapter.in.resources.dtos.InvoiceCreationDto;
+import es.upm.api.domain.model.BillingInfo;
 import es.upm.api.domain.model.Invoice;
 import es.upm.api.domain.model.criteria.InvoiceFindCriteria;
 import es.upm.api.domain.services.InvoiceService;
@@ -22,8 +24,16 @@ public class InvoiceResource {
     private final InvoiceService invoiceService;
 
     @PostMapping
-    public Invoice create(@Valid @RequestBody Invoice request) {
-        return this.invoiceService.create(request);
+    public void create(@Valid @RequestBody InvoiceCreationDto creation){
+        Invoice invoice = Invoice.builder()
+                .billingInfo(BillingInfo.builder()
+                        .userId(creation.getUserId())
+                        .concept(creation.getConcept())
+                        .build())
+                .baseAmount(creation.getBaseAmount())
+                .discounts(creation.getDiscounts())
+                .build();
+        this.invoiceService.create(invoice);
     }
 
     @GetMapping("/{id}")

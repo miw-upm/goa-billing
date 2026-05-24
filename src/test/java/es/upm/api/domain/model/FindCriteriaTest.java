@@ -6,7 +6,6 @@ import es.upm.api.domain.model.criteria.PaymentFindCriteria;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
-import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -47,8 +46,11 @@ class FindCriteriaTest {
 
         assertTrue(criteria.isEmpty());
 
-        criteria.setEngagementId(UUID.randomUUID());
-        criteria.setDate(LocalDate.now());
+        criteria.setClient("john");
+        assertFalse(criteria.isEmpty());
+
+        criteria = new InvoiceFindCriteria();
+        criteria.setFromDate(LocalDate.now());
         assertFalse(criteria.isEmpty());
     }
 }

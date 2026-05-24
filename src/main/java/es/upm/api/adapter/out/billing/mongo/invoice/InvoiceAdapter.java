@@ -4,18 +4,15 @@ import es.upm.api.domain.model.Invoice;
 import es.upm.api.domain.model.criteria.InvoiceFindCriteria;
 import es.upm.api.domain.ports.out.billing.InvoiceGateway;
 import es.upm.miw.exception.NotFoundException;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Stream;
 
 @Repository
 public class InvoiceAdapter implements InvoiceGateway {
-
-    public static final Sort DATE = Sort.by(Sort.Direction.DESC, "emissionDate");
-
     private final InvoiceRepository invoiceRepository;
 
     public InvoiceAdapter(InvoiceRepository invoiceRepository) {
@@ -39,7 +36,7 @@ public class InvoiceAdapter implements InvoiceGateway {
         invoiceEntity.setNumber(invoice.getNumber());
         invoiceEntity.setBaseAmount(invoice.getBaseAmount());
         invoiceEntity.setVatRate(invoice.getVatRate());
-        invoiceEntity.setEngagementId(invoice.getEngagement().getId());
+        invoiceEntity.setEngagementId(invoice.getEngagement() == null ? null : invoice.getEngagement().getId());
         invoiceEntity.setPayments(invoice.getPayments());
         invoiceEntity.setDiscounts(invoice.getDiscounts());
         invoiceEntity.setPdfPath(invoice.getPdfPath());
@@ -66,20 +63,19 @@ public class InvoiceAdapter implements InvoiceGateway {
     public Stream<Invoice> find(InvoiceFindCriteria criteria) {
         List<InvoiceEntity> result;
 
-        if (criteria.isEmpty()) {
-            result = this.invoiceRepository.findAll(DATE);
-        } else if (criteria.getEngagementId() != null) {
-            result = this.invoiceRepository.findByEngagementId(criteria.getEngagementId());
-            if (criteria.getDate() != null) {
-                result = result.stream()
-                        .filter(invoiceEntity -> invoiceEntity.getEmissionDate().equals(criteria.getDate()))
-                        .toList();
-            }
+        if (criteria.isEmpty() || criteria.getFromDate() == null) {
+            result = this.invoiceRepository.findAllByOrderByEmissionDateDesc();
         } else {
-            result = this.invoiceRepository.findByEmissionDate(criteria.getDate());
+            result = this.invoiceRepository.findByEmissionDateGreaterThanEqualOrderByEmissionDateDesc(criteria.getFromDate());
         }
 
         return result.stream()
+                .map(InvoiceEntity::toDomain);
+    }
+
+    @Override
+    public Optional<Invoice> findById(UUID id) {
+        return this.invoiceRepository.findById(id)
                 .map(InvoiceEntity::toDomain);
     }
 }

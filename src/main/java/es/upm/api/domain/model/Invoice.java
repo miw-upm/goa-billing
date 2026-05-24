@@ -34,7 +34,11 @@ public class Invoice {
     @JsonFormat(pattern = "yyyy-MM-dd")
     @PastOrPresent
     private LocalDate operationDate;
+
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private String series;
+
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private Integer number;
 
     @NotNull
@@ -44,13 +48,12 @@ public class Invoice {
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private BigDecimal vatRate;
 
-    @NotNull
     private EngagementSnapshot engagement;
-
     private List<Payment> payments;
     private List<BigDecimal> discounts;
 
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private String pdfPath;
+
     private Rectification rectification;
 }

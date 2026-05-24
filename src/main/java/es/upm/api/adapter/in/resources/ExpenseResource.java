@@ -1,5 +1,6 @@
 package es.upm.api.adapter.in.resources;
 
+import es.upm.api.adapter.in.resources.dtos.CategoryResponseDto;
 import es.upm.api.domain.model.Expense;
 import es.upm.api.domain.model.SupplierInfo;
 import es.upm.api.domain.model.TaxCategory;

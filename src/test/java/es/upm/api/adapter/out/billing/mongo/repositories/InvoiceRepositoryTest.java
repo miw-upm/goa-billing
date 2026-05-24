@@ -90,14 +90,16 @@ class InvoiceRepositoryTest {
     }
 
     @Test
-    void shouldFindInvoiceByEngagementIdAndEmissionDate() {
+    void shouldFindInvoiceByEmissionDateFrom() {
         InvoiceEntity saved = this.invoiceRepository.save(new InvoiceEntity(this.invoice));
 
-        List<InvoiceEntity> byEngagement = this.invoiceRepository.findByEngagementId(saved.getEngagementId());
-        List<InvoiceEntity> byDate = this.invoiceRepository.findByEmissionDate(saved.getEmissionDate());
+        List<InvoiceEntity> all = this.invoiceRepository.findAllByOrderByEmissionDateDesc();
+        List<InvoiceEntity> byDate = this.invoiceRepository.findByEmissionDateGreaterThanEqualOrderByEmissionDateDesc(
+                saved.getEmissionDate()
+        );
 
-        assertEquals(1, byEngagement.size());
-        assertEquals(saved.getId(), byEngagement.get(0).getId());
+        assertEquals(1, all.size());
+        assertEquals(saved.getId(), all.get(0).getId());
         assertEquals(1, byDate.size());
         assertEquals(saved.getId(), byDate.get(0).getId());
     }

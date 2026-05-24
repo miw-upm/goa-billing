@@ -125,28 +125,27 @@ class InvoiceAdapterIT {
 
     @Test
     void shouldFindInvoicesWithoutFilters() {
-        when(this.invoiceRepository.findAll(InvoiceAdapter.DATE))
+        when(this.invoiceRepository.findAllByOrderByEmissionDateDesc())
                 .thenReturn(List.of(new InvoiceEntity(this.invoice)));
 
         Stream<Invoice> stream = this.invoiceAdapter.find(this.criteria);
 
         assertEquals(this.invoice, stream.findFirst().orElse(null));
-        verify(this.invoiceRepository).findAll(InvoiceAdapter.DATE);
+        verify(this.invoiceRepository).findAllByOrderByEmissionDateDesc();
     }
 
     @Test
-    void shouldFindInvoicesByEngagementAndDate() {
-        InvoiceFindCriteria findCriteria = new InvoiceFindCriteria(this.engagementId, LocalDate.of(2026, 3, 20));
-        Invoice second = this.buildInvoice(UUID.randomUUID(), this.engagementId, this.userId, this.paymentId,
-                LocalDate.of(2026, 3, 19), BigDecimal.valueOf(40));
-        when(this.invoiceRepository.findByEngagementId(this.engagementId))
-                .thenReturn(List.of(new InvoiceEntity(this.invoice), new InvoiceEntity(second)));
+    void shouldFindInvoicesByFromDate() {
+        LocalDate fromDate = LocalDate.of(2026, 3, 20);
+        InvoiceFindCriteria findCriteria = new InvoiceFindCriteria(null, fromDate);
+        when(this.invoiceRepository.findByEmissionDateGreaterThanEqualOrderByEmissionDateDesc(fromDate))
+                .thenReturn(List.of(new InvoiceEntity(this.invoice)));
 
         List<Invoice> result = this.invoiceAdapter.find(findCriteria).toList();
 
         assertEquals(1, result.size());
         assertEquals(this.invoice.getId(), result.get(0).getId());
-        verify(this.invoiceRepository).findByEngagementId(this.engagementId);
+        verify(this.invoiceRepository).findByEmissionDateGreaterThanEqualOrderByEmissionDateDesc(fromDate);
     }
 
     private Invoice buildInvoice(UUID invoiceId, UUID engagementId, UUID userId, UUID paymentId,

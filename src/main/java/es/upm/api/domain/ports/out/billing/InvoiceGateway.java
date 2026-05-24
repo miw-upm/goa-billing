@@ -4,6 +4,7 @@ import es.upm.api.domain.model.Invoice;
 import es.upm.api.domain.model.criteria.InvoiceFindCriteria;
 import org.springframework.stereotype.Repository;
 
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Stream;
 
@@ -18,4 +19,6 @@ public interface InvoiceGateway {
     void delete(UUID id);
 
     Stream<Invoice> find(InvoiceFindCriteria criteria);
+
+    Optional<Invoice> findById(UUID id);
 }

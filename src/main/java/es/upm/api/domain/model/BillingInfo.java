@@ -30,6 +30,8 @@ public class BillingInfo {
     @NotBlank
     private String fullAddress;
 
+    private String concept;
+
     public static BillingInfo from(UserSnapshot userSnapshot) {
         String fullName = Stream.of(userSnapshot.getFirstName(), userSnapshot.getFamilyName())
                 .filter(part -> part != null && !part.isBlank())
