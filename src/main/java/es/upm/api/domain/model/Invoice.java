@@ -56,4 +56,8 @@ public class Invoice {
     private String pdfPath;
 
     private Rectification rectification;
+
+    public boolean isIssued(){
+        return this.emissionDate!=null;
+    }
 }

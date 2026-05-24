@@ -10,6 +10,7 @@ import es.upm.api.domain.ports.out.billing.PaymentGateway;
 import es.upm.api.domain.ports.out.engagement.EngagementFinder;
 import es.upm.api.domain.ports.out.user.UserFinder;
 import es.upm.miw.exception.InvalidTransitionException;
+import es.upm.miw.pdf.PdfBuilder;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -120,5 +121,18 @@ public class InvoiceService {
         billingInfo.updateFrom(this.userFinder.readById(billingInfo.getUserId()));
         billingInfo.setConcept(billingInfo.getConcept());
         return billingInfo;
+    }
+
+    public byte[] generatePdf(UUID id) {
+        Invoice invoice = this.invoiceGateway.read(id);
+        PdfBuilder pdf = new PdfBuilder()
+                .header()
+                .space(2);
+        if (invoice.isIssued()){
+            pdf.title("FACTURA --- PROFORMA ---");
+        }else{
+            pdf.title("FACTURA");
+        }
+        return pdf.build();
     }
 }
