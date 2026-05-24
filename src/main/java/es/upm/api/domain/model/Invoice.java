@@ -57,7 +57,7 @@ public class Invoice {
 
     private Rectification rectification;
 
-    public boolean isIssued(){
-        return this.emissionDate!=null;
+    public boolean isIssued() {
+        return this.emissionDate != null;
     }
 }

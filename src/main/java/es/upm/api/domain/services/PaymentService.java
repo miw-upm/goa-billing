@@ -60,8 +60,8 @@ public class PaymentService {
                 .map(UserSnapshot::getId)
                 .toList();
         return payments.filter(payment -> payment.getUser() != null
-                && payment.getUser().getId() != null
-                && clientIds.contains(payment.getUser().getId()))
+                        && payment.getUser().getId() != null
+                        && clientIds.contains(payment.getUser().getId()))
                 .map(this::hydrate);
     }
 

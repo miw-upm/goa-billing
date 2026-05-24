@@ -9,7 +9,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.UUID;
 import java.util.stream.Stream;
 
@@ -22,7 +21,7 @@ public class ExpenseService {
     public void create(Expense expense) {
         expense.setId(UUID.randomUUID());
         expense.setRecordedAt(LocalDateTime.now());
-        if (expense.getEngagement() != null){
+        if (expense.getEngagement() != null) {
             expense.setEngagement(this.engagementFinder.read(expense.getEngagement().getId()));
         }
         expense.setDocumentPath(null); //TODO
@@ -31,7 +30,7 @@ public class ExpenseService {
 
     public Expense read(UUID id) {
         Expense expense = this.expenseGateway.read(id);
-        if (expense.getEngagement() != null){
+        if (expense.getEngagement() != null) {
             expense.setEngagement(this.engagementFinder.read(expense.getEngagement().getId()));
         }
         return expense;
@@ -42,7 +41,7 @@ public class ExpenseService {
         expense.setId(id);
         expense.setRecordedAt(LocalDateTime.now());
         expense.setDocumentPath(currentExpense.getDocumentPath());
-        if (expense.getEngagement() != null){
+        if (expense.getEngagement() != null) {
             expense.setEngagement(this.engagementFinder.read(expense.getEngagement().getId()));
         }
         this.expenseGateway.update(id, expense);
@@ -55,7 +54,7 @@ public class ExpenseService {
     public Stream<Expense> find(ExpenseFindCriteria criteria) {
         return this.expenseGateway.find(criteria)
                 .map(expense -> {
-                    if (expense.getEngagement() != null){
+                    if (expense.getEngagement() != null) {
                         expense.setEngagement(this.engagementFinder.read(expense.getEngagement().getId()));
                     }
                     return expense;

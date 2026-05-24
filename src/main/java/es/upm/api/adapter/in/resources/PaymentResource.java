@@ -33,7 +33,7 @@ public class PaymentResource {
 
     @PutMapping("/{id}")
     public void update(@PathVariable UUID id, @Valid @RequestBody Payment request) {
-       this.paymentService.update(id, request);
+        this.paymentService.update(id, request);
     }
 
     @PreAuthorize(Security.ADMIN)

@@ -24,7 +24,7 @@ public class InvoiceResource {
     private final InvoiceService invoiceService;
 
     @PostMapping
-    public void create(@Valid @RequestBody InvoiceCreationDto creation){
+    public void create(@Valid @RequestBody InvoiceCreationDto creation) {
         Invoice invoice = Invoice.builder()
                 .billingInfo(BillingInfo.builder()
                         .userId(creation.getUserId())

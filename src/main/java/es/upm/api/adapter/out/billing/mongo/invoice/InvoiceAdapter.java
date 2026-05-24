@@ -13,7 +13,7 @@ import java.util.stream.Stream;
 
 @Repository
 public class InvoiceAdapter implements InvoiceGateway {
-    public static final int FIRST_SERIES_NUMBER  = 30;
+    public static final int FIRST_SERIES_NUMBER = 30;
     private final InvoiceRepository invoiceRepository;
 
     public InvoiceAdapter(InvoiceRepository invoiceRepository) {

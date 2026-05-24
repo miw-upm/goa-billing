@@ -18,14 +18,18 @@ import org.springframework.util.StringUtils;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
-import java.util.ArrayList;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Locale;
 import java.util.UUID;
 import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
 public class InvoiceService {
+    private static final DateTimeFormatter DATE_FORMAT =
+            DateTimeFormatter.ofPattern("EEEE, d 'de' MMMM 'de' yyyy", new Locale("es", "ES"));
+
 
     private static final BigDecimal DEFAULT_VAT_RATE = new BigDecimal("21");
 
@@ -139,14 +143,14 @@ public class InvoiceService {
                 ? invoice.getSeries() + "-" + invoice.getNumber()
                 : "—";
         String issueDate = invoice.isIssued()
-                ? invoice.getEmissionDate().toString()
+                ? invoice.getEmissionDate().format(DATE_FORMAT)
                 : "—";
 
         PdfBuilder pdf = new PdfBuilder()
                 .header()
                 .space(2)
                 .title(title)
-                .paragraph("Nº " + invoiceNumber + "   ·   " + issueDate)
+                .paragraphBold("Nº " + invoiceNumber + "   ·   " + issueDate)
                 .space(2);
 
         pdf.section("FACTURAR A")
@@ -170,6 +174,6 @@ public class InvoiceService {
         pdf.space(3)
                 .signatureLine("Doña Nuria Ocaña Pérez");
 
-        return pdf.footer().build();
+        return pdf.build();
     }
 }

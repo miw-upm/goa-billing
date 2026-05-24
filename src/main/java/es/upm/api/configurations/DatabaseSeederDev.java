@@ -26,16 +26,6 @@ import java.util.UUID;
 @Profile({"dev", "test"})
 public class DatabaseSeederDev {
 
-    private final ExpenseRepository expenseRepository;
-    private final InvoiceRepository invoiceRepository;
-    private final PaymentRepository paymentRepository;
-
-    public DatabaseSeederDev(ExpenseRepository expenseRepository, InvoiceRepository invoiceRepository, PaymentRepository paymentRepository) {
-        this.expenseRepository = expenseRepository;
-        this.invoiceRepository = invoiceRepository;
-        this.paymentRepository = paymentRepository;
-    }
-
     public static final UUID ID_0 = UUID.fromString("aaaaaaaa-bbbb-cccc-dddd-eeeeffff0000");
     public static final UUID ID_1 = UUID.fromString("aaaaaaaa-bbbb-cccc-dddd-eeeeffff0001");
     public static final UUID ID_2 = UUID.fromString("aaaaaaaa-bbbb-cccc-dddd-eeeeffff0002");
@@ -54,12 +44,18 @@ public class DatabaseSeederDev {
     public static final UUID ID_15 = UUID.fromString("aaaaaaaa-bbbb-cccc-dddd-eeeeffff000f");
     public static final UUID ID_16 = UUID.fromString("aaaaaaaa-bbbb-cccc-dddd-eeeeffff0010");
     public static final UUID ID_17 = UUID.fromString("aaaaaaaa-bbbb-cccc-dddd-eeeeffff0011");
-
     public static final UUID EL_0 = ID_0;
     public static final UUID EL_1 = ID_1;
-
     public static final UUID C_0 = ID_0;
     public static final UUID C_1 = ID_1;
+    private final ExpenseRepository expenseRepository;
+    private final InvoiceRepository invoiceRepository;
+    private final PaymentRepository paymentRepository;
+    public DatabaseSeederDev(ExpenseRepository expenseRepository, InvoiceRepository invoiceRepository, PaymentRepository paymentRepository) {
+        this.expenseRepository = expenseRepository;
+        this.invoiceRepository = invoiceRepository;
+        this.paymentRepository = paymentRepository;
+    }
 
     @PostConstruct
     public void deleteAllAndInitializeAndSeedDataBase() {
