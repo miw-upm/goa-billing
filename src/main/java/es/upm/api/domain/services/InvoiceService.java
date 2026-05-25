@@ -104,7 +104,7 @@ public class InvoiceService {
                         .build())
                 .engagement(engagement)
                 .payments(payments)
-                .invoicedPayments(invoicedPayments)
+                .priorPayments(invoicedPayments)
                 .baseAmount(baseAmount)
                 .build();
         this.create(invoice);
@@ -145,7 +145,7 @@ public class InvoiceService {
                         .concept(concept)
                         .build())
                 .engagement(engagement)
-                .invoicedPayments(invoicedPayments)
+                .priorPayments(invoicedPayments)
                 .expenses(expenses)
                 .baseAmount(pendingServiceBaseAmount)
                 .build();
@@ -251,13 +251,13 @@ public class InvoiceService {
         Invoice invoice = this.read(id);
 
         BigDecimal vatRate = invoice.getVatRate() == null ? DEFAULT_VAT_RATE : invoice.getVatRate();
-        BigDecimal serviceBaseAmount = invoice.getBaseAmount().setScale(2, RoundingMode.HALF_UP);
-        BigDecimal serviceVatAmount = invoice.getServiceVatAmount().setScale(2, RoundingMode.HALF_UP);
-        BigDecimal expensesBaseAmount = invoice.getExpensesBaseAmount().setScale(2, RoundingMode.HALF_UP);
-        BigDecimal expensesVatAmount = invoice.getExpensesVatAmount().setScale(2, RoundingMode.HALF_UP);
-        BigDecimal totalBaseAmount = invoice.getTotalBaseAmount().setScale(2, RoundingMode.HALF_UP);
-        BigDecimal totalVatAmount = invoice.getTotalVatAmount().setScale(2, RoundingMode.HALF_UP);
-        BigDecimal totalAmount = invoice.getTotalAmount().setScale(2, RoundingMode.HALF_UP);
+        BigDecimal baseAmount4 = invoice.getBaseAmount().setScale(4, RoundingMode.HALF_UP);
+        BigDecimal vatAmount4 = baseAmount4.multiply(vatRate)
+                .divide(new BigDecimal("100"), 4, RoundingMode.HALF_UP);
+        BigDecimal totalAmount4 = baseAmount4.add(vatAmount4).setScale(4, RoundingMode.HALF_UP);
+        BigDecimal baseAmount = baseAmount4.setScale(2, RoundingMode.HALF_UP);
+        BigDecimal vatAmount = vatAmount4.setScale(2, RoundingMode.HALF_UP);
+        BigDecimal totalAmount = totalAmount4.setScale(2, RoundingMode.HALF_UP);
 
         String title = invoice.isIssued() ? "FACTURA" : "FACTURA PROFORMA";
         String invoiceNumber = invoice.isIssued()
@@ -296,14 +296,10 @@ public class InvoiceService {
             pdf.table(new String[]{"Fecha", "Importe", "Tipo de Ingreso"}, paymentRows);
         }
 
-        pdf.section("IMPORTES DE LA PRESENTE FACTURA");
+        pdf.section("IMPORTE DE LA PRESENTE FACTURA");
         List<String[]> amountRows = List.of(
-                new String[]{"Base servicios", serviceBaseAmount.toPlainString() + " €"},
-                new String[]{"IVA servicios (" + vatRate.toPlainString() + "%)", serviceVatAmount.toPlainString() + " €"},
-                new String[]{"Base gastos", expensesBaseAmount.toPlainString() + " €"},
-                new String[]{"IVA gastos", expensesVatAmount.toPlainString() + " €"},
-                new String[]{"BASE TOTAL", totalBaseAmount.toPlainString() + " €"},
-                new String[]{"IVA TOTAL", totalVatAmount.toPlainString() + " €"},
+                new String[]{"Base imponible", baseAmount.toPlainString() + " €"},
+                new String[]{"IVA (" + vatRate.toPlainString() + "%)", vatAmount.toPlainString() + " €"},
                 new String[]{"TOTAL", totalAmount.toPlainString() + " €"}
         );
         pdf.table(new String[]{"Concepto", "Importe"}, amountRows);
@@ -328,9 +324,9 @@ public class InvoiceService {
             pdf.table(new String[]{"Fecha", "Descripción", "Base imponible", "IVA"}, expenseRows);
         }
 
-        if (invoice.getInvoicedPayments() != null && !invoice.getInvoicedPayments().isEmpty()) {
+        if (invoice.getPriorPayments() != null && !invoice.getPriorPayments().isEmpty()) {
             pdf.section("ANTERIORES INGRESOS YA FACTURADOS");
-            List<String[]> paymentRows = invoice.getInvoicedPayments().stream()
+            List<String[]> paymentRows = invoice.getPriorPayments().stream()
                     .map(p -> new String[]{
                             p.getUser().toFullName(),
                             p.getDate().format(DATE_FORMAT),

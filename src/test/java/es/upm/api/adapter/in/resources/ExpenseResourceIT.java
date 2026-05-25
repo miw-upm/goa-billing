@@ -67,7 +67,7 @@ class ExpenseResourceIT {
                   \"engagement\": { \"engagementId\": \"%s\" },
                   \"issueDate\": \"2026-03-20\",
                   \"baseAmount\": 0,
-                  \"vatRate\": 21,
+                  \"vatAmount\": 21,
                   \"supplier\": { \"name\": \"Taxi\", \"identity\": \"A10000000\" },
                   \"taxCategory\": \"OTROS\"
                 }
@@ -78,7 +78,7 @@ class ExpenseResourceIT {
                   \"engagement\": { \"engagementId\": \"%s\" },
                   \"issueDate\": \"2026-03-20\",
                   \"baseAmount\": 10,
-                  \"vatRate\": 21,
+                  \"vatAmount\": 21,
                   \"supplier\": { \"name\": \"\", \"identity\": \"A10000000\" },
                   \"taxCategory\": \"OTROS\"
                 }
@@ -87,7 +87,7 @@ class ExpenseResourceIT {
                 """
                 {
                   \"baseAmount\": 10,
-                  \"vatRate\": 21,
+                  \"vatAmount\": 21,
                   \"supplier\": { \"name\": \"Taxi\", \"identity\": \"A10000000\" },
                   \"taxCategory\": \"OTROS\"
                 }
@@ -98,7 +98,7 @@ class ExpenseResourceIT {
                   \"engagement\": { \"engagementId\": \"%s\" },
                   \"issueDate\": \"2026-03-20\",
                   \"baseAmount\": 10,
-                  \"vatRate\": 21,
+                  \"vatAmount\": 21,
                   \"supplier\": { \"name\": \"Taxi\", \"identity\": \"A10000000\" }
                 }
                 """.formatted(java.util.UUID.randomUUID())
@@ -127,7 +127,7 @@ class ExpenseResourceIT {
                 .andExpect(jsonPath("$.id").value(expenseId.toString()))
                 .andExpect(jsonPath("$.engagement.id").value(engagementId.toString()))
                 .andExpect(jsonPath("$.baseAmount").value(50))
-                .andExpect(jsonPath("$.vatRate").value(21))
+                .andExpect(jsonPath("$.vatAmount").value(21))
                 .andExpect(jsonPath("$.supplier.name").value("Taxi Madrid"))
                 .andExpect(jsonPath("$.supplier.identity").value("A10000000"))
                 .andExpect(jsonPath("$.taxCategory").value("OTROS"))
@@ -146,7 +146,7 @@ class ExpenseResourceIT {
                   "engagement": { "id": "aaaaaaaa-bbbb-cccc-dddd-eeeeffff2000" },
                   "issueDate": "2026-03-21",
                   "baseAmount": 0,
-                  "vatRate": 21,
+                  "vatAmount": 21,
                   "supplier": { "name": "Taxi Updated", "identity": "A10000000" },
                   "taxCategory": "OTROS"
                 }
@@ -195,7 +195,7 @@ class ExpenseResourceIT {
                 .andExpect(jsonPath("$.[0].id").value(expenseId.toString()))
                 .andExpect(jsonPath("$.[0].engagement.id").value(engagementId.toString()))
                 .andExpect(jsonPath("$.[0].baseAmount").value(10))
-                .andExpect(jsonPath("$.[0].vatRate").value(21))
+                .andExpect(jsonPath("$.[0].vatAmount").value(21))
                 .andExpect(jsonPath("$.[0].supplier.name").value("Taxi Madrid"))
                 .andExpect(jsonPath("$.[0].supplier.identity").value("A10000000"))
                 .andExpect(jsonPath("$.[0].taxCategory").value("OTROS"))

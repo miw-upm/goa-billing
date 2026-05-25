@@ -70,7 +70,7 @@ class InvoiceAdapterIT {
         assertEquals(this.invoice.getId(), captor.getValue().getId());
         assertEquals(this.invoice.getEngagement().getId(), captor.getValue().getEngagementId());
         assertEquals(this.invoice.getBaseAmount(), captor.getValue().getBaseAmount());
-        assertEquals(this.invoice.getInvoicedPayments(), captor.getValue().getInvoicedPayments());
+        assertEquals(this.invoice.getPriorPayments(), captor.getValue().getInvoicedPayments());
         assertEquals(this.invoice.getExpenses(), captor.getValue().getExpenses());
     }
 
@@ -177,7 +177,7 @@ class InvoiceAdapterIT {
                         .date(emissionDate.minusDays(2))
                         .invoiced(false)
                         .build()))
-                .invoicedPayments(List.of(Payment.builder()
+                .priorPayments(List.of(Payment.builder()
                         .id(UUID.randomUUID())
                         .user(UserSnapshot.builder().id(userId).build())
                         .amount(BigDecimal.TEN)

@@ -64,7 +64,7 @@ class InvoiceRepositoryTest {
                         .date(LocalDate.of(2026, 3, 18))
                         .invoiced(false)
                         .build()))
-                .invoicedPayments(List.of(Payment.builder()
+                .priorPayments(List.of(Payment.builder()
                         .id(UUID.randomUUID())
                         .engagement(EngagementSnapshot.builder().id(engagementId).build())
                         .user(UserSnapshot.builder().id(userId).build())
@@ -94,7 +94,7 @@ class InvoiceRepositoryTest {
         assertEquals(this.invoice.getEngagement().getId(), saved.getEngagementId());
         assertEquals(this.invoice.getBillingInfo(), saved.getBillingInfo());
         assertEquals(this.invoice.getPayments(), saved.getPayments());
-        assertEquals(this.invoice.getInvoicedPayments(), saved.getInvoicedPayments());
+        assertEquals(this.invoice.getPriorPayments(), saved.getInvoicedPayments());
         assertEquals(this.invoice.getExpenses(), saved.getExpenses());
     }
 

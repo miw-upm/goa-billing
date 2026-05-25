@@ -7,7 +7,6 @@ import es.upm.api.domain.model.Payment;
 import es.upm.api.domain.model.PaymentMethod;
 import es.upm.api.domain.model.criteria.InvoiceFindCriteria;
 import es.upm.api.domain.model.external.EngagementSnapshot;
-import es.upm.api.domain.model.external.LegalProcedureSnapshot;
 import es.upm.api.domain.model.external.UserSnapshot;
 import es.upm.api.domain.ports.out.billing.ExpenseGateway;
 import es.upm.api.domain.ports.out.billing.InvoiceGateway;
@@ -35,7 +34,6 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.mockito.Mockito.times;
 
 @SpringBootTest
 @ActiveProfiles("test")
@@ -226,7 +224,7 @@ class InvoiceServiceIT {
         assertEquals(new BigDecimal("666.0000"), created.getTotalAmount());
         assertEquals(new BigDecimal("550.4132"), created.getPendingBaseAmount());
         assertEquals(new BigDecimal("115.5868"), created.getPendingVatAmount());
-        assertEquals(1, created.getInvoicedPayments().size());
-        assertEquals(paymentId, created.getInvoicedPayments().get(0).getId());
+        assertEquals(1, created.getPriorPayments().size());
+        assertEquals(paymentId, created.getPriorPayments().get(0).getId());
     }
 }

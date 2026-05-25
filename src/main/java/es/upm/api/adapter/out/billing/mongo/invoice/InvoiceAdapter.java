@@ -39,7 +39,7 @@ public class InvoiceAdapter implements InvoiceGateway {
         invoiceEntity.setVatRate(invoice.getVatRate());
         invoiceEntity.setEngagementId(invoice.getEngagement() == null ? null : invoice.getEngagement().getId());
         invoiceEntity.setPayments(invoice.getPayments());
-        invoiceEntity.setInvoicedPayments(invoice.getInvoicedPayments());
+        invoiceEntity.setInvoicedPayments(invoice.getPriorPayments());
         invoiceEntity.setExpenses(invoice.getExpenses());
         invoiceEntity.setDiscounts(invoice.getDiscounts());
         invoiceEntity.setPdfPath(invoice.getPdfPath());

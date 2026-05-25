@@ -51,7 +51,7 @@ class InvoiceEntityTest {
                         .date(LocalDate.of(2026, 3, 18))
                         .invoiced(false)
                         .build()))
-                .invoicedPayments(List.of(Payment.builder()
+                .priorPayments(List.of(Payment.builder()
                         .id(UUID.randomUUID())
                         .engagement(EngagementSnapshot.builder().id(engagementId).build())
                         .user(UserSnapshot.builder().id(userId).build())
@@ -86,7 +86,7 @@ class InvoiceEntityTest {
         assertEquals(this.invoice.getVatRate(), entity.getVatRate());
         assertEquals(this.invoice.getEngagement().getId(), entity.getEngagementId());
         assertEquals(this.invoice.getPayments(), entity.getPayments());
-        assertEquals(this.invoice.getInvoicedPayments(), entity.getInvoicedPayments());
+        assertEquals(this.invoice.getPriorPayments(), entity.getInvoicedPayments());
         assertEquals(this.invoice.getExpenses(), entity.getExpenses());
         assertEquals(this.invoice.getDiscounts(), entity.getDiscounts());
         assertEquals(this.invoice.getPdfPath(), entity.getPdfPath());
@@ -108,7 +108,7 @@ class InvoiceEntityTest {
         assertEquals(entity.getVatRate(), mapped.getVatRate());
         assertEquals(entity.getEngagementId(), mapped.getEngagement().getId());
         assertEquals(entity.getPayments(), mapped.getPayments());
-        assertEquals(entity.getInvoicedPayments(), mapped.getInvoicedPayments());
+        assertEquals(entity.getInvoicedPayments(), mapped.getPriorPayments());
         assertEquals(entity.getExpenses(), mapped.getExpenses());
         assertEquals(entity.getDiscounts(), mapped.getDiscounts());
         assertEquals(entity.getPdfPath(), mapped.getPdfPath());

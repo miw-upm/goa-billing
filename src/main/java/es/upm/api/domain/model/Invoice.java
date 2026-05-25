@@ -1,11 +1,7 @@
 package es.upm.api.domain.model;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import es.upm.api.domain.model.external.EngagementSnapshot;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.PastOrPresent;
-import jakarta.validation.constraints.Positive;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -15,105 +11,85 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
+import java.util.function.Function;
 
 @Builder
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class Invoice {
-    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private UUID id;
-
-    @NotNull
     private BillingInfo billingInfo;
-
     @JsonFormat(pattern = "yyyy-MM-dd")
-    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private LocalDate emissionDate;
-
     @JsonFormat(pattern = "yyyy-MM-dd")
-    @PastOrPresent
     private LocalDate operationDate;
-
-    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private String series;
-
-    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private Integer number;
-
-    @NotNull
-    @Positive
     private BigDecimal baseAmount;
-
-    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    private BigDecimal vatAmount;
     private BigDecimal vatRate;
-
     private EngagementSnapshot engagement;
-    private List<Payment> payments;
-    private List<Payment> invoicedPayments;
-    private List<Expense> expenses;
+    private List<InvoicedPayment> payments;
+    private List<InvoicedPayment> priorPayments;
+    private List<InvoicedExpense> expenses;
     private List<BigDecimal> discounts;
-
-    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private String pdfPath;
-
     private Rectification rectification;
 
     public boolean isIssued() {
         return this.emissionDate != null;
     }
 
-    public BigDecimal getServiceVatAmount() {
-        BigDecimal effectiveVatRate = this.vatRate == null ? BigDecimal.ZERO : this.vatRate;
-        BigDecimal effectiveBaseAmount = this.baseAmount == null ? BigDecimal.ZERO : this.baseAmount;
-        return effectiveBaseAmount.multiply(effectiveVatRate)
-                .divide(new BigDecimal("100"), 4, RoundingMode.HALF_UP);
-    }
-
-    public BigDecimal getExpensesBaseAmount() {
-        if (this.expenses == null || this.expenses.isEmpty()) {
-            return BigDecimal.ZERO;
-        }
-        return this.expenses.stream()
-                .map(expense -> expense.getBaseAmount() == null ? BigDecimal.ZERO : expense.getBaseAmount())
+    private <T> BigDecimal sum(List<T> list, Function<T, BigDecimal> mapper) {
+        return Optional.ofNullable(list)
+                .orElse(List.of())
+                .stream()
+                .map(mapper)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
-    public BigDecimal getExpensesVatAmount() {
-        if (this.expenses == null || this.expenses.isEmpty()) {
-            return BigDecimal.ZERO;
-        }
-        return this.expenses.stream()
-                .map(expense -> {
-                    BigDecimal expenseBase = expense.getBaseAmount() == null ? BigDecimal.ZERO : expense.getBaseAmount();
-                    BigDecimal expenseVatRate = expense.getVatRate() == null
-                            ? BigDecimal.ZERO
-                            : new BigDecimal(expense.getVatRate());
-                    return expenseBase.multiply(expenseVatRate)
-                            .divide(new BigDecimal("100"), 4, RoundingMode.HALF_UP);
-                })
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+    public BigDecimal expensesBaseAmount() {
+        return sum(expenses, InvoicedExpense::baseAmount);
     }
 
-    public BigDecimal getTotalBaseAmount() {
-        BigDecimal effectiveBaseAmount = this.baseAmount == null ? BigDecimal.ZERO : this.baseAmount;
-        return effectiveBaseAmount.add(this.getExpensesBaseAmount());
+    public BigDecimal expensesVatAmount() {
+        return sum(expenses, InvoicedExpense::vatAmount);
     }
 
-    public BigDecimal getTotalVatAmount() {
-        return this.getServiceVatAmount().add(this.getExpensesVatAmount());
+    public BigDecimal priorPaymentsAmount() {
+        return sum(priorPayments, InvoicedPayment::amount);
     }
 
-    public BigDecimal getTotalAmount() {
-        return this.getTotalBaseAmount().add(this.getTotalVatAmount());
+    public BigDecimal priorPaymentsBaseAmount() {
+        BigDecimal divisor = BigDecimal.ONE.add(
+                vatRate.divide(new BigDecimal("100"), 4, RoundingMode.HALF_UP));
+        return sum(priorPayments, p -> p.amount().divide(divisor, 4, RoundingMode.HALF_UP));
     }
 
-    public BigDecimal getPendingBaseAmount() {
-        return this.getTotalBaseAmount();
+    public BigDecimal priorPaymentsVatAmount() {
+        return priorPaymentsAmount().subtract(priorPaymentsBaseAmount());
     }
 
-    public BigDecimal getPendingVatAmount() {
-        return this.getTotalVatAmount();
+    public BigDecimal discountsAmount() {
+        return sum(discounts, Function.identity());
     }
-}
+
+    public BigDecimal totalAmount() {
+        return baseAmount
+                .add(vatAmount)
+                .add(expensesBaseAmount())
+                .add(expensesVatAmount());
+    }
+    public void applyTotal(BigDecimal totalBaseAmount) {
+        BigDecimal serviceBase = totalBaseAmount
+                .subtract(priorPaymentsBaseAmount())
+                .subtract(discountsAmount());
+        BigDecimal serviceVat = serviceBase
+                .multiply(vatRate)
+                .divide(new BigDecimal("100"), 2, RoundingMode.HALF_UP);
+        this.baseAmount = serviceBase.setScale(2, RoundingMode.HALF_UP);
+        this.vatAmount = serviceVat;
+    }}
