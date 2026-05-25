@@ -1,6 +1,7 @@
 package es.upm.api.adapter.out.billing.mongo.invoice;
 
 import es.upm.api.domain.model.BillingInfo;
+import es.upm.api.domain.model.Expense;
 import es.upm.api.domain.model.Invoice;
 import es.upm.api.domain.model.Payment;
 import es.upm.api.domain.model.Rectification;
@@ -36,6 +37,7 @@ public class InvoiceEntity {
     private UUID engagementId;
     private List<Payment> payments;
     private List<Payment> invoicedPayments;
+    private List<Expense> expenses;
     private List<BigDecimal> discounts;
     private String pdfPath;
     private Rectification rectification;

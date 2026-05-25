@@ -1,19 +1,20 @@
 package es.upm.api.domain.services;
 
 import es.upm.api.domain.model.BillingInfo;
+import es.upm.api.domain.model.Expense;
 import es.upm.api.domain.model.Invoice;
 import es.upm.api.domain.model.Payment;
 import es.upm.api.domain.model.criteria.InvoiceFindCriteria;
 import es.upm.api.domain.model.external.EngagementSnapshot;
 import es.upm.api.domain.model.external.LegalProcedureSnapshot;
 import es.upm.api.domain.model.external.UserSnapshot;
+import es.upm.api.domain.ports.out.billing.ExpenseGateway;
 import es.upm.api.domain.ports.out.billing.InvoiceGateway;
 import es.upm.api.domain.ports.out.billing.PaymentGateway;
 import es.upm.api.domain.ports.out.engagement.EngagementFinder;
 import es.upm.api.domain.ports.out.user.UserFinder;
 import es.upm.miw.exception.InvalidTransitionException;
 import es.upm.miw.pdf.PdfBuilder;
-import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -40,6 +41,7 @@ public class InvoiceService {
 
     private final InvoiceGateway invoiceGateway;
     private final PaymentGateway paymentGateway;
+    private final ExpenseGateway expenseGateway;
     private final EngagementFinder engagementFinder;
     private final UserFinder userFinder;
 
@@ -75,6 +77,7 @@ public class InvoiceService {
             markAsInvoiced(userPayments);
         });
     }
+
     private void createInvoiceFor(UUID userId, List<Payment> payments,
                                   EngagementSnapshot engagement, List<Payment> invoicedPayments) {
         BigDecimal grossAmount = payments.stream()
@@ -96,7 +99,7 @@ public class InvoiceService {
                         .userId(userId)
                         .concept(String
                                 .format("Provisión de fondos.%nHoja de encargo aceptada el %s.%nProcedimientos legales: %s.",
-                                engagementDate, procedures))
+                                        engagementDate, procedures))
                         .build())
                 .engagement(engagement)
                 .payments(payments)
@@ -113,7 +116,28 @@ public class InvoiceService {
         });
     }
 
-    public void createFromEngagement(@NotNull UUID engagementId) {
+    public void createFromEngagement(UUID engagementId, BigDecimal totalBaseAmount, String concept) {
+        EngagementSnapshot engagement = this.engagementFinder.read(engagementId);
+        List<Expense> expenses = this.expenseGateway.findByEngagementId(engagementId).toList();
+        List<Payment> invoicedPayments = this.paymentGateway
+                .findInvoicedByEngagementId(engagementId)
+                .map(payment -> {
+                    payment.setUser(this.userFinder.readById(payment.getUser().getId()));
+                    return payment;
+                })
+                .toList();
+        Invoice invoice = Invoice.builder()
+                .billingInfo(BillingInfo.builder()
+                        .userId(engagement.getOwner().getId())
+                        .concept(concept)
+                        .build())
+                .engagement(engagement)
+                .invoicedPayments(invoicedPayments)
+                .expenses(expenses)
+                .baseAmount(totalBaseAmount.setScale(4, RoundingMode.HALF_UP))
+                .build();
+        this.create(invoice);
+
     }
 
 
@@ -154,17 +178,27 @@ public class InvoiceService {
         this.invoiceGateway.delete(id);
     }
 
-    public Stream<Invoice> find(InvoiceFindCriteria criteria) { //TODO No tengo claro las queries utiles
-        Stream<Invoice> invoices = this.invoiceGateway.find(criteria);
-        if (criteria == null || !StringUtils.hasText(criteria.getClient())) {
-            return invoices;
+    public Stream<Invoice> find(InvoiceFindCriteria criteria) {
+        Stream<Invoice> invoices = invoiceGateway.find(criteria);
+
+        if (StringUtils.hasText(criteria.getClient())) {
+            List<UUID> clientIds = userFinder.find(criteria.getClient()).stream()
+                    .map(UserSnapshot::getId)
+                    .toList();
+
+            invoices = invoices.filter(invoice ->
+                    invoice.getBillingInfo() != null
+                            && invoice.getBillingInfo().getUserId() != null
+                            && clientIds.contains(invoice.getBillingInfo().getUserId()));
         }
-        List<UUID> clientIds = this.userFinder.find(criteria.getClient()).stream()
-                .map(UserSnapshot::getId)
-                .toList();
-        return invoices.filter(invoice -> invoice.getBillingInfo() != null
-                && invoice.getBillingInfo().getUserId() != null
-                && clientIds.contains(invoice.getBillingInfo().getUserId()));
+
+        return invoices.map(invoice -> {
+            if (invoice.getEngagement() != null) {
+                UUID engagementId = invoice.getEngagement().getId();
+                invoice.setEngagement(engagementFinder.read(engagementId));
+            }
+            return invoice;
+        });
     }
 
     private void validateAndHydrate(Invoice invoice) {
@@ -249,13 +283,33 @@ public class InvoiceService {
             pdf.table(new String[]{"Fecha", "Importe", "Tipo de Ingreso"}, paymentRows);
         }
 
-        pdf.section("IMPORTES");
+        pdf.section("IMPORTES DE LA PRESENTE FACTURA");
         List<String[]> amountRows = List.of(
                 new String[]{"Base imponible", baseAmount.toPlainString() + " €"},
                 new String[]{"IVA (" + vatRate.toPlainString() + "%)", vatAmount.toPlainString() + " €"},
                 new String[]{"TOTAL", totalAmount.toPlainString() + " €"}
         );
         pdf.table(new String[]{"Concepto", "Importe"}, amountRows);
+
+        if (invoice.getExpenses() != null && !invoice.getExpenses().isEmpty()) {
+            pdf.section("GASTOS ASOCIADOS AL ENCARGO");
+
+            List<String[]> expenseRows = invoice.getExpenses().stream()
+                    .map(e -> {
+                        BigDecimal base = e.getBaseAmount().setScale(2, RoundingMode.HALF_UP);
+                        BigDecimal vat = base.multiply(BigDecimal.valueOf(e.getVatRate()))
+                                .divide(new BigDecimal("100"), 2, RoundingMode.HALF_UP);
+                        return new String[]{
+                                e.getIssueDate().format(DATE_FORMAT),
+                                e.getDescription(),
+                                base.toPlainString() + " €",
+                                vat.toPlainString() + " €"
+                        };
+                    })
+                    .toList();
+
+            pdf.table(new String[]{"Fecha", "Descripción", "Base imponible", "IVA"}, expenseRows);
+        }
 
         if (invoice.getInvoicedPayments() != null && !invoice.getInvoicedPayments().isEmpty()) {
             pdf.section("ANTERIORES INGRESOS YA FACTURADOS");
@@ -267,15 +321,16 @@ public class InvoiceService {
                             p.getMethod().name()
                     })
                     .toList();
-            pdf.table(new String[]{"User","Fecha", "Importe", "Tipo de Ingreso"}, paymentRows);
+            pdf.table(new String[]{"User", "Fecha", "Importe", "Tipo de Ingreso"}, paymentRows);
         }
+
+
 
         pdf.space(3)
                 .signatureLine("Doña Nuria Ocaña Pérez");
 
         return pdf.build();
     }
-
 
 
 }

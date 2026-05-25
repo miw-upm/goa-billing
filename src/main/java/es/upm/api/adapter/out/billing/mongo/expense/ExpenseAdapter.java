@@ -78,6 +78,12 @@ public class ExpenseAdapter implements ExpenseGateway {
     }
 
     @Override
+    public Stream<Expense> findByEngagementId(UUID engagementId) {
+        return this.expenseRepository.findByEngagementIdOrderByIssueDateDesc(engagementId).stream()
+                .map(ExpenseEntity::toDomain);
+    }
+
+    @Override
     public Stream<SupplierInfo> findSuppliers(String supplier) {
         String normalizedSupplier = Objects.toString(supplier, "");
         return this.expenseRepository.findBySupplierNameContainingIgnoreCaseOrSupplierIdentityContainingIgnoreCase(

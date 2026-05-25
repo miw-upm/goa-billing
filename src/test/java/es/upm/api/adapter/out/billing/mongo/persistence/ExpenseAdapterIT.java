@@ -254,4 +254,16 @@ class ExpenseAdapterIT {
         assertEquals("A10000000", suppliers.get(0).getIdentity());
         verify(this.expenseRepository).findBySupplierNameContainingIgnoreCaseOrSupplierIdentityContainingIgnoreCase("100", "100");
     }
+
+    @Test
+    void shouldFindByEngagementId() {
+        when(this.expenseRepository.findByEngagementIdOrderByIssueDateDesc(this.engagementUuid))
+                .thenReturn(List.of(new ExpenseEntity(this.expense)));
+
+        List<Expense> expenses = this.expensePersistenceMongodb.findByEngagementId(this.engagementUuid).toList();
+
+        assertEquals(1, expenses.size());
+        assertEquals(this.expense.getId(), expenses.getFirst().getId());
+        verify(this.expenseRepository).findByEngagementIdOrderByIssueDateDesc(this.engagementUuid);
+    }
 }

@@ -18,4 +18,6 @@ public interface ExpenseRepository extends MongoRepository<ExpenseEntity, UUID> 
     );
 
     List<ExpenseEntity> findByIssueDateGreaterThanEqualOrderByIssueDateDesc(LocalDate issueDate);
+
+    List<ExpenseEntity> findByEngagementIdOrderByIssueDateDesc(UUID engagementId);
 }

@@ -1,6 +1,7 @@
 package es.upm.api.domain.services;
 
 import es.upm.api.domain.model.BillingInfo;
+import es.upm.api.domain.model.Expense;
 import es.upm.api.domain.model.Invoice;
 import es.upm.api.domain.model.Payment;
 import es.upm.api.domain.model.PaymentMethod;
@@ -8,6 +9,7 @@ import es.upm.api.domain.model.criteria.InvoiceFindCriteria;
 import es.upm.api.domain.model.external.EngagementSnapshot;
 import es.upm.api.domain.model.external.LegalProcedureSnapshot;
 import es.upm.api.domain.model.external.UserSnapshot;
+import es.upm.api.domain.ports.out.billing.ExpenseGateway;
 import es.upm.api.domain.ports.out.billing.InvoiceGateway;
 import es.upm.api.domain.ports.out.billing.PaymentGateway;
 import es.upm.api.domain.ports.out.engagement.EngagementFinder;
@@ -23,7 +25,6 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Stream;
 
@@ -48,6 +49,9 @@ class InvoiceServiceIT {
 
     @MockitoBean
     private PaymentGateway paymentGateway;
+
+    @MockitoBean
+    private ExpenseGateway expenseGateway;
 
     @MockitoBean
     private EngagementFinder engagementFinder;
@@ -139,8 +143,6 @@ class InvoiceServiceIT {
     @Test
     void shouldDeleteInvoiceOnlyWhenDraft() {
         UUID invoiceId = UUID.randomUUID();
-        Invoice draft = Invoice.builder().id(invoiceId).emissionDate(null).build();
-        when(this.invoiceGateway.findById(invoiceId)).thenReturn(Optional.of(draft));
 
         this.invoiceService.delete(invoiceId);
 
@@ -182,99 +184,49 @@ class InvoiceServiceIT {
     }
 
     @Test
-    void shouldCreateInvoicesFromNotInvoicedPaymentsGroupedByUser() {
-        UUID secondUserId = UUID.randomUUID();
-        UserSnapshot secondUserSnapshot = UserSnapshot.builder()
-                .id(secondUserId)
-                .firstName("Jane")
-                .familyName("Roe")
-                .identity("87654321B")
-                .address("Second St 2")
-                .city("Madrid")
-                .province("Madrid")
-                .postalCode(28002)
+    void shouldCreateInvoiceFromEngagementDiscountingExpensesAndAddingInvoicedPayments() {
+        UUID paymentId = UUID.randomUUID();
+        EngagementSnapshot engagement = EngagementSnapshot.builder()
+                .id(this.engagementId)
+                .owner(UserSnapshot.builder().id(this.userId).build())
                 .build();
-
-        Payment firstPayment = Payment.builder()
-                .id(UUID.randomUUID())
+        Payment invoicedPayment = Payment.builder()
+                .id(paymentId)
                 .engagement(EngagementSnapshot.builder().id(this.engagementId).build())
                 .user(UserSnapshot.builder().id(this.userId).build())
-                .amount(new BigDecimal("100.00"))
+                .amount(new BigDecimal("60.00"))
                 .method(PaymentMethod.TRANSFER)
                 .date(LocalDate.of(2026, 3, 20))
-                .invoiced(false)
-                .build();
-        Payment secondPaymentSameUser = Payment.builder()
-                .id(UUID.randomUUID())
-                .engagement(EngagementSnapshot.builder().id(this.engagementId).build())
-                .user(UserSnapshot.builder().id(this.userId).build())
-                .amount(new BigDecimal("50.00"))
-                .method(PaymentMethod.CASH)
-                .date(LocalDate.of(2026, 3, 21))
-                .invoiced(false)
-                .build();
-        Payment thirdPaymentOtherUser = Payment.builder()
-                .id(UUID.randomUUID())
-                .engagement(EngagementSnapshot.builder().id(this.engagementId).build())
-                .user(UserSnapshot.builder().id(secondUserId).build())
-                .amount(new BigDecimal("25.00"))
-                .method(PaymentMethod.BIZUM)
-                .date(LocalDate.of(2026, 3, 22))
-                .invoiced(false)
+                .invoiced(true)
                 .build();
 
-        when(this.engagementFinder.read(this.engagementId))
-                .thenReturn(EngagementSnapshot.builder()
-                        .id(this.engagementId)
-                        .legalProcedures(List.of(
-                                LegalProcedureSnapshot.builder().title("Penal").build(),
-                                LegalProcedureSnapshot.builder().title("Civil").build()
-                        ))
-                        .lastUpdatedDate(LocalDate.of(2026, 3, 20))
-                        .build());
-        when(this.paymentGateway.findNotInvoicedByEngagementId(this.engagementId))
-                .thenReturn(Stream.of(firstPayment, secondPaymentSameUser, thirdPaymentOtherUser));
+        when(this.engagementFinder.read(this.engagementId)).thenReturn(engagement);
         when(this.paymentGateway.findInvoicedByEngagementId(this.engagementId))
-                .thenReturn(Stream.empty());
+                .thenReturn(Stream.of(invoicedPayment));
+        Expense expense = Expense.builder()
+                .id(UUID.randomUUID())
+                .baseAmount(new BigDecimal("100.00"))
+                .vatRate(21)
+                .build();
+        when(this.expenseGateway.findByEngagementId(this.engagementId)).thenReturn(Stream.of(expense));
         when(this.userFinder.readById(this.userId)).thenReturn(this.userSnapshot);
-        when(this.userFinder.readById(secondUserId)).thenReturn(secondUserSnapshot);
 
-        this.invoiceService.createFromPayments(this.engagementId);
+        this.invoiceService.createFromEngagement(this.engagementId, new BigDecimal("500.00"), "Concepto libre");
 
-        ArgumentCaptor<Invoice> invoiceCaptor = ArgumentCaptor.forClass(Invoice.class);
-        verify(this.invoiceGateway, times(2)).create(invoiceCaptor.capture());
-        List<Invoice> createdInvoices = invoiceCaptor.getAllValues();
-
-        BigDecimal firstUserTotal = createdInvoices.stream()
-                .filter(invoice -> this.userId.equals(invoice.getBillingInfo().getUserId()))
-                .map(Invoice::getBaseAmount)
-                .findFirst()
-                .orElse(BigDecimal.ZERO);
-        BigDecimal secondUserTotal = createdInvoices.stream()
-                .filter(invoice -> secondUserId.equals(invoice.getBillingInfo().getUserId()))
-                .map(Invoice::getBaseAmount)
-                .findFirst()
-                .orElse(BigDecimal.ZERO);
-
-        assertEquals(new BigDecimal("123.9669"), firstUserTotal);
-        assertEquals(new BigDecimal("20.6612"), secondUserTotal);
-
-        createdInvoices.forEach(createdInvoice -> {
-            BigDecimal grossPayments = createdInvoice.getPayments().stream()
-                    .map(Payment::getAmount)
-                    .reduce(BigDecimal.ZERO, BigDecimal::add)
-                    .setScale(2);
-            BigDecimal vatAmount = createdInvoice.getBaseAmount().multiply(createdInvoice.getVatRate())
-                    .divide(new BigDecimal("100"), 2, java.math.RoundingMode.HALF_UP);
-            BigDecimal totalInvoice = createdInvoice.getBaseAmount().add(vatAmount).setScale(2);
-            assertEquals(grossPayments, totalInvoice);
-        });
-
-        verify(this.paymentGateway).findNotInvoicedByEngagementId(this.engagementId);
-        verify(this.paymentGateway).findInvoicedByEngagementId(this.engagementId);
-
-        verify(this.paymentGateway).update(eq(firstPayment.getId()), any(Payment.class));
-        verify(this.paymentGateway).update(eq(secondPaymentSameUser.getId()), any(Payment.class));
-        verify(this.paymentGateway).update(eq(thirdPaymentOtherUser.getId()), any(Payment.class));
+        ArgumentCaptor<Invoice> captor = ArgumentCaptor.forClass(Invoice.class);
+        verify(this.invoiceGateway).create(captor.capture());
+        Invoice created = captor.getValue();
+        assertEquals(this.userId, created.getBillingInfo().getUserId());
+        assertEquals("Concepto libre", created.getBillingInfo().getConcept());
+        assertEquals(new BigDecimal("500.0000"), created.getBaseAmount());
+        assertEquals(1, created.getExpenses().size());
+        assertEquals(expense.getId(), created.getExpenses().getFirst().getId());
+        assertEquals(new BigDecimal("600.0000"), created.getTotalBaseAmount());
+        assertEquals(new BigDecimal("126.0000"), created.getTotalVatAmount());
+        assertEquals(new BigDecimal("726.0000"), created.getTotalAmount());
+        assertEquals(new BigDecimal("550.4132"), created.getPendingBaseAmount());
+        assertEquals(new BigDecimal("115.5868"), created.getPendingVatAmount());
+        assertEquals(1, created.getInvoicedPayments().size());
+        assertEquals(paymentId, created.getInvoicedPayments().get(0).getId());
     }
 }

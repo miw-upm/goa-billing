@@ -4,6 +4,7 @@ import es.upm.api.adapter.out.billing.mongo.invoice.InvoiceAdapter;
 import es.upm.api.adapter.out.billing.mongo.invoice.InvoiceEntity;
 import es.upm.api.adapter.out.billing.mongo.invoice.InvoiceRepository;
 import es.upm.api.domain.model.BillingInfo;
+import es.upm.api.domain.model.Expense;
 import es.upm.api.domain.model.Invoice;
 import es.upm.api.domain.model.Payment;
 import es.upm.api.domain.model.PaymentMethod;
@@ -70,6 +71,7 @@ class InvoiceAdapterIT {
         assertEquals(this.invoice.getEngagement().getId(), captor.getValue().getEngagementId());
         assertEquals(this.invoice.getBaseAmount(), captor.getValue().getBaseAmount());
         assertEquals(this.invoice.getInvoicedPayments(), captor.getValue().getInvoicedPayments());
+        assertEquals(this.invoice.getExpenses(), captor.getValue().getExpenses());
     }
 
     @Test
@@ -182,6 +184,13 @@ class InvoiceAdapterIT {
                         .method(PaymentMethod.CASH)
                         .date(emissionDate.minusDays(5))
                         .invoiced(true)
+                        .build()))
+                .expenses(List.of(Expense.builder()
+                        .id(UUID.randomUUID())
+                        .engagement(EngagementSnapshot.builder().id(engagementId).build())
+                        .baseAmount(BigDecimal.valueOf(30))
+                        .vatRate(21)
+                        .issueDate(emissionDate.minusDays(3))
                         .build()))
                 .discounts(List.of(BigDecimal.TEN))
                 .pdfPath("/tmp/invoice.pdf")

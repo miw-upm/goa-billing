@@ -1,6 +1,7 @@
 package es.upm.api.adapter.in.resources;
 
 import es.upm.api.adapter.in.resources.dtos.InvoiceCreationDto;
+import es.upm.api.adapter.in.resources.dtos.InvoiceCreationFromEngagementDto;
 import es.upm.api.adapter.in.resources.dtos.InvoiceCreationFromPaymentsDto;
 import es.upm.api.domain.model.BillingInfo;
 import es.upm.api.domain.model.Invoice;
@@ -12,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.util.UUID;
 import java.util.stream.Stream;
 
@@ -46,8 +48,8 @@ public class InvoiceResource {
     }
 
     @PostMapping(FROM_ENGAGEMENT)
-    public void createFromEngagement(@RequestBody @Valid InvoiceCreationFromPaymentsDto creation) {
-        this.invoiceService.createFromEngagement(creation.getEngagementId());
+    public void createFromEngagement(@RequestBody @Valid InvoiceCreationFromEngagementDto creation) {
+        this.invoiceService.createFromEngagement(creation.getEngagementId(), creation.getTotalBaseAmount(), creation.getConcept());
     }
 
     @GetMapping("/{id}")

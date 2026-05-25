@@ -203,6 +203,30 @@ class InvoiceResourceIT {
 
     @Test
     @WithMockUser(roles = "admin")
+    void shouldCreateInvoiceFromEngagement() throws Exception {
+        UUID engagementId = UUID.randomUUID();
+        String requestBody = """
+                {
+                  "engagementId": "%s",
+                  "totalBaseAmount": 500.00,
+                  "concept": "Provisión inicial"
+                }
+                """.formatted(engagementId);
+
+        this.mockMvc.perform(post("/invoices/from-engagement")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestBody))
+                .andExpect(status().isOk());
+
+        verify(this.invoiceService).createFromEngagement(
+                engagementId,
+                new BigDecimal("500.00"),
+                "Provisión inicial"
+        );
+    }
+
+    @Test
+    @WithMockUser(roles = "admin")
     void shouldViewInvoicePdf() throws Exception {
         UUID invoiceId = UUID.randomUUID();
         byte[] pdf = "%PDF-1.4".getBytes(StandardCharsets.UTF_8);

@@ -20,5 +20,7 @@ public interface ExpenseGateway {
 
     Stream<Expense> find(ExpenseFindCriteria criteria);
 
+    Stream<Expense> findByEngagementId(UUID engagementId);
+
     Stream<SupplierInfo> findSuppliers(String supplier);
 }

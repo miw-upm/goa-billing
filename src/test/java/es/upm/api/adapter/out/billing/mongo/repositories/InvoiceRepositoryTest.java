@@ -3,6 +3,7 @@ package es.upm.api.adapter.out.billing.mongo.repositories;
 import es.upm.api.adapter.out.billing.mongo.invoice.InvoiceEntity;
 import es.upm.api.adapter.out.billing.mongo.invoice.InvoiceRepository;
 import es.upm.api.domain.model.BillingInfo;
+import es.upm.api.domain.model.Expense;
 import es.upm.api.domain.model.Invoice;
 import es.upm.api.domain.model.Payment;
 import es.upm.api.domain.model.PaymentMethod;
@@ -72,6 +73,13 @@ class InvoiceRepositoryTest {
                         .date(LocalDate.of(2026, 3, 10))
                         .invoiced(true)
                         .build()))
+                .expenses(List.of(Expense.builder()
+                        .id(UUID.randomUUID())
+                        .engagement(EngagementSnapshot.builder().id(engagementId).build())
+                        .baseAmount(BigDecimal.valueOf(15))
+                        .vatRate(10)
+                        .issueDate(LocalDate.of(2026, 3, 11))
+                        .build()))
                 .discounts(List.of(BigDecimal.TEN))
                 .pdfPath("/tmp/invoice.pdf")
                 .build();
@@ -87,6 +95,7 @@ class InvoiceRepositoryTest {
         assertEquals(this.invoice.getBillingInfo(), saved.getBillingInfo());
         assertEquals(this.invoice.getPayments(), saved.getPayments());
         assertEquals(this.invoice.getInvoicedPayments(), saved.getInvoicedPayments());
+        assertEquals(this.invoice.getExpenses(), saved.getExpenses());
     }
 
     @Test
