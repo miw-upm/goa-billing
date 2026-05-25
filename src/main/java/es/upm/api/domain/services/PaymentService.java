@@ -42,6 +42,7 @@ public class PaymentService {
         Payment currentPayment = this.paymentGateway.read(id);
         payment.setId(id);
         payment.setDate(currentPayment.getDate());
+        payment.setInvoiced(currentPayment.getInvoiced());
         this.hydrateEngagement(payment);
         payment.setUser(this.userFinder.readById(payment.getUser().getId()));
         this.paymentGateway.update(id, payment);

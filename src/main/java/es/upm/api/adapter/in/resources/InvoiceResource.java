@@ -17,7 +17,7 @@ import java.util.stream.Stream;
 
 @PreAuthorize(Security.ADMIN_MANAGER_OPERATOR)
 @RestController
-@RequestMapping(InvoiceResource.FROM_PAYMENTS)
+@RequestMapping(InvoiceResource.INVOICES)
 @RequiredArgsConstructor
 public class InvoiceResource {
     public static final String INVOICES = "/invoices";
@@ -41,7 +41,7 @@ public class InvoiceResource {
 
     @PostMapping(FROM_PAYMENTS)
     public void createFromPayments(@RequestBody @Valid InvoiceCreationFromPaymentsDto creation) {
-        this.invoiceService.createFromPayments(creation.getEngagementId(),creation.getUserShares());
+        this.invoiceService.createFromPayments(creation.getEngagementId());
     }
 
 

@@ -2,7 +2,10 @@ package es.upm.api.domain.services;
 
 import es.upm.api.domain.model.BillingInfo;
 import es.upm.api.domain.model.Invoice;
+import es.upm.api.domain.model.Payment;
+import es.upm.api.domain.model.PaymentMethod;
 import es.upm.api.domain.model.criteria.InvoiceFindCriteria;
+import es.upm.api.domain.model.criteria.PaymentFindCriteria;
 import es.upm.api.domain.model.external.EngagementSnapshot;
 import es.upm.api.domain.model.external.UserSnapshot;
 import es.upm.api.domain.ports.out.billing.InvoiceGateway;
@@ -31,6 +34,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.times;
 
 @SpringBootTest
 @ActiveProfiles("test")
@@ -175,5 +179,93 @@ class InvoiceServiceIT {
 
         assertEquals(1, invoices.size());
         verify(this.userFinder, never()).find(any());
+    }
+
+    @Test
+    void shouldCreateInvoicesFromNotInvoicedPaymentsGroupedByUser() {
+        UUID secondUserId = UUID.randomUUID();
+        UserSnapshot secondUserSnapshot = UserSnapshot.builder()
+                .id(secondUserId)
+                .firstName("Jane")
+                .familyName("Roe")
+                .identity("87654321B")
+                .address("Second St 2")
+                .city("Madrid")
+                .province("Madrid")
+                .postalCode(28002)
+                .build();
+
+        Payment firstPayment = Payment.builder()
+                .id(UUID.randomUUID())
+                .engagement(EngagementSnapshot.builder().id(this.engagementId).build())
+                .user(UserSnapshot.builder().id(this.userId).build())
+                .amount(new BigDecimal("100.00"))
+                .method(PaymentMethod.TRANSFER)
+                .date(LocalDate.of(2026, 3, 20))
+                .invoiced(false)
+                .build();
+        Payment secondPaymentSameUser = Payment.builder()
+                .id(UUID.randomUUID())
+                .engagement(EngagementSnapshot.builder().id(this.engagementId).build())
+                .user(UserSnapshot.builder().id(this.userId).build())
+                .amount(new BigDecimal("50.00"))
+                .method(PaymentMethod.CASH)
+                .date(LocalDate.of(2026, 3, 21))
+                .invoiced(false)
+                .build();
+        Payment thirdPaymentOtherUser = Payment.builder()
+                .id(UUID.randomUUID())
+                .engagement(EngagementSnapshot.builder().id(this.engagementId).build())
+                .user(UserSnapshot.builder().id(secondUserId).build())
+                .amount(new BigDecimal("25.00"))
+                .method(PaymentMethod.BIZUM)
+                .date(LocalDate.of(2026, 3, 22))
+                .invoiced(false)
+                .build();
+        Payment otherEngagementPayment = Payment.builder()
+                .id(UUID.randomUUID())
+                .engagement(EngagementSnapshot.builder().id(UUID.randomUUID()).build())
+                .user(UserSnapshot.builder().id(this.userId).build())
+                .amount(new BigDecimal("999.00"))
+                .method(PaymentMethod.BIZUM)
+                .date(LocalDate.of(2026, 3, 22))
+                .invoiced(false)
+                .build();
+
+        when(this.engagementFinder.read(this.engagementId))
+                .thenReturn(EngagementSnapshot.builder().id(this.engagementId).build());
+        when(this.paymentGateway.find(any(PaymentFindCriteria.class)))
+                .thenReturn(Stream.of(firstPayment, secondPaymentSameUser, thirdPaymentOtherUser, otherEngagementPayment));
+        when(this.userFinder.readById(this.userId)).thenReturn(this.userSnapshot);
+        when(this.userFinder.readById(secondUserId)).thenReturn(secondUserSnapshot);
+
+        this.invoiceService.createFromPayments(this.engagementId);
+
+        ArgumentCaptor<Invoice> invoiceCaptor = ArgumentCaptor.forClass(Invoice.class);
+        verify(this.invoiceGateway, times(2)).create(invoiceCaptor.capture());
+        List<Invoice> createdInvoices = invoiceCaptor.getAllValues();
+
+        BigDecimal firstUserTotal = createdInvoices.stream()
+                .filter(invoice -> this.userId.equals(invoice.getBillingInfo().getUserId()))
+                .map(Invoice::getBaseAmount)
+                .findFirst()
+                .orElse(BigDecimal.ZERO);
+        BigDecimal secondUserTotal = createdInvoices.stream()
+                .filter(invoice -> secondUserId.equals(invoice.getBillingInfo().getUserId()))
+                .map(Invoice::getBaseAmount)
+                .findFirst()
+                .orElse(BigDecimal.ZERO);
+
+        assertEquals(new BigDecimal("150.00"), firstUserTotal);
+        assertEquals(new BigDecimal("25.00"), secondUserTotal);
+
+        ArgumentCaptor<PaymentFindCriteria> criteriaCaptor = ArgumentCaptor.forClass(PaymentFindCriteria.class);
+        verify(this.paymentGateway).find(criteriaCaptor.capture());
+        assertEquals(Boolean.FALSE, criteriaCaptor.getValue().getInvoiced());
+
+        verify(this.paymentGateway).update(eq(firstPayment.getId()), any(Payment.class));
+        verify(this.paymentGateway).update(eq(secondPaymentSameUser.getId()), any(Payment.class));
+        verify(this.paymentGateway).update(eq(thirdPaymentOtherUser.getId()), any(Payment.class));
+        verify(this.paymentGateway, never()).update(eq(otherEngagementPayment.getId()), any(Payment.class));
     }
 }

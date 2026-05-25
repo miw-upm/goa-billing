@@ -31,6 +31,7 @@ public class PaymentAdapter implements PaymentGateway {
         paymentEntity.setAmount(payment.getAmount());
         paymentEntity.setMethod(payment.getMethod());
         paymentEntity.setDate(payment.getDate());
+        paymentEntity.setInvoiced(payment.getInvoiced());
 
         return this.paymentRepository.save(paymentEntity).toDomain();
     }
