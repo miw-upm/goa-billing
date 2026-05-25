@@ -16,4 +16,6 @@ public interface PaymentRepository extends MongoRepository<PaymentEntity, UUID> 
     List<PaymentEntity> findByDateGreaterThanEqualAndInvoicedOrderByDateDesc(LocalDate fromDate, Boolean invoiced);
 
     List<PaymentEntity> findByEngagementIdAndInvoicedFalseOrderByDateDesc(UUID engagementId);
+
+    List<PaymentEntity> findByEngagementIdAndInvoicedTrueOrderByDateDesc(UUID engagementId);
 }

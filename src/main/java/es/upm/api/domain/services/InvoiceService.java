@@ -57,18 +57,24 @@ public class InvoiceService {
         Map<UUID, List<Payment>> paymentsByUser = paymentGateway
                 .findNotInvoicedByEngagementId(engagementId)
                 .collect(Collectors.groupingBy(p -> p.getUser().getId()));
+
+        List<Payment> paymentsInvoicedByUser = paymentGateway
+                .findInvoicedByEngagementId(engagementId).toList();
+
         paymentsByUser.forEach((userId, userPayments) -> {
-            createInvoiceFor(userId, userPayments, engagement);
+            createInvoiceFor(userId, userPayments, engagement, paymentsInvoicedByUser);
             markAsInvoiced(userPayments);
         });
     }
     private void createInvoiceFor(UUID userId, List<Payment> payments,
-                                  EngagementSnapshot engagement) {
+                                  EngagementSnapshot engagement, List<Payment> invoicedPayments) {
         BigDecimal grossAmount = payments.stream()
                 .map(Payment::getAmount)
                 .reduce(BigDecimal.ZERO, BigDecimal::add)
                 .setScale(2, RoundingMode.HALF_UP);
-        BigDecimal baseAmount = this.baseAmountFromGross(grossAmount, DEFAULT_VAT_RATE);
+        BigDecimal divisor = BigDecimal.ONE.add(DEFAULT_VAT_RATE
+                .divide(new BigDecimal("100"), 8, RoundingMode.HALF_UP));
+        BigDecimal baseAmount = grossAmount.divide(divisor, 4, RoundingMode.HALF_UP);
         String procedures = engagement.getLegalProcedures().stream()
                 .map(LegalProcedureSnapshot::getTitle)
                 .collect(Collectors.joining(", "));
@@ -76,56 +82,16 @@ public class InvoiceService {
         Invoice invoice = Invoice.builder()
                 .billingInfo(BillingInfo.builder()
                         .userId(userId)
-                        .concept(String.format("Provisión de fondos.%nHoja de encargo aceptada el %s.%nProcedimientos legales: %s",
+                        .concept(String
+                                .format("Provisión de fondos.%nHoja de encargo aceptada el %s.%nProcedimientos legales: %s.",
                                 engagementDate, procedures))
                         .build())
                 .engagement(engagement)
                 .payments(payments)
+                .invoicedPayments(invoicedPayments)
                 .baseAmount(baseAmount)
                 .build();
         this.create(invoice);
-    }
-
-    private BigDecimal baseAmountFromGross(BigDecimal grossAmount, BigDecimal vatRate) {
-        long grossCents = grossAmount.movePointRight(2).setScale(0, RoundingMode.HALF_UP).longValueExact();
-        BigDecimal divisor = BigDecimal.ONE.add(vatRate.divide(new BigDecimal("100"), 12, RoundingMode.HALF_UP));
-        long candidateBaseCents = grossAmount.divide(divisor, 2, RoundingMode.HALF_UP)
-                .movePointRight(2).longValueExact();
-
-        for (long delta = 0; delta <= grossCents; delta++) {
-            long up = candidateBaseCents + delta;
-            if (this.totalCentsFromBaseCents(up, vatRate) == grossCents) {
-                return BigDecimal.valueOf(up, 2);
-            }
-            long down = candidateBaseCents - delta;
-            if (down >= 0 && this.totalCentsFromBaseCents(down, vatRate) == grossCents) {
-                return BigDecimal.valueOf(down, 2);
-            }
-        }
-
-        BigDecimal baseAmount = BigDecimal.valueOf(candidateBaseCents, 2);
-        BigDecimal totalAmount = this.totalAmountFromBase(baseAmount, vatRate);
-        if (totalAmount.compareTo(grossAmount) > 0) {
-            return baseAmount.subtract(new BigDecimal("0.01"));
-        }
-        if (totalAmount.compareTo(grossAmount) < 0) {
-            return baseAmount.add(new BigDecimal("0.01"));
-        }
-        return baseAmount;
-    }
-
-    private long totalCentsFromBaseCents(long baseCents, BigDecimal vatRate) {
-        BigDecimal baseAmount = BigDecimal.valueOf(baseCents, 2);
-        BigDecimal vatAmount = baseAmount.multiply(vatRate)
-                .divide(new BigDecimal("100"), 2, RoundingMode.HALF_UP);
-        BigDecimal totalAmount = baseAmount.add(vatAmount).setScale(2, RoundingMode.HALF_UP);
-        return totalAmount.movePointRight(2).longValueExact();
-    }
-
-    private BigDecimal totalAmountFromBase(BigDecimal baseAmount, BigDecimal vatRate) {
-        BigDecimal vatAmount = baseAmount.multiply(vatRate)
-                .divide(new BigDecimal("100"), 2, RoundingMode.HALF_UP);
-        return baseAmount.add(vatAmount).setScale(2, RoundingMode.HALF_UP);
     }
 
     private void markAsInvoiced(List<Payment> payments) {
@@ -223,10 +189,13 @@ public class InvoiceService {
         Invoice invoice = this.read(id);
 
         BigDecimal vatRate = invoice.getVatRate() == null ? DEFAULT_VAT_RATE : invoice.getVatRate();
-        BigDecimal baseAmount = invoice.getBaseAmount().setScale(2, RoundingMode.HALF_UP);
-        BigDecimal vatAmount = baseAmount.multiply(vatRate)
-                .divide(new BigDecimal("100"), 2, RoundingMode.HALF_UP);
-        BigDecimal totalAmount = baseAmount.add(vatAmount).setScale(2, RoundingMode.HALF_UP);
+        BigDecimal baseAmount4 = invoice.getBaseAmount().setScale(4, RoundingMode.HALF_UP);
+        BigDecimal vatAmount4 = baseAmount4.multiply(vatRate)
+                .divide(new BigDecimal("100"), 4, RoundingMode.HALF_UP);
+        BigDecimal totalAmount4 = baseAmount4.add(vatAmount4).setScale(4, RoundingMode.HALF_UP);
+        BigDecimal baseAmount = baseAmount4.setScale(2, RoundingMode.HALF_UP);
+        BigDecimal vatAmount = vatAmount4.setScale(2, RoundingMode.HALF_UP);
+        BigDecimal totalAmount = totalAmount4.setScale(2, RoundingMode.HALF_UP);
 
         String title = invoice.isIssued() ? "FACTURA" : "FACTURA PROFORMA";
         String invoiceNumber = invoice.isIssued()
@@ -272,6 +241,19 @@ public class InvoiceService {
                 new String[]{"TOTAL", totalAmount.toPlainString() + " €"}
         );
         pdf.table(new String[]{"Concepto", "Importe"}, amountRows);
+
+        if (invoice.getInvoicedPayments() != null && !invoice.getInvoicedPayments().isEmpty()) {
+            pdf.section("ANTERIORES INGRESOS YA FACTURADOS");
+            List<String[]> paymentRows = invoice.getInvoicedPayments().stream()
+                    .map(p -> new String[]{
+                            p.getUser().toFullName(),
+                            p.getDate().format(DATE_FORMAT),
+                            p.getAmount().setScale(2, RoundingMode.HALF_UP).toPlainString() + " €",
+                            p.getMethod().name()
+                    })
+                    .toList();
+            pdf.table(new String[]{"User","Fecha", "Importe", "Tipo de Ingreso"}, paymentRows);
+        }
 
         pdf.space(3)
                 .signatureLine("Doña Nuria Ocaña Pérez");

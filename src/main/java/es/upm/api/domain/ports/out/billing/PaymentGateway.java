@@ -20,4 +20,6 @@ public interface PaymentGateway {
     Stream<Payment> find(PaymentFindCriteria criteria);
 
     Stream<Payment> findNotInvoicedByEngagementId(UUID engagementId);
+
+    Stream<Payment> findInvoicedByEngagementId(UUID engagementId);
 }

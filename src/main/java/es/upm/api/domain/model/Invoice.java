@@ -50,6 +50,7 @@ public class Invoice {
 
     private EngagementSnapshot engagement;
     private List<Payment> payments;
+    private List<Payment> invoicedPayments;
     private List<BigDecimal> discounts;
 
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)

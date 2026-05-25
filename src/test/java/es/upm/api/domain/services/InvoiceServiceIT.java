@@ -246,8 +246,8 @@ class InvoiceServiceIT {
                 .findFirst()
                 .orElse(BigDecimal.ZERO);
 
-        assertEquals(new BigDecimal("123.97"), firstUserTotal);
-        assertEquals(new BigDecimal("20.66"), secondUserTotal);
+        assertEquals(new BigDecimal("123.9669"), firstUserTotal);
+        assertEquals(new BigDecimal("20.6612"), secondUserTotal);
 
         createdInvoices.forEach(createdInvoice -> {
             BigDecimal grossPayments = createdInvoice.getPayments().stream()

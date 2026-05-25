@@ -6,6 +6,7 @@ import es.upm.api.domain.model.external.EngagementSnapshot;
 import es.upm.api.domain.model.external.UserSnapshot;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Past;
+import jakarta.validation.constraints.PastOrPresent;
 import jakarta.validation.constraints.Positive;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -26,7 +27,7 @@ public class Payment {
 
     @JsonFormat(pattern = "yyyy-MM-dd")
     @NotNull
-    @Past
+    @PastOrPresent
     private LocalDate date;
 
     private EngagementSnapshot engagement;

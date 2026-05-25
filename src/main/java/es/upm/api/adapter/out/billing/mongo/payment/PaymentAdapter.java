@@ -76,4 +76,10 @@ public class PaymentAdapter implements PaymentGateway {
         return this.paymentRepository.findByEngagementIdAndInvoicedFalseOrderByDateDesc(engagementId).stream()
                 .map(PaymentEntity::toDomain);
     }
+
+    @Override
+    public Stream<Payment> findInvoicedByEngagementId(UUID engagementId) {
+        return this.paymentRepository.findByEngagementIdAndInvoicedTrueOrderByDateDesc(engagementId).stream()
+                .map(PaymentEntity::toDomain);
+    }
 }
