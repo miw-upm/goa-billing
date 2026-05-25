@@ -13,6 +13,7 @@ import es.upm.api.domain.ports.out.engagement.EngagementFinder;
 import es.upm.api.domain.ports.out.user.UserFinder;
 import es.upm.miw.exception.InvalidTransitionException;
 import es.upm.miw.pdf.PdfBuilder;
+import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -21,8 +22,6 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -56,13 +55,23 @@ public class InvoiceService {
         EngagementSnapshot engagement = engagementFinder.read(engagementId);
         Map<UUID, List<Payment>> paymentsByUser = paymentGateway
                 .findNotInvoicedByEngagementId(engagementId)
+                .filter(payment -> payment.getUser() != null && payment.getUser().getId() != null)
                 .collect(Collectors.groupingBy(p -> p.getUser().getId()));
 
-        List<Payment> paymentsInvoicedByUser = paymentGateway
-                .findInvoicedByEngagementId(engagementId).toList();
+        List<Payment> invoicedPayments = paymentGateway
+                .findInvoicedByEngagementId(engagementId)
+                .map(payment -> {
+                    payment.setUser(userFinder.readById(payment.getUser().getId()));
+                    return payment;
+                })
+                .toList();
 
         paymentsByUser.forEach((userId, userPayments) -> {
-            createInvoiceFor(userId, userPayments, engagement, paymentsInvoicedByUser);
+            List<Payment> userInvoicedPayments = invoicedPayments.stream()
+                    .filter(payment -> payment.getUser() != null)
+                    .filter(payment -> userId.equals(payment.getUser().getId()))
+                    .toList();
+            createInvoiceFor(userId, userPayments, engagement, userInvoicedPayments);
             markAsInvoiced(userPayments);
         });
     }
@@ -75,10 +84,13 @@ public class InvoiceService {
         BigDecimal divisor = BigDecimal.ONE.add(DEFAULT_VAT_RATE
                 .divide(new BigDecimal("100"), 8, RoundingMode.HALF_UP));
         BigDecimal baseAmount = grossAmount.divide(divisor, 4, RoundingMode.HALF_UP);
-        String procedures = engagement.getLegalProcedures().stream()
+        String procedures = engagement.getLegalProcedures() == null ? ""
+                : engagement.getLegalProcedures().stream()
                 .map(LegalProcedureSnapshot::getTitle)
                 .collect(Collectors.joining(", "));
-        String engagementDate = engagement.getLastUpdatedDate().format(DATE_FORMAT);
+        String engagementDate = engagement.getLastUpdatedDate() == null
+                ? LocalDate.now().format(DATE_FORMAT)
+                : engagement.getLastUpdatedDate().format(DATE_FORMAT);
         Invoice invoice = Invoice.builder()
                 .billingInfo(BillingInfo.builder()
                         .userId(userId)
@@ -99,6 +111,9 @@ public class InvoiceService {
             payment.setInvoiced(true);
             paymentGateway.update(payment.getId(), payment);
         });
+    }
+
+    public void createFromEngagement(@NotNull UUID engagementId) {
     }
 
 
@@ -260,6 +275,7 @@ public class InvoiceService {
 
         return pdf.build();
     }
+
 
 
 }

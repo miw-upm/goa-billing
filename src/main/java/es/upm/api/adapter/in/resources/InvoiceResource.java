@@ -22,6 +22,7 @@ import java.util.stream.Stream;
 public class InvoiceResource {
     public static final String INVOICES = "/invoices";
     public static final String FROM_PAYMENTS = "/from-payments";
+    public static final String FROM_ENGAGEMENT = "/from-engagement";
 
 
     private final InvoiceService invoiceService;
@@ -44,6 +45,10 @@ public class InvoiceResource {
         this.invoiceService.createFromPayments(creation.getEngagementId());
     }
 
+    @PostMapping(FROM_ENGAGEMENT)
+    public void createFromEngagement(@RequestBody @Valid InvoiceCreationFromPaymentsDto creation) {
+        this.invoiceService.createFromEngagement(creation.getEngagementId());
+    }
 
     @GetMapping("/{id}")
     public Invoice read(@PathVariable UUID id) {

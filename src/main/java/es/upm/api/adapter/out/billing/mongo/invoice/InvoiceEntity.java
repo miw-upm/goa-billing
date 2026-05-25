@@ -35,6 +35,7 @@ public class InvoiceEntity {
     private BigDecimal vatRate;
     private UUID engagementId;
     private List<Payment> payments;
+    private List<Payment> invoicedPayments;
     private List<BigDecimal> discounts;
     private String pdfPath;
     private Rectification rectification;

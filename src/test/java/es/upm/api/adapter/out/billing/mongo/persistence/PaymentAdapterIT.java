@@ -136,5 +136,27 @@ class PaymentAdapterIT {
         verify(this.paymentRepository).findByEngagementIdAndInvoicedFalseOrderByDateDesc(this.engagementId);
     }
 
+    @Test
+    void shouldFindInvoicedByEngagementId() {
+        Payment invoicedPayment = Payment.builder()
+                .id(this.payment.getId())
+                .engagement(this.payment.getEngagement())
+                .user(this.payment.getUser())
+                .amount(this.payment.getAmount())
+                .method(this.payment.getMethod())
+                .date(this.payment.getDate())
+                .invoiced(true)
+                .build();
+        PaymentEntity entity = new PaymentEntity(invoicedPayment);
+        when(this.paymentRepository.findByEngagementIdAndInvoicedTrueOrderByDateDesc(this.engagementId))
+                .thenReturn(List.of(entity));
+
+        List<Payment> result = this.paymentAdapter.findInvoicedByEngagementId(this.engagementId).toList();
+
+        assertEquals(1, result.size());
+        assertEquals(this.payment.getId(), result.get(0).getId());
+        verify(this.paymentRepository).findByEngagementIdAndInvoicedTrueOrderByDateDesc(this.engagementId);
+    }
+
 
 }

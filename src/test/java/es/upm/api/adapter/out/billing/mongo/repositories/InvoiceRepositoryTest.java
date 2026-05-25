@@ -61,6 +61,16 @@ class InvoiceRepositoryTest {
                         .amount(BigDecimal.valueOf(100))
                         .method(PaymentMethod.TRANSFER)
                         .date(LocalDate.of(2026, 3, 18))
+                        .invoiced(false)
+                        .build()))
+                .invoicedPayments(List.of(Payment.builder()
+                        .id(UUID.randomUUID())
+                        .engagement(EngagementSnapshot.builder().id(engagementId).build())
+                        .user(UserSnapshot.builder().id(userId).build())
+                        .amount(BigDecimal.valueOf(80))
+                        .method(PaymentMethod.CASH)
+                        .date(LocalDate.of(2026, 3, 10))
+                        .invoiced(true)
                         .build()))
                 .discounts(List.of(BigDecimal.TEN))
                 .pdfPath("/tmp/invoice.pdf")
@@ -76,6 +86,7 @@ class InvoiceRepositoryTest {
         assertEquals(this.invoice.getEngagement().getId(), saved.getEngagementId());
         assertEquals(this.invoice.getBillingInfo(), saved.getBillingInfo());
         assertEquals(this.invoice.getPayments(), saved.getPayments());
+        assertEquals(this.invoice.getInvoicedPayments(), saved.getInvoicedPayments());
     }
 
     @Test

@@ -69,6 +69,7 @@ class InvoiceAdapterIT {
         assertEquals(this.invoice.getId(), captor.getValue().getId());
         assertEquals(this.invoice.getEngagement().getId(), captor.getValue().getEngagementId());
         assertEquals(this.invoice.getBaseAmount(), captor.getValue().getBaseAmount());
+        assertEquals(this.invoice.getInvoicedPayments(), captor.getValue().getInvoicedPayments());
     }
 
     @Test
@@ -172,6 +173,15 @@ class InvoiceAdapterIT {
                         .amount(baseAmount.add(BigDecimal.TEN))
                         .method(PaymentMethod.TRANSFER)
                         .date(emissionDate.minusDays(2))
+                        .invoiced(false)
+                        .build()))
+                .invoicedPayments(List.of(Payment.builder()
+                        .id(UUID.randomUUID())
+                        .user(UserSnapshot.builder().id(userId).build())
+                        .amount(BigDecimal.TEN)
+                        .method(PaymentMethod.CASH)
+                        .date(emissionDate.minusDays(5))
+                        .invoiced(true)
                         .build()))
                 .discounts(List.of(BigDecimal.TEN))
                 .pdfPath("/tmp/invoice.pdf")

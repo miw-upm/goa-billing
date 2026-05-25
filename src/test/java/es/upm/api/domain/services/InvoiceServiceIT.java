@@ -6,6 +6,7 @@ import es.upm.api.domain.model.Payment;
 import es.upm.api.domain.model.PaymentMethod;
 import es.upm.api.domain.model.criteria.InvoiceFindCriteria;
 import es.upm.api.domain.model.external.EngagementSnapshot;
+import es.upm.api.domain.model.external.LegalProcedureSnapshot;
 import es.upm.api.domain.model.external.UserSnapshot;
 import es.upm.api.domain.ports.out.billing.InvoiceGateway;
 import es.upm.api.domain.ports.out.billing.PaymentGateway;
@@ -223,9 +224,18 @@ class InvoiceServiceIT {
                 .build();
 
         when(this.engagementFinder.read(this.engagementId))
-                .thenReturn(EngagementSnapshot.builder().id(this.engagementId).build());
+                .thenReturn(EngagementSnapshot.builder()
+                        .id(this.engagementId)
+                        .legalProcedures(List.of(
+                                LegalProcedureSnapshot.builder().title("Penal").build(),
+                                LegalProcedureSnapshot.builder().title("Civil").build()
+                        ))
+                        .lastUpdatedDate(LocalDate.of(2026, 3, 20))
+                        .build());
         when(this.paymentGateway.findNotInvoicedByEngagementId(this.engagementId))
                 .thenReturn(Stream.of(firstPayment, secondPaymentSameUser, thirdPaymentOtherUser));
+        when(this.paymentGateway.findInvoicedByEngagementId(this.engagementId))
+                .thenReturn(Stream.empty());
         when(this.userFinder.readById(this.userId)).thenReturn(this.userSnapshot);
         when(this.userFinder.readById(secondUserId)).thenReturn(secondUserSnapshot);
 
@@ -261,6 +271,7 @@ class InvoiceServiceIT {
         });
 
         verify(this.paymentGateway).findNotInvoicedByEngagementId(this.engagementId);
+        verify(this.paymentGateway).findInvoicedByEngagementId(this.engagementId);
 
         verify(this.paymentGateway).update(eq(firstPayment.getId()), any(Payment.class));
         verify(this.paymentGateway).update(eq(secondPaymentSameUser.getId()), any(Payment.class));

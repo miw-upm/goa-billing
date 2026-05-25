@@ -48,6 +48,16 @@ class InvoiceEntityTest {
                         .amount(BigDecimal.valueOf(100))
                         .method(PaymentMethod.TRANSFER)
                         .date(LocalDate.of(2026, 3, 18))
+                        .invoiced(false)
+                        .build()))
+                .invoicedPayments(List.of(Payment.builder()
+                        .id(UUID.randomUUID())
+                        .engagement(EngagementSnapshot.builder().id(engagementId).build())
+                        .user(UserSnapshot.builder().id(userId).build())
+                        .amount(BigDecimal.valueOf(50))
+                        .method(PaymentMethod.CASH)
+                        .date(LocalDate.of(2026, 3, 10))
+                        .invoiced(true)
                         .build()))
                 .discounts(List.of(BigDecimal.TEN))
                 .pdfPath("/tmp/invoice.pdf")
@@ -68,6 +78,7 @@ class InvoiceEntityTest {
         assertEquals(this.invoice.getVatRate(), entity.getVatRate());
         assertEquals(this.invoice.getEngagement().getId(), entity.getEngagementId());
         assertEquals(this.invoice.getPayments(), entity.getPayments());
+        assertEquals(this.invoice.getInvoicedPayments(), entity.getInvoicedPayments());
         assertEquals(this.invoice.getDiscounts(), entity.getDiscounts());
         assertEquals(this.invoice.getPdfPath(), entity.getPdfPath());
     }
@@ -88,6 +99,7 @@ class InvoiceEntityTest {
         assertEquals(entity.getVatRate(), mapped.getVatRate());
         assertEquals(entity.getEngagementId(), mapped.getEngagement().getId());
         assertEquals(entity.getPayments(), mapped.getPayments());
+        assertEquals(entity.getInvoicedPayments(), mapped.getInvoicedPayments());
         assertEquals(entity.getDiscounts(), mapped.getDiscounts());
         assertEquals(entity.getPdfPath(), mapped.getPdfPath());
     }
