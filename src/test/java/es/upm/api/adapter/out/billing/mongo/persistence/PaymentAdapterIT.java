@@ -123,5 +123,18 @@ class PaymentAdapterIT {
         assertThrows(NotFoundException.class, () -> this.paymentAdapter.delete(id));
     }
 
+    @Test
+    void shouldFindNotInvoicedByEngagementId() {
+        PaymentEntity entity = new PaymentEntity(this.payment);
+        when(this.paymentRepository.findByEngagementIdAndInvoicedFalseOrderByDateDesc(this.engagementId))
+                .thenReturn(List.of(entity));
+
+        List<Payment> result = this.paymentAdapter.findNotInvoicedByEngagementId(this.engagementId).toList();
+
+        assertEquals(1, result.size());
+        assertEquals(this.payment.getId(), result.get(0).getId());
+        verify(this.paymentRepository).findByEngagementIdAndInvoicedFalseOrderByDateDesc(this.engagementId);
+    }
+
 
 }

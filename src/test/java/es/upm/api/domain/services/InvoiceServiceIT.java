@@ -5,7 +5,6 @@ import es.upm.api.domain.model.Invoice;
 import es.upm.api.domain.model.Payment;
 import es.upm.api.domain.model.PaymentMethod;
 import es.upm.api.domain.model.criteria.InvoiceFindCriteria;
-import es.upm.api.domain.model.criteria.PaymentFindCriteria;
 import es.upm.api.domain.model.external.EngagementSnapshot;
 import es.upm.api.domain.model.external.UserSnapshot;
 import es.upm.api.domain.ports.out.billing.InvoiceGateway;
@@ -222,20 +221,11 @@ class InvoiceServiceIT {
                 .date(LocalDate.of(2026, 3, 22))
                 .invoiced(false)
                 .build();
-        Payment otherEngagementPayment = Payment.builder()
-                .id(UUID.randomUUID())
-                .engagement(EngagementSnapshot.builder().id(UUID.randomUUID()).build())
-                .user(UserSnapshot.builder().id(this.userId).build())
-                .amount(new BigDecimal("999.00"))
-                .method(PaymentMethod.BIZUM)
-                .date(LocalDate.of(2026, 3, 22))
-                .invoiced(false)
-                .build();
 
         when(this.engagementFinder.read(this.engagementId))
                 .thenReturn(EngagementSnapshot.builder().id(this.engagementId).build());
-        when(this.paymentGateway.find(any(PaymentFindCriteria.class)))
-                .thenReturn(Stream.of(firstPayment, secondPaymentSameUser, thirdPaymentOtherUser, otherEngagementPayment));
+        when(this.paymentGateway.findNotInvoicedByEngagementId(this.engagementId))
+                .thenReturn(Stream.of(firstPayment, secondPaymentSameUser, thirdPaymentOtherUser));
         when(this.userFinder.readById(this.userId)).thenReturn(this.userSnapshot);
         when(this.userFinder.readById(secondUserId)).thenReturn(secondUserSnapshot);
 
@@ -259,13 +249,10 @@ class InvoiceServiceIT {
         assertEquals(new BigDecimal("150.00"), firstUserTotal);
         assertEquals(new BigDecimal("25.00"), secondUserTotal);
 
-        ArgumentCaptor<PaymentFindCriteria> criteriaCaptor = ArgumentCaptor.forClass(PaymentFindCriteria.class);
-        verify(this.paymentGateway).find(criteriaCaptor.capture());
-        assertEquals(Boolean.FALSE, criteriaCaptor.getValue().getInvoiced());
+        verify(this.paymentGateway).findNotInvoicedByEngagementId(this.engagementId);
 
         verify(this.paymentGateway).update(eq(firstPayment.getId()), any(Payment.class));
         verify(this.paymentGateway).update(eq(secondPaymentSameUser.getId()), any(Payment.class));
         verify(this.paymentGateway).update(eq(thirdPaymentOtherUser.getId()), any(Payment.class));
-        verify(this.paymentGateway, never()).update(eq(otherEngagementPayment.getId()), any(Payment.class));
     }
 }

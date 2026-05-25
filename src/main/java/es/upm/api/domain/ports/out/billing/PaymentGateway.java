@@ -18,4 +18,6 @@ public interface PaymentGateway {
     void delete(UUID id);
 
     Stream<Payment> find(PaymentFindCriteria criteria);
+
+    Stream<Payment> findNotInvoicedByEngagementId(UUID engagementId);
 }

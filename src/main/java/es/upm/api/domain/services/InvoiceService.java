@@ -4,7 +4,6 @@ import es.upm.api.domain.model.BillingInfo;
 import es.upm.api.domain.model.Invoice;
 import es.upm.api.domain.model.Payment;
 import es.upm.api.domain.model.criteria.InvoiceFindCriteria;
-import es.upm.api.domain.model.criteria.PaymentFindCriteria;
 import es.upm.api.domain.model.external.EngagementSnapshot;
 import es.upm.api.domain.model.external.UserSnapshot;
 import es.upm.api.domain.ports.out.billing.InvoiceGateway;
@@ -27,6 +26,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Service
@@ -52,46 +52,39 @@ public class InvoiceService {
     }
 
     public void createFromPayments(UUID engagementId) {
-        EngagementSnapshot engagementSnapshot = this.engagementFinder.read(engagementId);
-        PaymentFindCriteria criteria = new PaymentFindCriteria();
-        criteria.setInvoiced(false);
-        List<Payment> notInvoicedPayments = this.paymentGateway.find(criteria).toList();
-
-        List<Payment> payments = new ArrayList<>();
-        Map<UUID, List<Payment>> paymentsByUser = new HashMap<>();
-        for (Payment payment : notInvoicedPayments) {
-            if (payment.getEngagement() == null || !engagementId.equals(payment.getEngagement().getId())) {
-                continue;
-            }
-            if (payment.getUser() == null || payment.getUser().getId() == null) {
-                continue;
-            }
-            payments.add(payment);
-            UUID userId = payment.getUser().getId();
-            paymentsByUser.computeIfAbsent(userId, key -> new ArrayList<>()).add(payment);
-        }
-
+        EngagementSnapshot engagement = engagementFinder.read(engagementId);
+        Map<UUID, List<Payment>> paymentsByUser = paymentGateway
+                .findNotInvoicedByEngagementId(engagementId)
+                .collect(Collectors.groupingBy(p -> p.getUser().getId()));
         paymentsByUser.forEach((userId, userPayments) -> {
-            BigDecimal baseAmount = userPayments.stream()
-                    .map(Payment::getAmount)
-                    .reduce(BigDecimal.ZERO, BigDecimal::add);
-            Invoice invoice = Invoice.builder()
-                    .billingInfo(BillingInfo.builder()
-                            .userId(userId)
-                            .concept("Pagos del engagement " + engagementId)
-                            .build())
-                    .engagement(engagementSnapshot)
-                    .payments(userPayments)
-                    .baseAmount(baseAmount)
-                    .build();
-            this.create(invoice);
-        });
-
-        payments.forEach(payment -> {
-            payment.setInvoiced(true);
-            this.paymentGateway.update(payment.getId(), payment);
+            createInvoiceFor(userId, userPayments, engagement, engagementId);
+            markAsInvoiced(userPayments);
         });
     }
+    private void createInvoiceFor(UUID userId, List<Payment> payments,
+                                  EngagementSnapshot engagement, UUID engagementId) {
+        BigDecimal baseAmount = payments.stream()
+                .map(Payment::getAmount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        Invoice invoice = Invoice.builder()
+                .billingInfo(BillingInfo.builder()
+                        .userId(userId)
+                        .concept("Pagos del engagement " + engagementId)
+                        .build())
+                .engagement(engagement)
+                .payments(payments)
+                .baseAmount(baseAmount)
+                .build();
+        this.create(invoice);
+    }
+
+    private void markAsInvoiced(List<Payment> payments) {
+        payments.forEach(payment -> {
+            payment.setInvoiced(true);
+            paymentGateway.update(payment.getId(), payment);
+        });
+    }
+
 
     public void emission(UUID id) {
         Invoice invoice = this.read(id);

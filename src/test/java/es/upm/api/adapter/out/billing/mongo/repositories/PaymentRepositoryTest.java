@@ -95,4 +95,45 @@ class PaymentRepositoryTest {
         assertEquals(1, result.size());
         assertEquals(newer.getId(), result.get(0).getId());
     }
+
+    @Test
+    void shouldFindNotInvoicedByEngagementId() {
+        UUID engagementId = UUID.randomUUID();
+        Payment notInvoiced = Payment.builder()
+                .id(UUID.randomUUID())
+                .engagement(EngagementSnapshot.builder().id(engagementId).build())
+                .user(UserSnapshot.builder().id(UUID.randomUUID()).build())
+                .amount(BigDecimal.valueOf(100))
+                .method(PaymentMethod.TRANSFER)
+                .date(LocalDate.of(2026, 3, 20))
+                .invoiced(false)
+                .build();
+        Payment invoiced = Payment.builder()
+                .id(UUID.randomUUID())
+                .engagement(EngagementSnapshot.builder().id(engagementId).build())
+                .user(UserSnapshot.builder().id(UUID.randomUUID()).build())
+                .amount(BigDecimal.valueOf(200))
+                .method(PaymentMethod.CASH)
+                .date(LocalDate.of(2026, 3, 21))
+                .invoiced(true)
+                .build();
+        Payment otherEngagement = Payment.builder()
+                .id(UUID.randomUUID())
+                .engagement(EngagementSnapshot.builder().id(UUID.randomUUID()).build())
+                .user(UserSnapshot.builder().id(UUID.randomUUID()).build())
+                .amount(BigDecimal.valueOf(300))
+                .method(PaymentMethod.BIZUM)
+                .date(LocalDate.of(2026, 3, 22))
+                .invoiced(false)
+                .build();
+        this.paymentRepository.save(new PaymentEntity(notInvoiced));
+        this.paymentRepository.save(new PaymentEntity(invoiced));
+        this.paymentRepository.save(new PaymentEntity(otherEngagement));
+
+        List<PaymentEntity> result = this.paymentRepository
+                .findByEngagementIdAndInvoicedFalseOrderByDateDesc(engagementId);
+
+        assertEquals(1, result.size());
+        assertEquals(notInvoiced.getId(), result.get(0).getId());
+    }
 }
