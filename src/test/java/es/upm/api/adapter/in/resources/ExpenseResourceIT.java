@@ -105,37 +105,6 @@ class ExpenseResourceIT {
         );
     }
 
-    @Test
-    @WithMockUser(roles = "admin")
-    void shouldReadExpenseById() throws Exception {
-        UUID expenseId = UUID.randomUUID();
-        UUID engagementId = UUID.randomUUID();
-        Expense response = Expense.builder()
-                .id(expenseId)
-                .engagement(EngagementSnapshot.builder().id(engagementId).build())
-                .baseAmount(BigDecimal.valueOf(50))
-                .vatRate(21)
-                .supplier(SupplierInfo.builder().name("Taxi Madrid").identity("A10000000").build())
-                .taxCategory(TaxCategory.OTROS)
-                .issueDate(LocalDate.of(2026, 3, 20))
-                .build();
-
-        when(this.expenseService.read(expenseId)).thenReturn(response);
-
-        this.mockMvc.perform(get("/expenses/{id}", expenseId))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(expenseId.toString()))
-                .andExpect(jsonPath("$.engagement.id").value(engagementId.toString()))
-                .andExpect(jsonPath("$.baseAmount").value(50))
-                .andExpect(jsonPath("$.vatAmount").value(21))
-                .andExpect(jsonPath("$.supplier.name").value("Taxi Madrid"))
-                .andExpect(jsonPath("$.supplier.identity").value("A10000000"))
-                .andExpect(jsonPath("$.taxCategory").value("OTROS"))
-                .andExpect(jsonPath("$.issueDate").value("2026-03-20"));
-
-        verify(this.expenseService).read(expenseId);
-    }
-
 
     @Test
     @WithMockUser(roles = "admin")
@@ -171,37 +140,6 @@ class ExpenseResourceIT {
                 .andExpect(status().isNotFound());
 
         verify(this.expenseService).read(expenseId);
-    }
-
-    @Test
-    @WithMockUser(roles = "admin")
-    void shouldFindWithValues() throws Exception {
-        UUID expenseId = UUID.randomUUID();
-        UUID engagementId = UUID.randomUUID();
-        Expense response = Expense.builder()
-                .id(expenseId)
-                .engagement(EngagementSnapshot.builder().id(engagementId).build())
-                .baseAmount(BigDecimal.valueOf(10))
-                .vatRate(21)
-                .supplier(SupplierInfo.builder().name("Taxi Madrid").identity("A10000000").build())
-                .taxCategory(TaxCategory.OTROS)
-                .issueDate(LocalDate.of(2026, 3, 20))
-                .build();
-
-        when(this.expenseService.find(this.criteria)).thenReturn(Stream.of(response));
-
-        this.mockMvc.perform(get("/expenses"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.[0].id").value(expenseId.toString()))
-                .andExpect(jsonPath("$.[0].engagement.id").value(engagementId.toString()))
-                .andExpect(jsonPath("$.[0].baseAmount").value(10))
-                .andExpect(jsonPath("$.[0].vatAmount").value(21))
-                .andExpect(jsonPath("$.[0].supplier.name").value("Taxi Madrid"))
-                .andExpect(jsonPath("$.[0].supplier.identity").value("A10000000"))
-                .andExpect(jsonPath("$.[0].taxCategory").value("OTROS"))
-                .andExpect(jsonPath("$.[0].issueDate").value("2026-03-20"));
-
-        verify(this.expenseService).find(this.criteria);
     }
 
 

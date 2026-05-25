@@ -3,9 +3,9 @@ package es.upm.api.adapter.out.billing.mongo.repositories;
 import es.upm.api.adapter.out.billing.mongo.invoice.InvoiceEntity;
 import es.upm.api.adapter.out.billing.mongo.invoice.InvoiceRepository;
 import es.upm.api.domain.model.BillingInfo;
-import es.upm.api.domain.model.Expense;
 import es.upm.api.domain.model.Invoice;
-import es.upm.api.domain.model.Payment;
+import es.upm.api.domain.model.InvoicedExpense;
+import es.upm.api.domain.model.InvoicedPayment;
 import es.upm.api.domain.model.PaymentMethod;
 import es.upm.api.domain.model.external.EngagementSnapshot;
 import es.upm.api.domain.model.external.UserSnapshot;
@@ -53,33 +53,30 @@ class InvoiceRepositoryTest {
                 .series("A")
                 .number(1)
                 .baseAmount(BigDecimal.valueOf(90))
+                .vatAmount(BigDecimal.valueOf(18.9))
                 .vatRate(BigDecimal.valueOf(21))
                 .engagement(EngagementSnapshot.builder().id(engagementId).build())
-                .payments(List.of(Payment.builder()
-                        .id(paymentId)
-                        .engagement(EngagementSnapshot.builder().id(engagementId).build())
-                        .user(UserSnapshot.builder().id(userId).build())
-                        .amount(BigDecimal.valueOf(100))
-                        .method(PaymentMethod.TRANSFER)
-                        .date(LocalDate.of(2026, 3, 18))
-                        .invoiced(false)
-                        .build()))
-                .priorPayments(List.of(Payment.builder()
-                        .id(UUID.randomUUID())
-                        .engagement(EngagementSnapshot.builder().id(engagementId).build())
-                        .user(UserSnapshot.builder().id(userId).build())
-                        .amount(BigDecimal.valueOf(80))
-                        .method(PaymentMethod.CASH)
-                        .date(LocalDate.of(2026, 3, 10))
-                        .invoiced(true)
-                        .build()))
-                .expenses(List.of(Expense.builder()
-                        .id(UUID.randomUUID())
-                        .engagement(EngagementSnapshot.builder().id(engagementId).build())
-                        .baseAmount(BigDecimal.valueOf(15))
-                        .vatRate(10)
-                        .issueDate(LocalDate.of(2026, 3, 11))
-                        .build()))
+                .payments(List.of(new InvoicedPayment(
+                        paymentId,
+                        LocalDate.of(2026, 3, 18),
+                        BigDecimal.valueOf(100),
+                        PaymentMethod.TRANSFER,
+                        UserSnapshot.builder().id(userId).build()
+                )))
+                .priorPayments(List.of(new InvoicedPayment(
+                        UUID.randomUUID(),
+                        LocalDate.of(2026, 3, 10),
+                        BigDecimal.valueOf(80),
+                        PaymentMethod.CASH,
+                        UserSnapshot.builder().id(userId).build()
+                )))
+                .expenses(List.of(new InvoicedExpense(
+                        UUID.randomUUID(),
+                        LocalDate.of(2026, 3, 11),
+                        "gasto",
+                        BigDecimal.valueOf(15),
+                        BigDecimal.valueOf(1.5)
+                )))
                 .discounts(List.of(BigDecimal.TEN))
                 .pdfPath("/tmp/invoice.pdf")
                 .build();
@@ -94,7 +91,7 @@ class InvoiceRepositoryTest {
         assertEquals(this.invoice.getEngagement().getId(), saved.getEngagementId());
         assertEquals(this.invoice.getBillingInfo(), saved.getBillingInfo());
         assertEquals(this.invoice.getPayments(), saved.getPayments());
-        assertEquals(this.invoice.getPriorPayments(), saved.getInvoicedPayments());
+        assertEquals(this.invoice.getPriorPayments(), saved.getPriorPayments());
         assertEquals(this.invoice.getExpenses(), saved.getExpenses());
     }
 

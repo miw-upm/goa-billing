@@ -1,9 +1,9 @@
 package es.upm.api.adapter.out.billing.mongo.invoice;
 
 import es.upm.api.domain.model.BillingInfo;
-import es.upm.api.domain.model.Expense;
 import es.upm.api.domain.model.Invoice;
-import es.upm.api.domain.model.Payment;
+import es.upm.api.domain.model.InvoicedExpense;
+import es.upm.api.domain.model.InvoicedPayment;
 import es.upm.api.domain.model.Rectification;
 import es.upm.api.domain.model.external.EngagementSnapshot;
 import lombok.AllArgsConstructor;
@@ -33,11 +33,12 @@ public class InvoiceEntity {
     private String series;
     private Integer number;
     private BigDecimal baseAmount;
+    private BigDecimal vatAmount;
     private BigDecimal vatRate;
     private UUID engagementId;
-    private List<Payment> payments;
-    private List<Payment> invoicedPayments;
-    private List<Expense> expenses;
+    private List<InvoicedPayment> payments;
+    private List<InvoicedPayment> priorPayments;
+    private List<InvoicedExpense> expenses;
     private List<BigDecimal> discounts;
     private String pdfPath;
     private Rectification rectification;

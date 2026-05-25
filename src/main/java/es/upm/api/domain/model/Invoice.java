@@ -83,13 +83,24 @@ public class Invoice {
                 .add(expensesBaseAmount())
                 .add(expensesVatAmount());
     }
-    public void applyTotal(BigDecimal totalBaseAmount) {
-        BigDecimal serviceBase = totalBaseAmount
-                .subtract(priorPaymentsBaseAmount())
-                .subtract(discountsAmount());
-        BigDecimal serviceVat = serviceBase
+
+    public void applyVatRate(BigDecimal vatRate) {
+        this.vatRate = vatRate;
+        this.vatAmount = baseAmount
                 .multiply(vatRate)
-                .divide(new BigDecimal("100"), 2, RoundingMode.HALF_UP);
-        this.baseAmount = serviceBase.setScale(2, RoundingMode.HALF_UP);
-        this.vatAmount = serviceVat;
-    }}
+                .divide(new BigDecimal("100"), 4, RoundingMode.HALF_UP);
+    }
+
+    public BigDecimal totalBaseAmount() {
+        return baseAmount
+                .subtract(priorPaymentsBaseAmount())
+                .subtract(discountsAmount())
+                .add(expensesBaseAmount());
+    }
+
+    public BigDecimal totalVatAmount() {
+        return vatAmount
+                .subtract(priorPaymentsVatAmount())
+                .add(expensesVatAmount());
+    }
+}

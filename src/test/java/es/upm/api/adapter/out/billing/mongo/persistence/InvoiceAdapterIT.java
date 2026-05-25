@@ -4,9 +4,9 @@ import es.upm.api.adapter.out.billing.mongo.invoice.InvoiceAdapter;
 import es.upm.api.adapter.out.billing.mongo.invoice.InvoiceEntity;
 import es.upm.api.adapter.out.billing.mongo.invoice.InvoiceRepository;
 import es.upm.api.domain.model.BillingInfo;
-import es.upm.api.domain.model.Expense;
 import es.upm.api.domain.model.Invoice;
-import es.upm.api.domain.model.Payment;
+import es.upm.api.domain.model.InvoicedExpense;
+import es.upm.api.domain.model.InvoicedPayment;
 import es.upm.api.domain.model.PaymentMethod;
 import es.upm.api.domain.model.criteria.InvoiceFindCriteria;
 import es.upm.api.domain.model.external.EngagementSnapshot;
@@ -70,7 +70,7 @@ class InvoiceAdapterIT {
         assertEquals(this.invoice.getId(), captor.getValue().getId());
         assertEquals(this.invoice.getEngagement().getId(), captor.getValue().getEngagementId());
         assertEquals(this.invoice.getBaseAmount(), captor.getValue().getBaseAmount());
-        assertEquals(this.invoice.getPriorPayments(), captor.getValue().getInvoicedPayments());
+        assertEquals(this.invoice.getPriorPayments(), captor.getValue().getPriorPayments());
         assertEquals(this.invoice.getExpenses(), captor.getValue().getExpenses());
     }
 
@@ -166,32 +166,30 @@ class InvoiceAdapterIT {
                 .series("A")
                 .number(1)
                 .baseAmount(baseAmount)
+                .vatAmount(new BigDecimal("18.90"))
                 .vatRate(BigDecimal.valueOf(21))
                 .engagement(EngagementSnapshot.builder().id(engagementId).build())
-                .payments(List.of(Payment.builder()
-                        .id(paymentId)
-                        .engagement(EngagementSnapshot.builder().id(engagementId).build())
-                        .user(UserSnapshot.builder().id(userId).build())
-                        .amount(baseAmount.add(BigDecimal.TEN))
-                        .method(PaymentMethod.TRANSFER)
-                        .date(emissionDate.minusDays(2))
-                        .invoiced(false)
-                        .build()))
-                .priorPayments(List.of(Payment.builder()
-                        .id(UUID.randomUUID())
-                        .user(UserSnapshot.builder().id(userId).build())
-                        .amount(BigDecimal.TEN)
-                        .method(PaymentMethod.CASH)
-                        .date(emissionDate.minusDays(5))
-                        .invoiced(true)
-                        .build()))
-                .expenses(List.of(Expense.builder()
-                        .id(UUID.randomUUID())
-                        .engagement(EngagementSnapshot.builder().id(engagementId).build())
-                        .baseAmount(BigDecimal.valueOf(30))
-                        .vatRate(21)
-                        .issueDate(emissionDate.minusDays(3))
-                        .build()))
+                .payments(List.of(new InvoicedPayment(
+                        paymentId,
+                        emissionDate.minusDays(2),
+                        baseAmount.add(BigDecimal.TEN),
+                        PaymentMethod.TRANSFER,
+                        UserSnapshot.builder().id(userId).build()
+                )))
+                .priorPayments(List.of(new InvoicedPayment(
+                        UUID.randomUUID(),
+                        emissionDate.minusDays(5),
+                        BigDecimal.TEN,
+                        PaymentMethod.CASH,
+                        UserSnapshot.builder().id(userId).build()
+                )))
+                .expenses(List.of(new InvoicedExpense(
+                        UUID.randomUUID(),
+                        emissionDate.minusDays(3),
+                        "gasto",
+                        BigDecimal.valueOf(30),
+                        BigDecimal.valueOf(6.30)
+                )))
                 .discounts(List.of(BigDecimal.TEN))
                 .pdfPath("/tmp/invoice.pdf")
                 .build();
