@@ -218,12 +218,12 @@ class InvoiceServiceIT {
         Invoice created = captor.getValue();
         assertEquals(this.userId, created.getBillingInfo().getUserId());
         assertEquals("Concepto libre", created.getBillingInfo().getConcept());
-        assertEquals(new BigDecimal("500.0000"), created.getBaseAmount());
+        assertEquals(new BigDecimal("450.4132"), created.getBaseAmount());
         assertEquals(1, created.getExpenses().size());
         assertEquals(expense.getId(), created.getExpenses().getFirst().getId());
-        assertEquals(new BigDecimal("600.0000"), created.getTotalBaseAmount());
-        assertEquals(new BigDecimal("126.0000"), created.getTotalVatAmount());
-        assertEquals(new BigDecimal("726.0000"), created.getTotalAmount());
+        assertEquals(new BigDecimal("550.4132"), created.getTotalBaseAmount());
+        assertEquals(new BigDecimal("115.5868"), created.getTotalVatAmount());
+        assertEquals(new BigDecimal("666.0000"), created.getTotalAmount());
         assertEquals(new BigDecimal("550.4132"), created.getPendingBaseAmount());
         assertEquals(new BigDecimal("115.5868"), created.getPendingVatAmount());
         assertEquals(1, created.getInvoicedPayments().size());

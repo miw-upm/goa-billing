@@ -13,6 +13,7 @@ import es.upm.api.domain.ports.out.billing.InvoiceGateway;
 import es.upm.api.domain.ports.out.billing.PaymentGateway;
 import es.upm.api.domain.ports.out.engagement.EngagementFinder;
 import es.upm.api.domain.ports.out.user.UserFinder;
+import es.upm.miw.exception.BadRequestException;
 import es.upm.miw.exception.InvalidTransitionException;
 import es.upm.miw.pdf.PdfBuilder;
 import lombok.RequiredArgsConstructor;
@@ -126,6 +127,18 @@ public class InvoiceService {
                     return payment;
                 })
                 .toList();
+        BigDecimal invoicedTotalAmount = invoicedPayments.stream()
+                .map(Payment::getAmount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal divisor = BigDecimal.ONE.add(DEFAULT_VAT_RATE
+                .divide(new BigDecimal("100"), 8, RoundingMode.HALF_UP));
+        BigDecimal invoicedBaseAmount = invoicedTotalAmount.divide(divisor, 4, RoundingMode.HALF_UP);
+        BigDecimal pendingServiceBaseAmount = totalBaseAmount
+                .subtract(invoicedBaseAmount)
+                .setScale(4, RoundingMode.HALF_UP);
+        if (pendingServiceBaseAmount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new BadRequestException("Pending service base amount must be greater than zero");
+        }
         Invoice invoice = Invoice.builder()
                 .billingInfo(BillingInfo.builder()
                         .userId(engagement.getOwner().getId())
@@ -134,7 +147,7 @@ public class InvoiceService {
                 .engagement(engagement)
                 .invoicedPayments(invoicedPayments)
                 .expenses(expenses)
-                .baseAmount(totalBaseAmount.setScale(4, RoundingMode.HALF_UP))
+                .baseAmount(pendingServiceBaseAmount)
                 .build();
         this.create(invoice);
 
@@ -238,13 +251,13 @@ public class InvoiceService {
         Invoice invoice = this.read(id);
 
         BigDecimal vatRate = invoice.getVatRate() == null ? DEFAULT_VAT_RATE : invoice.getVatRate();
-        BigDecimal baseAmount4 = invoice.getBaseAmount().setScale(4, RoundingMode.HALF_UP);
-        BigDecimal vatAmount4 = baseAmount4.multiply(vatRate)
-                .divide(new BigDecimal("100"), 4, RoundingMode.HALF_UP);
-        BigDecimal totalAmount4 = baseAmount4.add(vatAmount4).setScale(4, RoundingMode.HALF_UP);
-        BigDecimal baseAmount = baseAmount4.setScale(2, RoundingMode.HALF_UP);
-        BigDecimal vatAmount = vatAmount4.setScale(2, RoundingMode.HALF_UP);
-        BigDecimal totalAmount = totalAmount4.setScale(2, RoundingMode.HALF_UP);
+        BigDecimal serviceBaseAmount = invoice.getBaseAmount().setScale(2, RoundingMode.HALF_UP);
+        BigDecimal serviceVatAmount = invoice.getServiceVatAmount().setScale(2, RoundingMode.HALF_UP);
+        BigDecimal expensesBaseAmount = invoice.getExpensesBaseAmount().setScale(2, RoundingMode.HALF_UP);
+        BigDecimal expensesVatAmount = invoice.getExpensesVatAmount().setScale(2, RoundingMode.HALF_UP);
+        BigDecimal totalBaseAmount = invoice.getTotalBaseAmount().setScale(2, RoundingMode.HALF_UP);
+        BigDecimal totalVatAmount = invoice.getTotalVatAmount().setScale(2, RoundingMode.HALF_UP);
+        BigDecimal totalAmount = invoice.getTotalAmount().setScale(2, RoundingMode.HALF_UP);
 
         String title = invoice.isIssued() ? "FACTURA" : "FACTURA PROFORMA";
         String invoiceNumber = invoice.isIssued()
@@ -285,8 +298,12 @@ public class InvoiceService {
 
         pdf.section("IMPORTES DE LA PRESENTE FACTURA");
         List<String[]> amountRows = List.of(
-                new String[]{"Base imponible", baseAmount.toPlainString() + " €"},
-                new String[]{"IVA (" + vatRate.toPlainString() + "%)", vatAmount.toPlainString() + " €"},
+                new String[]{"Base servicios", serviceBaseAmount.toPlainString() + " €"},
+                new String[]{"IVA servicios (" + vatRate.toPlainString() + "%)", serviceVatAmount.toPlainString() + " €"},
+                new String[]{"Base gastos", expensesBaseAmount.toPlainString() + " €"},
+                new String[]{"IVA gastos", expensesVatAmount.toPlainString() + " €"},
+                new String[]{"BASE TOTAL", totalBaseAmount.toPlainString() + " €"},
+                new String[]{"IVA TOTAL", totalVatAmount.toPlainString() + " €"},
                 new String[]{"TOTAL", totalAmount.toPlainString() + " €"}
         );
         pdf.table(new String[]{"Concepto", "Importe"}, amountRows);

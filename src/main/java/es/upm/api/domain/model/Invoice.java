@@ -110,42 +110,10 @@ public class Invoice {
     }
 
     public BigDecimal getPendingBaseAmount() {
-        BigDecimal pendingServiceBase = this.baseAmount == null ? BigDecimal.ZERO : this.baseAmount;
-        BigDecimal paidServiceTotal = this.getInvoicedPaymentsTotalAmount();
-        if (paidServiceTotal.compareTo(BigDecimal.ZERO) > 0 && this.vatRate != null) {
-            BigDecimal divisor = BigDecimal.ONE.add(this.vatRate
-                    .divide(new BigDecimal("100"), 8, RoundingMode.HALF_UP));
-            BigDecimal paidServiceBase = paidServiceTotal.divide(divisor, 4, RoundingMode.HALF_UP);
-            pendingServiceBase = pendingServiceBase.subtract(paidServiceBase);
-            if (pendingServiceBase.compareTo(BigDecimal.ZERO) < 0) {
-                pendingServiceBase = BigDecimal.ZERO;
-            }
-        }
-        return pendingServiceBase.add(this.getExpensesBaseAmount());
+        return this.getTotalBaseAmount();
     }
 
     public BigDecimal getPendingVatAmount() {
-        BigDecimal pendingServiceVat = this.getServiceVatAmount();
-        BigDecimal paidServiceTotal = this.getInvoicedPaymentsTotalAmount();
-        if (paidServiceTotal.compareTo(BigDecimal.ZERO) > 0 && this.vatRate != null) {
-            BigDecimal divisor = BigDecimal.ONE.add(this.vatRate
-                    .divide(new BigDecimal("100"), 8, RoundingMode.HALF_UP));
-            BigDecimal paidServiceBase = paidServiceTotal.divide(divisor, 4, RoundingMode.HALF_UP);
-            BigDecimal paidServiceVat = paidServiceTotal.subtract(paidServiceBase);
-            pendingServiceVat = pendingServiceVat.subtract(paidServiceVat);
-            if (pendingServiceVat.compareTo(BigDecimal.ZERO) < 0) {
-                pendingServiceVat = BigDecimal.ZERO;
-            }
-        }
-        return pendingServiceVat.add(this.getExpensesVatAmount());
-    }
-
-    private BigDecimal getInvoicedPaymentsTotalAmount() {
-        if (this.invoicedPayments == null || this.invoicedPayments.isEmpty()) {
-            return BigDecimal.ZERO;
-        }
-        return this.invoicedPayments.stream()
-                .map(payment -> payment.getAmount() == null ? BigDecimal.ZERO : payment.getAmount())
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        return this.getTotalVatAmount();
     }
 }
