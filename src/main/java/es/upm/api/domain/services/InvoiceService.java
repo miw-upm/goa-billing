@@ -21,10 +21,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -235,14 +232,10 @@ public class InvoiceService {
     public byte[] generatePdf(UUID id) {
         Invoice invoice = this.read(id);
 
-        BigDecimal vatRate = invoice.getVatRate() == null ? DEFAULT_VAT_RATE : invoice.getVatRate();
-        BigDecimal baseAmount = invoice.getBaseAmount() == null
-                ? BigDecimal.ZERO
-                : invoice.getBaseAmount().setScale(2, RoundingMode.HALF_UP);
-        BigDecimal vatAmount = invoice.getVatAmount() == null
-                ? baseAmount.multiply(vatRate).divide(new BigDecimal("100"), 2, RoundingMode.HALF_UP)
-                : invoice.getVatAmount().setScale(2, RoundingMode.HALF_UP);
-        BigDecimal totalAmount = baseAmount.add(vatAmount).setScale(2, RoundingMode.HALF_UP);
+        BigDecimal baseAmount = invoice.totalBaseAmount().setScale(2, RoundingMode.HALF_UP);
+        BigDecimal vatAmount = invoice.totalVatAmount().setScale(2, RoundingMode.HALF_UP);
+        BigDecimal totalAmount = baseAmount.add(vatAmount);
+        BigDecimal vatRate = invoice.getVatRate();
 
         String title = invoice.isIssued() ? "FACTURA" : "FACTURA PROFORMA";
         String invoiceNumber = invoice.isIssued()
@@ -269,8 +262,33 @@ public class InvoiceService {
                 .paragraph(invoice.getBillingInfo().getConcept())
                 .space();
 
+        pdf.section("IMPORTE DE LA PRESENTE FACTURA");
+        List<String[]> amountRows = List.of(
+                new String[]{"Base imponible", baseAmount.toPlainString() + " €"},
+                new String[]{"IVA (" + vatRate.toPlainString() + "%)", vatAmount.toPlainString() + " €"},
+                new String[]{"TOTAL", totalAmount.toPlainString() + " €"}
+        );
+        pdf.table(new String[]{"Concepto", "Importe"}, amountRows);
+
+        if (invoice.getDiscounts() != null && !invoice.getDiscounts().isEmpty()) {
+            pdf.section("DESCUENTOS APLICADOS");
+            List<String[]> discountRows = new ArrayList<>(invoice.getDiscounts().stream()
+                    .map(d -> new String[]{
+                            "",
+                            "− " + d.setScale(2, RoundingMode.HALF_UP).toPlainString() + " €",
+                            ""
+                    })
+                    .toList());
+            discountRows.add(new String[]{
+                    invoice.totalBaseAmount().add(invoice.discountsAmount()).setScale(2, RoundingMode.HALF_UP).toPlainString() + " €",
+                    "− " + invoice.discountsAmount().setScale(2, RoundingMode.HALF_UP).toPlainString() + " €",
+                    invoice.totalBaseAmount().setScale(2, RoundingMode.HALF_UP).toPlainString() + " €"
+            });
+            pdf.table(new String[]{"Base original", "Descuentos", "Base final"}, discountRows);
+        }
+
         if (invoice.getPayments() != null && !invoice.getPayments().isEmpty()) {
-            pdf.section("INGRESOS");
+            pdf.section("INGRESOS ASOCIADOS");
             List<String[]> paymentRows = invoice.getPayments().stream()
                     .map(p -> new String[]{
                             p.date().format(DATE_FORMAT),
@@ -280,14 +298,6 @@ public class InvoiceService {
                     .toList();
             pdf.table(new String[]{"Fecha", "Importe", "Tipo de Ingreso"}, paymentRows);
         }
-
-        pdf.section("IMPORTE DE LA PRESENTE FACTURA");
-        List<String[]> amountRows = List.of(
-                new String[]{"Base imponible", baseAmount.toPlainString() + " €"},
-                new String[]{"IVA (" + vatRate.toPlainString() + "%)", vatAmount.toPlainString() + " €"},
-                new String[]{"TOTAL", totalAmount.toPlainString() + " €"}
-        );
-        pdf.table(new String[]{"Concepto", "Importe"}, amountRows);
 
         if (invoice.getExpenses() != null && !invoice.getExpenses().isEmpty()) {
             pdf.section("GASTOS ASOCIADOS AL ENCARGO");
