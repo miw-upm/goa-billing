@@ -5,6 +5,7 @@ import es.upm.api.domain.model.Invoice;
 import es.upm.api.domain.model.Payment;
 import es.upm.api.domain.model.criteria.InvoiceFindCriteria;
 import es.upm.api.domain.model.external.EngagementSnapshot;
+import es.upm.api.domain.model.external.LegalProcedureSnapshot;
 import es.upm.api.domain.model.external.UserSnapshot;
 import es.upm.api.domain.ports.out.billing.InvoiceGateway;
 import es.upm.api.domain.ports.out.billing.PaymentGateway;
@@ -57,25 +58,74 @@ public class InvoiceService {
                 .findNotInvoicedByEngagementId(engagementId)
                 .collect(Collectors.groupingBy(p -> p.getUser().getId()));
         paymentsByUser.forEach((userId, userPayments) -> {
-            createInvoiceFor(userId, userPayments, engagement, engagementId);
+            createInvoiceFor(userId, userPayments, engagement);
             markAsInvoiced(userPayments);
         });
     }
     private void createInvoiceFor(UUID userId, List<Payment> payments,
-                                  EngagementSnapshot engagement, UUID engagementId) {
-        BigDecimal baseAmount = payments.stream()
+                                  EngagementSnapshot engagement) {
+        BigDecimal grossAmount = payments.stream()
                 .map(Payment::getAmount)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+                .reduce(BigDecimal.ZERO, BigDecimal::add)
+                .setScale(2, RoundingMode.HALF_UP);
+        BigDecimal baseAmount = this.baseAmountFromGross(grossAmount, DEFAULT_VAT_RATE);
+        String procedures = engagement.getLegalProcedures().stream()
+                .map(LegalProcedureSnapshot::getTitle)
+                .collect(Collectors.joining(", "));
+        String engagementDate = engagement.getLastUpdatedDate().format(DATE_FORMAT);
         Invoice invoice = Invoice.builder()
                 .billingInfo(BillingInfo.builder()
                         .userId(userId)
-                        .concept("Pagos del engagement " + engagementId)
+                        .concept(String.format("Provisión de fondos.%nHoja de encargo aceptada el %s.%nProcedimientos legales: %s",
+                                engagementDate, procedures))
                         .build())
                 .engagement(engagement)
                 .payments(payments)
                 .baseAmount(baseAmount)
                 .build();
         this.create(invoice);
+    }
+
+    private BigDecimal baseAmountFromGross(BigDecimal grossAmount, BigDecimal vatRate) {
+        long grossCents = grossAmount.movePointRight(2).setScale(0, RoundingMode.HALF_UP).longValueExact();
+        BigDecimal divisor = BigDecimal.ONE.add(vatRate.divide(new BigDecimal("100"), 12, RoundingMode.HALF_UP));
+        long candidateBaseCents = grossAmount.divide(divisor, 2, RoundingMode.HALF_UP)
+                .movePointRight(2).longValueExact();
+
+        for (long delta = 0; delta <= grossCents; delta++) {
+            long up = candidateBaseCents + delta;
+            if (this.totalCentsFromBaseCents(up, vatRate) == grossCents) {
+                return BigDecimal.valueOf(up, 2);
+            }
+            long down = candidateBaseCents - delta;
+            if (down >= 0 && this.totalCentsFromBaseCents(down, vatRate) == grossCents) {
+                return BigDecimal.valueOf(down, 2);
+            }
+        }
+
+        BigDecimal baseAmount = BigDecimal.valueOf(candidateBaseCents, 2);
+        BigDecimal totalAmount = this.totalAmountFromBase(baseAmount, vatRate);
+        if (totalAmount.compareTo(grossAmount) > 0) {
+            return baseAmount.subtract(new BigDecimal("0.01"));
+        }
+        if (totalAmount.compareTo(grossAmount) < 0) {
+            return baseAmount.add(new BigDecimal("0.01"));
+        }
+        return baseAmount;
+    }
+
+    private long totalCentsFromBaseCents(long baseCents, BigDecimal vatRate) {
+        BigDecimal baseAmount = BigDecimal.valueOf(baseCents, 2);
+        BigDecimal vatAmount = baseAmount.multiply(vatRate)
+                .divide(new BigDecimal("100"), 2, RoundingMode.HALF_UP);
+        BigDecimal totalAmount = baseAmount.add(vatAmount).setScale(2, RoundingMode.HALF_UP);
+        return totalAmount.movePointRight(2).longValueExact();
+    }
+
+    private BigDecimal totalAmountFromBase(BigDecimal baseAmount, BigDecimal vatRate) {
+        BigDecimal vatAmount = baseAmount.multiply(vatRate)
+                .divide(new BigDecimal("100"), 2, RoundingMode.HALF_UP);
+        return baseAmount.add(vatAmount).setScale(2, RoundingMode.HALF_UP);
     }
 
     private void markAsInvoiced(List<Payment> payments) {
@@ -202,6 +252,18 @@ public class InvoiceService {
         pdf.section("CONCEPTO")
                 .paragraph(invoice.getBillingInfo().getConcept())
                 .space();
+
+        if (invoice.getPayments() != null && !invoice.getPayments().isEmpty()) {
+            pdf.section("INGRESOS");
+            List<String[]> paymentRows = invoice.getPayments().stream()
+                    .map(p -> new String[]{
+                            p.getDate().format(DATE_FORMAT),
+                            p.getAmount().setScale(2, RoundingMode.HALF_UP).toPlainString() + " €",
+                            p.getMethod().name()
+                    })
+                    .toList();
+            pdf.table(new String[]{"Fecha", "Importe", "Tipo de Ingreso"}, paymentRows);
+        }
 
         pdf.section("IMPORTES");
         List<String[]> amountRows = List.of(

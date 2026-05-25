@@ -246,8 +246,19 @@ class InvoiceServiceIT {
                 .findFirst()
                 .orElse(BigDecimal.ZERO);
 
-        assertEquals(new BigDecimal("150.00"), firstUserTotal);
-        assertEquals(new BigDecimal("25.00"), secondUserTotal);
+        assertEquals(new BigDecimal("123.97"), firstUserTotal);
+        assertEquals(new BigDecimal("20.66"), secondUserTotal);
+
+        createdInvoices.forEach(createdInvoice -> {
+            BigDecimal grossPayments = createdInvoice.getPayments().stream()
+                    .map(Payment::getAmount)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add)
+                    .setScale(2);
+            BigDecimal vatAmount = createdInvoice.getBaseAmount().multiply(createdInvoice.getVatRate())
+                    .divide(new BigDecimal("100"), 2, java.math.RoundingMode.HALF_UP);
+            BigDecimal totalInvoice = createdInvoice.getBaseAmount().add(vatAmount).setScale(2);
+            assertEquals(grossPayments, totalInvoice);
+        });
 
         verify(this.paymentGateway).findNotInvoicedByEngagementId(this.engagementId);
 
