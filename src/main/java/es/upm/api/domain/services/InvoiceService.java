@@ -86,12 +86,6 @@ public class InvoiceService {
         });
     }
 
-    private void markAsInvoiced(List<Payment> payments) { //TODO cuando se convierta de verdad en factura
-        payments.forEach(payment -> {
-            payment.setInvoiced(true);
-            paymentGateway.update(payment.getId(), payment);
-        });
-    }
 
     private InvoicedPayment toInvoicedPayment(Payment payment) {
         payment.setUser(this.userFinder.readById(payment.getUser().getId()));
@@ -128,13 +122,20 @@ public class InvoiceService {
     public void emission(UUID id) {
         Invoice invoice = this.read(id);
         if (invoice.getEmissionDate() != null) {
-            throw new IllegalStateException("Already issued");
+            throw new IllegalStateException("Already invoice issued: " + id);
         }
         String series = String.valueOf(LocalDate.now().getYear());
         invoice.setSeries(series);
         invoice.setNumber(invoiceGateway.findNextNumber(series));
         invoice.setEmissionDate(LocalDate.now());
         this.invoiceGateway.update(id, invoice);
+        if (invoice.getPayments() != null) {
+            invoice.getPayments().forEach(invoicedPayment -> {
+                Payment payment = this.paymentGateway.read(invoicedPayment.paymentId());
+                payment.setInvoiced(true);
+                paymentGateway.update(invoicedPayment.paymentId(), payment);
+            });
+        }
         //TODO enviar por email
     }
 
@@ -260,7 +261,7 @@ public class InvoiceService {
         pdf.table(new String[]{"Concepto", "Importe"}, amountRows);
 
         if (invoice.getDiscounts() != null && !invoice.getDiscounts().isEmpty()) {
-            pdf.section("DESCUENTOS APLICADOS");
+            pdf.section("DESCUENTOS APLICADOS A LA HOJA DE ENCARGO");
             List<String[]> discountRows = new ArrayList<>(invoice.getDiscounts().stream()
                     .map(d -> new String[]{
                             "",
@@ -277,7 +278,7 @@ public class InvoiceService {
         }
 
         if (invoice.getPayments() != null && !invoice.getPayments().isEmpty()) {
-            pdf.section("INGRESOS ASOCIADOS");
+            pdf.section("INGRESOS ASOCIADOS DEL CLIENTE EN LA PRESENTE FACTURA");
             List<String[]> paymentRows = invoice.getPayments().stream()
                     .map(p -> new String[]{
                             p.date().format(DATE_FORMAT),
@@ -289,7 +290,7 @@ public class InvoiceService {
         }
 
         if (invoice.getExpenses() != null && !invoice.getExpenses().isEmpty()) {
-            pdf.section("GASTOS ASOCIADOS AL ENCARGO");
+            pdf.section("GASTOS ASOCIADOS A LA HOJA DE ENCARGO");
 
             List<String[]> expenseRows = invoice.getExpenses().stream()
                     .map(e -> {
