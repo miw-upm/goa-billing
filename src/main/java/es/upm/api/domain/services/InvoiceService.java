@@ -85,6 +85,7 @@ public class InvoiceService {
                 .build();
         invoice.getBillingInfo().updateFrom(this.userFinder.readById(userId));
         invoice.applyBaseAmount(invoice.paymentsAmount().add(invoice.priorPaymentsAmount()));
+        this.invoiceGateway.create(invoice);
     }
 
     private void markAsInvoiced(List<Payment> payments) { //TODO cuando se convierta de verdad en factura
@@ -309,7 +310,7 @@ public class InvoiceService {
         }
 
         if (invoice.getPriorPayments() != null && !invoice.getPriorPayments().isEmpty()) {
-            pdf.section("ANTERIORES INGRESOS YA FACTURADOS");
+            pdf.section("ANTERIORES INGRESOS YA FACTURADOS DE LA HOJA DE ENCARGO");
             List<String[]> paymentRows = invoice.getPriorPayments().stream()
                     .map(p -> new String[]{
                             p.user().toFullName(),
