@@ -2,6 +2,7 @@ package es.upm.api.adapter.in.resources;
 
 import es.upm.api.domain.model.BillingInfo;
 import es.upm.api.domain.model.Invoice;
+import es.upm.api.domain.model.InvoiceBillingPercentageCreation;
 import es.upm.api.domain.model.criteria.InvoiceFindCriteria;
 import es.upm.api.domain.services.InvoiceService;
 import es.upm.miw.exception.NotFoundException;
@@ -19,11 +20,13 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.UUID;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -209,23 +212,55 @@ class InvoiceResourceIT {
     @WithMockUser(roles = "admin")
     void shouldCreateInvoiceFromEngagement() throws Exception {
         UUID engagementId = UUID.randomUUID();
+        UUID userId = UUID.randomUUID();
         String requestBody = """
                 {
                   "engagementId": "%s",
-                  "totalBaseAmount": 500.00,
-                  "concept": "Provisión inicial"
+                  "legalProcedures": [
+                    {
+                      "title": "Penal",
+                      "budget": 300.00,
+                      "legalTasks": ["Tarea 1", "Tarea 2"]
+                    },
+                    {
+                      "title": "Civil",
+                      "budget": 200.00,
+                      "legalTasks": ["Tarea A"]
+                    }
+                  ],
+                  "billingPercentages": [
+                    {
+                      "userId": "%s",
+                      "percentage": 100.00
+                    }
+                  ]
                 }
-                """.formatted(engagementId);
+                """.formatted(engagementId, userId);
 
         this.mockMvc.perform(post("/invoices/from-engagement")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBody))
                 .andExpect(status().isOk());
 
+        List<InvoiceBillingPercentageCreation> billingPercentages = List.of(
+                InvoiceBillingPercentageCreation.builder()
+                        .userId(userId)
+                        .percentage(new BigDecimal("100.00"))
+                        .build()
+        );
+        String expectedConcept = String.join(System.lineSeparator(),
+                "Penal - 300.00 €",
+                "- Tarea 1",
+                "- Tarea 2",
+                "",
+                "Civil - 200.00 €",
+                "- Tarea A"
+        );
         verify(this.invoiceService).createFromEngagement(
-                engagementId,
-                new BigDecimal("500.00"),
-                "Provisión inicial"
+                eq(engagementId),
+                eq(new BigDecimal("500.00")),
+                eq(billingPercentages),
+                argThat(expectedConcept::equals)
         );
     }
 

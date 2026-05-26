@@ -1,8 +1,9 @@
 package es.upm.api.adapter.in.resources.dtos;
 
-import jakarta.validation.constraints.NotBlank;
+import es.upm.api.domain.model.InvoiceBillingPercentageCreation;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Positive;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -10,6 +11,7 @@ import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Builder
@@ -20,12 +22,20 @@ public class InvoiceCreationFromEngagementDto {
     @NotNull
     private UUID engagementId;
 
-    @NotNull
-    @Positive
-    private BigDecimal totalBaseAmount;
+    @NotEmpty
+    @Valid
+    private List<LegalProcedureCreationDto> legalProcedures;
 
-    @NotBlank
-    private String concept;
+    @NotEmpty
+    @Valid
+    private List<InvoiceBillingPercentageCreation> billingPercentages;
 
-    private List<BigDecimal> discounts;
+    public BigDecimal totalBudget() {
+        return Optional.ofNullable(legalProcedures)
+                .orElse(List.of())
+                .stream()
+                .map(LegalProcedureCreationDto::getBudget)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
 }

@@ -10,7 +10,6 @@ import es.upm.api.domain.ports.out.billing.InvoiceGateway;
 import es.upm.api.domain.ports.out.billing.PaymentGateway;
 import es.upm.api.domain.ports.out.engagement.EngagementFinder;
 import es.upm.api.domain.ports.out.user.UserFinder;
-import es.upm.miw.exception.BadRequestException;
 import es.upm.miw.exception.InvalidTransitionException;
 import es.upm.miw.pdf.PdfBuilder;
 import lombok.RequiredArgsConstructor;
@@ -55,27 +54,17 @@ public class InvoiceService {
         String concept = String
                 .format("Provisión de Fondos.%nHoja de encargo aceptada el %s.%nProcedimientos legales: %s.",
                         engagement.getLastUpdatedDate().format(DATE_FORMAT), procedures);
-
-        List<InvoicedPayment> priorPayments = this.paymentGateway
-                .findInvoicedByEngagementId(engagementId)
-                .map(payment -> {
-                    payment.setUser(this.userFinder.readById(payment.getUser().getId()));
-                    return new InvoicedPayment(payment);
-                })
-                .toList();
-
         Map<UUID, List<InvoicedPayment>> paymentsByUser = paymentGateway
                 .findNotInvoicedByEngagementId(engagementId)
                 .map(InvoicedPayment::new)
                 .collect(Collectors.groupingBy(p -> p.user().getId()));
-
         paymentsByUser.forEach((userId, userPayments) -> {
             Invoice invoice = Invoice.builder()
                     .id(UUID.randomUUID())
                     .billingInfo(BillingInfo.builder().userId(userId).concept(concept).build())
                     .engagement(engagement)
                     .payments(userPayments)
-                    .priorPayments(priorPayments)
+                    .priorPayments(this.getInvoicedPayments(engagementId))
                     .vatRate(DEFAULT_VAT_RATE)
                     .discounts(discounts)
                     .build();
@@ -86,36 +75,42 @@ public class InvoiceService {
         });
     }
 
-
-    private InvoicedPayment toInvoicedPayment(Payment payment) {
-        payment.setUser(this.userFinder.readById(payment.getUser().getId()));
-        return new InvoicedPayment(payment);
+    private List<InvoicedPayment> getInvoicedPayments(UUID engagementId) {
+        return this.paymentGateway
+                .findInvoicedByEngagementId(engagementId)
+                .map(payment -> {
+                    payment.setUser(this.userFinder.readById(payment.getUser().getId()));
+                    return new InvoicedPayment(payment);
+                })
+                .toList();
     }
 
-    public void createFromEngagement(UUID engagementId, BigDecimal totalBaseAmount, String concept) {
+    public void createFromEngagement(UUID engagementId, BigDecimal totalBudget,
+                                     List<InvoiceBillingPercentageCreation> userPercentages, String concept) {
         EngagementSnapshot engagement = this.engagementFinder.read(engagementId);
         List<InvoicedExpense> expenses = this.expenseGateway.findByEngagementId(engagementId)
                 .map(this::toInvoicedExpense)
                 .toList();
-        List<InvoicedPayment> priorPayments = this.paymentGateway
-                .findInvoicedByEngagementId(engagementId)
-                .map(this::toInvoicedPayment)
-                .toList();
-        Invoice invoice = Invoice.builder()
-                .billingInfo(BillingInfo.builder()
-                        .userId(engagement.getOwner().getId())
-                        .concept(concept)
-                        .build())
-                .engagement(engagement)
-                .priorPayments(priorPayments)
-                .expenses(expenses)
-                .vatRate(DEFAULT_VAT_RATE)
-                .build();
-        if (invoice.getBaseAmount().compareTo(BigDecimal.ZERO) <= 0) {
-            throw new BadRequestException("Pending service base amount must be greater than zero");
-        }
-        this.create(invoice);
-
+        userPercentages.stream()
+                .filter(userPercentage -> userPercentage.getPercentage().compareTo(BigDecimal.ZERO) > 0)
+                .forEach(userPercentage -> {
+                    BigDecimal baseAmount = totalBudget
+                            .multiply(userPercentage.getPercentage())
+                            .divide(new BigDecimal("100"), 4, RoundingMode.HALF_UP);
+                    Invoice invoice = Invoice.builder()
+                            .billingInfo(BillingInfo.builder()
+                                    .userId(userPercentage.getUserId())
+                                    .concept(concept + userPercentage.getPercentage() + "%")
+                                    .build())
+                            .engagement(engagement)
+                            .priorPayments(this.getInvoicedPayments(engagementId))
+                            .expenses(expenses)
+                            .baseAmount(baseAmount)
+                            .vatRate(DEFAULT_VAT_RATE)
+                            .build();
+                    invoice.getBillingInfo().updateFrom(this.userFinder.readById(userPercentage.getUserId()));
+                    this.invoiceGateway.create(invoice);
+                });
     }
 
 
