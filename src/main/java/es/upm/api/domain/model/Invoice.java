@@ -51,6 +51,10 @@ public class Invoice {
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
+    public BigDecimal paymentsAmount() {
+        return sum(payments, InvoicedPayment::amount);
+    }
+
     public BigDecimal expensesBaseAmount() {
         return sum(expenses, InvoicedExpense::baseAmount);
     }
@@ -89,6 +93,12 @@ public class Invoice {
         this.vatAmount = baseAmount
                 .multiply(vatRate)
                 .divide(new BigDecimal("100"), 4, RoundingMode.HALF_UP);
+    }
+
+    public void applyBaseAmount(BigDecimal totalAmount) {
+        BigDecimal divisor = BigDecimal.ONE.add(
+                this.vatRate.divide(new BigDecimal("100"), 4, RoundingMode.HALF_UP));
+        this.baseAmount = totalAmount.divide(divisor, 4, RoundingMode.HALF_UP);
     }
 
     public BigDecimal totalBaseAmount() {

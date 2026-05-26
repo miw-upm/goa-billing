@@ -48,65 +48,55 @@ public class InvoiceService {
     }
 
     public void createFromPayments(UUID engagementId) {
-        EngagementSnapshot engagement = engagementFinder.read(engagementId);
-        Map<UUID, List<Payment>> paymentsByUser = paymentGateway
-                .findNotInvoicedByEngagementId(engagementId)
-                .filter(payment -> payment.getUser() != null && payment.getUser().getId() != null)
-                .collect(Collectors.groupingBy(p -> p.getUser().getId()));
-
-        List<InvoicedPayment> priorPayments = paymentGateway
+        EngagementSnapshot engagement = this.engagementFinder.read(engagementId);
+        List<InvoicedPayment> priorPayments = this.paymentGateway
                 .findInvoicedByEngagementId(engagementId)
-                .map(this::toInvoicedPayment)
+                .map(payment -> {
+                    payment.setUser(this.userFinder.readById(payment.getUser().getId()));
+                    return new InvoicedPayment(payment);
+                })
                 .toList();
-
-        paymentsByUser.forEach((userId, userPayments) -> {
-            List<InvoicedPayment> userPriorPayments = priorPayments.stream()
-                    .filter(payment -> payment.user() != null)
-                    .filter(payment -> userId.equals(payment.user().getId()))
-                    .toList();
-            createInvoiceFor(userId, userPayments, engagement, userPriorPayments);
-            markAsInvoiced(userPayments);
-        });
+        Map<UUID, List<InvoicedPayment>> paymentsByUser = paymentGateway
+                .findNotInvoicedByEngagementId(engagementId)
+                .map(InvoicedPayment::new)
+                .collect(Collectors.groupingBy(p -> p.user().getId()));
+        paymentsByUser.forEach((userId, userPayments) ->
+                createInvoiceFor(userId, userPayments, engagement, priorPayments));
     }
 
-    private void createInvoiceFor(UUID userId, List<Payment> payments,
+    private void createInvoiceFor(UUID userId, List<InvoicedPayment> payments,
                                   EngagementSnapshot engagement, List<InvoicedPayment> priorPayments) {
-        BigDecimal grossAmount = payments.stream()
-                .map(Payment::getAmount)
-                .reduce(BigDecimal.ZERO, BigDecimal::add)
-                .setScale(2, RoundingMode.HALF_UP);
-        BigDecimal divisor = BigDecimal.ONE.add(DEFAULT_VAT_RATE
-                .divide(new BigDecimal("100"), 8, RoundingMode.HALF_UP));
-        BigDecimal baseAmount = grossAmount.divide(divisor, 4, RoundingMode.HALF_UP);
-        String procedures = engagement.getLegalProcedures() == null ? ""
-                : engagement.getLegalProcedures().stream()
+        String procedures = engagement.getLegalProcedures().stream()
                 .map(LegalProcedureSnapshot::getTitle)
                 .collect(Collectors.joining(", "));
-        String engagementDate = engagement.getLastUpdatedDate() == null
-                ? LocalDate.now().format(DATE_FORMAT)
-                : engagement.getLastUpdatedDate().format(DATE_FORMAT);
-        BigDecimal vatAmount = grossAmount.subtract(baseAmount).setScale(4, RoundingMode.HALF_UP);
         Invoice invoice = Invoice.builder()
+                .id(UUID.randomUUID())
                 .billingInfo(BillingInfo.builder()
                         .userId(userId)
                         .concept(String
-                                .format("Provisión de fondos.%nHoja de encargo aceptada el %s.%nProcedimientos legales: %s.",
-                                        engagementDate, procedures))
-                        .build())
+                                .format("Provisión de Fondos.%nHoja de encargo aceptada el %s.%nProcedimientos legales: %s.",
+                                        engagement.getLastUpdatedDate().format(DATE_FORMAT), procedures))
+                        .build()
+                )
                 .engagement(engagement)
-                .payments(payments.stream().map(this::toInvoicedPayment).toList())
+                .payments(payments)
                 .priorPayments(priorPayments)
-                .baseAmount(baseAmount)
-                .vatAmount(vatAmount)
+                .vatRate(DEFAULT_VAT_RATE)
                 .build();
-        this.create(invoice);
+        invoice.getBillingInfo().updateFrom(this.userFinder.readById(userId));
+        invoice.applyBaseAmount(invoice.paymentsAmount().add(invoice.priorPaymentsAmount()));
     }
 
-    private void markAsInvoiced(List<Payment> payments) {
+    private void markAsInvoiced(List<Payment> payments) { //TODO cuando se convierta de verdad en factura
         payments.forEach(payment -> {
             payment.setInvoiced(true);
             paymentGateway.update(payment.getId(), payment);
         });
+    }
+
+    private InvoicedPayment toInvoicedPayment(Payment payment) {
+        payment.setUser(this.userFinder.readById(payment.getUser().getId()));
+        return new InvoicedPayment(payment);
     }
 
     public void createFromEngagement(UUID engagementId, BigDecimal totalBaseAmount, String concept) {
@@ -338,19 +328,7 @@ public class InvoiceService {
         return pdf.build();
     }
 
-    private InvoicedPayment toInvoicedPayment(Payment payment) {
-        UserSnapshot user = payment.getUser();
-        if (user != null && user.getId() != null) {
-            user = this.userFinder.readById(user.getId());
-        }
-        return new InvoicedPayment(
-                payment.getId(),
-                payment.getDate(),
-                payment.getAmount(),
-                payment.getMethod(),
-                user
-        );
-    }
+
 
     private InvoicedExpense toInvoicedExpense(Expense expense) {
         BigDecimal vatAmount = expense.getBaseAmount()
