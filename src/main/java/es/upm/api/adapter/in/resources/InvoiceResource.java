@@ -44,7 +44,7 @@ public class InvoiceResource {
 
     @PostMapping(FROM_PAYMENTS)
     public void createFromPayments(@RequestBody @Valid InvoiceCreationFromPaymentsDto creation) {
-        this.invoiceService.createFromPayments(creation.getEngagementId());
+        this.invoiceService.createFromPayments(creation.getEngagementId(), creation.getDiscounts());
     }
 
     @PostMapping(FROM_ENGAGEMENT)

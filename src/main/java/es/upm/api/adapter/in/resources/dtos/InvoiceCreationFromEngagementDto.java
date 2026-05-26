@@ -9,6 +9,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.UUID;
 
 @Builder
@@ -25,4 +26,6 @@ public class InvoiceCreationFromEngagementDto {
 
     @NotBlank
     private String concept;
+
+    private List<BigDecimal> discounts;
 }

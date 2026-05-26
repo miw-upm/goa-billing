@@ -47,8 +47,15 @@ public class InvoiceService {
         this.invoiceGateway.create(invoice);
     }
 
-    public void createFromPayments(UUID engagementId) {
+    public void createFromPayments(UUID engagementId, List<BigDecimal> discounts) {
         EngagementSnapshot engagement = this.engagementFinder.read(engagementId);
+        String procedures = engagement.getLegalProcedures().stream()
+                .map(LegalProcedureSnapshot::getTitle)
+                .collect(Collectors.joining(", "));
+        String concept = String
+                .format("Provisión de Fondos.%nHoja de encargo aceptada el %s.%nProcedimientos legales: %s.",
+                        engagement.getLastUpdatedDate().format(DATE_FORMAT), procedures);
+
         List<InvoicedPayment> priorPayments = this.paymentGateway
                 .findInvoicedByEngagementId(engagementId)
                 .map(payment -> {
@@ -56,36 +63,27 @@ public class InvoiceService {
                     return new InvoicedPayment(payment);
                 })
                 .toList();
+
         Map<UUID, List<InvoicedPayment>> paymentsByUser = paymentGateway
                 .findNotInvoicedByEngagementId(engagementId)
                 .map(InvoicedPayment::new)
                 .collect(Collectors.groupingBy(p -> p.user().getId()));
-        paymentsByUser.forEach((userId, userPayments) ->
-                createInvoiceFor(userId, userPayments, engagement, priorPayments));
-    }
 
-    private void createInvoiceFor(UUID userId, List<InvoicedPayment> payments,
-                                  EngagementSnapshot engagement, List<InvoicedPayment> priorPayments) {
-        String procedures = engagement.getLegalProcedures().stream()
-                .map(LegalProcedureSnapshot::getTitle)
-                .collect(Collectors.joining(", "));
-        Invoice invoice = Invoice.builder()
-                .id(UUID.randomUUID())
-                .billingInfo(BillingInfo.builder()
-                        .userId(userId)
-                        .concept(String
-                                .format("Provisión de Fondos.%nHoja de encargo aceptada el %s.%nProcedimientos legales: %s.",
-                                        engagement.getLastUpdatedDate().format(DATE_FORMAT), procedures))
-                        .build()
-                )
-                .engagement(engagement)
-                .payments(payments)
-                .priorPayments(priorPayments)
-                .vatRate(DEFAULT_VAT_RATE)
-                .build();
-        invoice.getBillingInfo().updateFrom(this.userFinder.readById(userId));
-        invoice.applyBaseAmount(invoice.paymentsAmount().add(invoice.priorPaymentsAmount()));
-        this.invoiceGateway.create(invoice);
+        paymentsByUser.forEach((userId, userPayments) -> {
+            Invoice invoice = Invoice.builder()
+                    .id(UUID.randomUUID())
+                    .billingInfo(BillingInfo.builder().userId(userId).concept(concept).build())
+                    .engagement(engagement)
+                    .payments(userPayments)
+                    .priorPayments(priorPayments)
+                    .vatRate(DEFAULT_VAT_RATE)
+                    .discounts(discounts)
+                    .build();
+            invoice.getBillingInfo().updateFrom(this.userFinder.readById(userId));
+            invoice.applyBaseAmount(invoice.paymentsAmount()
+                    .add(invoice.priorPaymentsAmount()).add(invoice.discountsAmount()));
+            this.invoiceGateway.create(invoice);
+        });
     }
 
     private void markAsInvoiced(List<Payment> payments) { //TODO cuando se convierta de verdad en factura
@@ -328,7 +326,6 @@ public class InvoiceService {
 
         return pdf.build();
     }
-
 
 
     private InvoicedExpense toInvoicedExpense(Expense expense) {

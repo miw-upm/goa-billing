@@ -189,7 +189,8 @@ class InvoiceResourceIT {
         UUID engagementId = UUID.randomUUID();
         String requestBody = """
                 {
-                  "engagementId": "%s"
+                  "engagementId": "%s",
+                  "discounts": [10.00, 5.00]
                 }
                 """.formatted(engagementId);
 
@@ -198,7 +199,10 @@ class InvoiceResourceIT {
                         .content(requestBody))
                 .andExpect(status().isOk());
 
-        verify(this.invoiceService).createFromPayments(engagementId);
+        verify(this.invoiceService).createFromPayments(
+                engagementId,
+                java.util.List.of(new BigDecimal("10.00"), new BigDecimal("5.00"))
+        );
     }
 
     @Test
