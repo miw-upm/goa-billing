@@ -6,7 +6,7 @@ import es.upm.api.domain.model.TaxCategory;
 import es.upm.api.domain.model.criteria.ExpenseFindCriteria;
 import es.upm.api.domain.model.external.EngagementSnapshot;
 import es.upm.api.domain.ports.out.billing.ExpenseGateway;
-import es.upm.api.domain.ports.out.engagement.EngagementFinder;
+import es.upm.api.domain.ports.out.engagement.EngagementGateway;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,7 +33,7 @@ class ExpenseServiceIT {
     @MockitoBean
     private ExpenseGateway expenseGateway;
     @MockitoBean
-    private EngagementFinder engagementFinder;
+    private EngagementGateway engagementGateway;
     private Expense expense;
     private UUID engagementId;
     private EngagementSnapshot engagement;
@@ -58,13 +58,13 @@ class ExpenseServiceIT {
     @Test
     void shouldNotPersistExpenseWhenEngagementDoesNotExist() {
         RuntimeException exception = new RuntimeException("Engagement not found");
-        when(this.engagementFinder.read(this.engagementId)).thenThrow(exception);
+        when(this.engagementGateway.read(this.engagementId)).thenThrow(exception);
 
         RuntimeException thrown = assertThrows(RuntimeException.class,
                 () -> this.expenseService.create(this.expense));
 
         assertEquals("Engagement not found", thrown.getMessage());
-        verify(this.engagementFinder).read(this.engagementId);
+        verify(this.engagementGateway).read(this.engagementId);
         verify(this.expenseGateway, never()).create(any());
     }
 
@@ -72,13 +72,13 @@ class ExpenseServiceIT {
     void shouldReadExpenseById() {
         this.expense.setId(UUID.randomUUID());
         when(this.expenseGateway.read(this.expense.getId())).thenReturn(this.expense);
-        when(this.engagementFinder.read(this.engagementId)).thenReturn(this.engagement);
+        when(this.engagementGateway.read(this.engagementId)).thenReturn(this.engagement);
 
         Expense readExpense = this.expenseService.read(this.expense.getId());
 
         assertEquals(this.expense, readExpense);
         verify(this.expenseGateway).read(this.expense.getId());
-        verify(this.engagementFinder).read(this.engagementId);
+        verify(this.engagementGateway).read(this.engagementId);
     }
 
     @Test
@@ -115,14 +115,14 @@ class ExpenseServiceIT {
                 .build();
         RuntimeException exception = new RuntimeException("Engagement not found");
         when(this.expenseGateway.read(id)).thenReturn(existing);
-        when(this.engagementFinder.read(this.engagementId)).thenThrow(exception);
+        when(this.engagementGateway.read(this.engagementId)).thenThrow(exception);
 
         RuntimeException thrown = assertThrows(RuntimeException.class,
                 () -> this.expenseService.update(id, updateData));
 
         assertEquals("Engagement not found", thrown.getMessage());
         verify(this.expenseGateway).read(id);
-        verify(this.engagementFinder).read(this.engagementId);
+        verify(this.engagementGateway).read(this.engagementId);
         verify(this.expenseGateway, never()).update(any(), any());
     }
 

@@ -2,7 +2,7 @@ package es.upm.api.domain.services;
 
 import es.upm.api.configurations.DatabaseSeederDev;
 import es.upm.api.domain.ports.out.billing.PaymentGateway;
-import es.upm.api.domain.ports.out.engagement.EngagementFinder;
+import es.upm.api.domain.ports.out.engagement.EngagementGateway;
 import es.upm.api.domain.ports.out.user.UserFinder;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -27,7 +27,7 @@ class InvoicePdfCheck {
     private PaymentGateway paymentGateway;
 
     @MockitoBean
-    private EngagementFinder engagementFinder;
+    private EngagementGateway engagementGateway;
 
     @MockitoBean
     private UserFinder userFinder;

@@ -6,7 +6,7 @@ import es.upm.api.domain.model.criteria.PaymentFindCriteria;
 import es.upm.api.domain.model.external.EngagementSnapshot;
 import es.upm.api.domain.model.external.UserSnapshot;
 import es.upm.api.domain.ports.out.billing.PaymentGateway;
-import es.upm.api.domain.ports.out.engagement.EngagementFinder;
+import es.upm.api.domain.ports.out.engagement.EngagementGateway;
 import es.upm.api.domain.ports.out.user.UserFinder;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -31,7 +31,7 @@ class PaymentServiceIT {
     @MockitoBean
     private PaymentGateway paymentGateway;
     @MockitoBean
-    private EngagementFinder engagementFinder;
+    private EngagementGateway engagementGateway;
     @MockitoBean
     private UserFinder userFinder;
     private Payment payment;
@@ -57,14 +57,14 @@ class PaymentServiceIT {
         UUID id = UUID.randomUUID();
         this.payment.setId(id);
         when(this.paymentGateway.read(id)).thenReturn(this.payment);
-        when(this.engagementFinder.read(this.engagementId)).thenReturn(this.payment.getEngagement());
+        when(this.engagementGateway.read(this.engagementId)).thenReturn(this.payment.getEngagement());
         when(this.userFinder.readById(this.userId)).thenReturn(this.payment.getUser());
 
         Payment read = this.paymentService.read(id);
 
         assertEquals(id, read.getId());
         verify(this.paymentGateway).read(id);
-        verify(this.engagementFinder).read(this.engagementId);
+        verify(this.engagementGateway).read(this.engagementId);
         verify(this.userFinder).readById(this.userId);
     }
 
@@ -79,7 +79,7 @@ class PaymentServiceIT {
     @Test
     void shouldNotCreateWhenUserFinderFails() {
         RuntimeException exception = new RuntimeException("User not found");
-        when(this.engagementFinder.read(this.engagementId))
+        when(this.engagementGateway.read(this.engagementId))
                 .thenReturn(EngagementSnapshot.builder().id(this.engagementId).build());
         when(this.userFinder.readById(this.userId)).thenThrow(exception);
 
@@ -88,7 +88,7 @@ class PaymentServiceIT {
         } catch (RuntimeException ignored) {
         }
 
-        verify(this.engagementFinder).read(this.engagementId);
+        verify(this.engagementGateway).read(this.engagementId);
         verify(this.userFinder).readById(this.userId);
         verify(this.paymentGateway, never()).create(any());
     }

@@ -8,8 +8,9 @@ import es.upm.api.domain.model.external.UserSnapshot;
 import es.upm.api.domain.ports.out.billing.ExpenseGateway;
 import es.upm.api.domain.ports.out.billing.InvoiceGateway;
 import es.upm.api.domain.ports.out.billing.PaymentGateway;
-import es.upm.api.domain.ports.out.engagement.EngagementFinder;
+import es.upm.api.domain.ports.out.engagement.EngagementGateway;
 import es.upm.api.domain.ports.out.user.UserFinder;
+import es.upm.miw.exception.BadRequestException;
 import es.upm.miw.exception.InvalidTransitionException;
 import es.upm.miw.pdf.PdfBuilder;
 import lombok.RequiredArgsConstructor;
@@ -38,7 +39,7 @@ public class InvoiceService {
     private final InvoiceGateway invoiceGateway;
     private final PaymentGateway paymentGateway;
     private final ExpenseGateway expenseGateway;
-    private final EngagementFinder engagementFinder;
+    private final EngagementGateway engagementGateway;
     private final UserFinder userFinder;
 
     public void create(Invoice invoice) {
@@ -82,7 +83,10 @@ public class InvoiceService {
     }
 
     public void createFromEngagement(InvoiceCreationFromEngagement creation) {
-        EngagementSnapshot engagement = this.engagementFinder.read(creation.getEngagementId());
+        EngagementSnapshot engagement = this.engagementGateway.read(creation.getEngagementId());
+        if (engagement.getClosingDate()!=null) {
+            throw new BadRequestException("Engagement is closed, no more invoices can be created, id: " + creation.getEngagementId());
+        }
         List<InvoicedExpense> expenses;
         if (Boolean.TRUE.equals(creation.getCloseEngagement())) {
             expenses = this.expenseGateway.findByEngagementId(creation.getEngagementId())
@@ -102,6 +106,7 @@ public class InvoiceService {
                 .payments(this.payments(creation.getEngagementId()))
                 .priorPayments(this.priorPayments(creation.getEngagementId()))
                 .expenses(expenses)
+                .closed(creation.getCloseEngagement())
                 .build();
         if (Boolean.TRUE.equals(creation.getCloseEngagement())) {
             invoice.applyBaseAmount(creation.totalBudget());
@@ -135,13 +140,16 @@ public class InvoiceService {
                 paymentGateway.update(invoicedPayment.paymentId(), payment);
             });
         }
+        if (Boolean.TRUE.equals(invoice.getClosed())) {
+            this.engagementGateway.close(invoice.getEngagement().getId());
+        }
         //TODO enviar por email
     }
 
     public Invoice read(UUID id) {
         Invoice invoice = this.invoiceGateway.read(id);
         if (invoice.getEngagement() != null) {
-            invoice.setEngagement(this.engagementFinder.read(invoice.getEngagement().getId()));
+            invoice.setEngagement(this.engagementGateway.read(invoice.getEngagement().getId()));
         }
         return invoice;
     }
@@ -179,7 +187,7 @@ public class InvoiceService {
         return invoices.map(invoice -> {
             if (invoice.getEngagement() != null) {
                 UUID engagementId = invoice.getEngagement().getId();
-                invoice.setEngagement(engagementFinder.read(engagementId));
+                invoice.setEngagement(engagementGateway.read(engagementId));
             }
             return invoice;
         });
@@ -187,7 +195,7 @@ public class InvoiceService {
 
     private void validateAndHydrate(Invoice invoice) {
         if (invoice.getEngagement() != null && invoice.getEngagement().getId() != null) {
-            invoice.setEngagement(this.engagementFinder.read(invoice.getEngagement().getId()));
+            invoice.setEngagement(this.engagementGateway.read(invoice.getEngagement().getId()));
         }
         invoice.setBillingInfo(this.hydrateBillingInfo(invoice.getBillingInfo()));
 
@@ -311,6 +319,7 @@ public class InvoiceService {
 
             pdf.table(new String[]{"Fecha", "Descripción", "Base imponible", "IVA"}, expenseRows);
         }
+
 
         if (invoice.getPriorPayments() != null && !invoice.getPriorPayments().isEmpty()) {
             pdf.section("ANTERIORES INGRESOS YA FACTURADOS DE LA HOJA DE ENCARGO");

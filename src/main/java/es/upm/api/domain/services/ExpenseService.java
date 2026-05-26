@@ -4,7 +4,7 @@ import es.upm.api.domain.model.Expense;
 import es.upm.api.domain.model.SupplierInfo;
 import es.upm.api.domain.model.criteria.ExpenseFindCriteria;
 import es.upm.api.domain.ports.out.billing.ExpenseGateway;
-import es.upm.api.domain.ports.out.engagement.EngagementFinder;
+import es.upm.api.domain.ports.out.engagement.EngagementGateway;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -16,13 +16,13 @@ import java.util.stream.Stream;
 @RequiredArgsConstructor
 public class ExpenseService {
     private final ExpenseGateway expenseGateway;
-    private final EngagementFinder engagementFinder;
+    private final EngagementGateway engagementGateway;
 
     public void create(Expense expense) {
         expense.setId(UUID.randomUUID());
         expense.setRecordedAt(LocalDateTime.now());
         if (expense.getEngagement() != null) {
-            expense.setEngagement(this.engagementFinder.read(expense.getEngagement().getId()));
+            expense.setEngagement(this.engagementGateway.read(expense.getEngagement().getId()));
         }
         expense.setDocumentPath(null); //TODO
         this.expenseGateway.create(expense);
@@ -31,7 +31,7 @@ public class ExpenseService {
     public Expense read(UUID id) {
         Expense expense = this.expenseGateway.read(id);
         if (expense.getEngagement() != null) {
-            expense.setEngagement(this.engagementFinder.read(expense.getEngagement().getId()));
+            expense.setEngagement(this.engagementGateway.read(expense.getEngagement().getId()));
         }
         return expense;
     }
@@ -42,7 +42,7 @@ public class ExpenseService {
         expense.setRecordedAt(LocalDateTime.now());
         expense.setDocumentPath(currentExpense.getDocumentPath());
         if (expense.getEngagement() != null) {
-            expense.setEngagement(this.engagementFinder.read(expense.getEngagement().getId()));
+            expense.setEngagement(this.engagementGateway.read(expense.getEngagement().getId()));
         }
         this.expenseGateway.update(id, expense);
     }
@@ -55,7 +55,7 @@ public class ExpenseService {
         return this.expenseGateway.find(criteria)
                 .map(expense -> {
                     if (expense.getEngagement() != null) {
-                        expense.setEngagement(this.engagementFinder.read(expense.getEngagement().getId()));
+                        expense.setEngagement(this.engagementGateway.read(expense.getEngagement().getId()));
                     }
                     return expense;
                 });

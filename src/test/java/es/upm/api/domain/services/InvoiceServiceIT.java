@@ -8,7 +8,7 @@ import es.upm.api.domain.model.external.UserSnapshot;
 import es.upm.api.domain.ports.out.billing.ExpenseGateway;
 import es.upm.api.domain.ports.out.billing.InvoiceGateway;
 import es.upm.api.domain.ports.out.billing.PaymentGateway;
-import es.upm.api.domain.ports.out.engagement.EngagementFinder;
+import es.upm.api.domain.ports.out.engagement.EngagementGateway;
 import es.upm.api.domain.ports.out.user.UserFinder;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -47,7 +47,7 @@ class InvoiceServiceIT {
     private ExpenseGateway expenseGateway;
 
     @MockitoBean
-    private EngagementFinder engagementFinder;
+    private EngagementGateway engagementGateway;
 
     @MockitoBean
     private UserFinder userFinder;
@@ -121,7 +121,7 @@ class InvoiceServiceIT {
 
         when(this.invoiceGateway.read(invoiceId)).thenReturn(current);
         when(this.userFinder.readById(this.userId)).thenReturn(this.userSnapshot);
-        when(this.engagementFinder.read(this.engagementId)).thenReturn(current.getEngagement());
+        when(this.engagementGateway.read(this.engagementId)).thenReturn(current.getEngagement());
         when(this.invoiceGateway.update(eq(invoiceId), any(Invoice.class)))
                 .thenAnswer(invocation -> invocation.getArgument(1));
 

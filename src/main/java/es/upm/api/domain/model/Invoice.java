@@ -37,6 +37,7 @@ public class Invoice {
     private List<InvoicedPayment> priorPayments;
     private List<InvoicedExpense> expenses;
     private List<BigDecimal> discounts;
+    private Boolean closed;
     private String pdfPath;
     private Rectification rectification;
 

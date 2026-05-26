@@ -4,7 +4,7 @@ import es.upm.api.domain.model.Payment;
 import es.upm.api.domain.model.criteria.PaymentFindCriteria;
 import es.upm.api.domain.model.external.UserSnapshot;
 import es.upm.api.domain.ports.out.billing.PaymentGateway;
-import es.upm.api.domain.ports.out.engagement.EngagementFinder;
+import es.upm.api.domain.ports.out.engagement.EngagementGateway;
 import es.upm.api.domain.ports.out.user.UserFinder;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -19,7 +19,7 @@ import java.util.stream.Stream;
 @RequiredArgsConstructor
 public class PaymentService {
     private final PaymentGateway paymentGateway;
-    private final EngagementFinder engagementFinder;
+    private final EngagementGateway engagementGateway;
     private final UserFinder userFinder;
 
     public void create(Payment payment) {
@@ -74,7 +74,7 @@ public class PaymentService {
 
     private void hydrateEngagement(Payment payment) {
         if (payment.getEngagement() != null && payment.getEngagement().getId() != null) {
-            payment.setEngagement(this.engagementFinder.read(payment.getEngagement().getId()));
+            payment.setEngagement(this.engagementGateway.read(payment.getEngagement().getId()));
         }
     }
 }
