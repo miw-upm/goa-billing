@@ -1,10 +1,7 @@
 package es.upm.api.domain.services;
 
 import es.upm.api.domain.model.BillingInfo;
-import es.upm.api.domain.model.Expense;
 import es.upm.api.domain.model.Invoice;
-import es.upm.api.domain.model.Payment;
-import es.upm.api.domain.model.PaymentMethod;
 import es.upm.api.domain.model.criteria.InvoiceFindCriteria;
 import es.upm.api.domain.model.external.EngagementSnapshot;
 import es.upm.api.domain.model.external.UserSnapshot;
@@ -31,9 +28,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @SpringBootTest
 @ActiveProfiles("test")
@@ -181,4 +176,4 @@ class InvoiceServiceIT {
         verify(this.userFinder, never()).find(any());
     }
 
- }
+}

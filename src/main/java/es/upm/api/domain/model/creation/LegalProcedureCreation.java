@@ -1,4 +1,4 @@
-package es.upm.api.adapter.in.resources.dtos;
+package es.upm.api.domain.model.creation;
 
 import es.upm.miw.validations.ListNotEmpty;
 import jakarta.validation.constraints.NotBlank;
@@ -15,7 +15,7 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class LegalProcedureCreationDto {
+public class LegalProcedureCreation {
     @NotBlank
     private String title;
 

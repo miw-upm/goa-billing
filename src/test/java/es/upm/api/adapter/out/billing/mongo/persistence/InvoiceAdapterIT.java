@@ -3,11 +3,7 @@ package es.upm.api.adapter.out.billing.mongo.persistence;
 import es.upm.api.adapter.out.billing.mongo.invoice.InvoiceAdapter;
 import es.upm.api.adapter.out.billing.mongo.invoice.InvoiceEntity;
 import es.upm.api.adapter.out.billing.mongo.invoice.InvoiceRepository;
-import es.upm.api.domain.model.BillingInfo;
-import es.upm.api.domain.model.Invoice;
-import es.upm.api.domain.model.InvoicedExpense;
-import es.upm.api.domain.model.InvoicedPayment;
-import es.upm.api.domain.model.PaymentMethod;
+import es.upm.api.domain.model.*;
 import es.upm.api.domain.model.criteria.InvoiceFindCriteria;
 import es.upm.api.domain.model.external.EngagementSnapshot;
 import es.upm.api.domain.model.external.UserSnapshot;
@@ -37,17 +33,15 @@ import static org.mockito.Mockito.when;
 @ActiveProfiles("test")
 class InvoiceAdapterIT {
 
+    private final InvoiceFindCriteria criteria = new InvoiceFindCriteria();
     @Autowired
     private InvoiceAdapter invoiceAdapter;
-
     @MockitoBean
     private InvoiceRepository invoiceRepository;
-
     private Invoice invoice;
     private UUID engagementId;
     private UUID userId;
     private UUID paymentId;
-    private final InvoiceFindCriteria criteria = new InvoiceFindCriteria();
 
     @BeforeEach
     void setUp() {

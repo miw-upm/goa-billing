@@ -2,11 +2,7 @@ package es.upm.api.adapter.out.billing.mongo.repositories;
 
 import es.upm.api.adapter.out.billing.mongo.invoice.InvoiceEntity;
 import es.upm.api.adapter.out.billing.mongo.invoice.InvoiceRepository;
-import es.upm.api.domain.model.BillingInfo;
-import es.upm.api.domain.model.Invoice;
-import es.upm.api.domain.model.InvoicedExpense;
-import es.upm.api.domain.model.InvoicedPayment;
-import es.upm.api.domain.model.PaymentMethod;
+import es.upm.api.domain.model.*;
 import es.upm.api.domain.model.external.EngagementSnapshot;
 import es.upm.api.domain.model.external.UserSnapshot;
 import org.junit.jupiter.api.BeforeEach;
@@ -21,9 +17,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 @DataMongoTest
 @ActiveProfiles("test")

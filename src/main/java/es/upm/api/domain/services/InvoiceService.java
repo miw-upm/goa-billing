@@ -1,9 +1,9 @@
 package es.upm.api.domain.services;
 
 import es.upm.api.domain.model.*;
+import es.upm.api.domain.model.creation.InvoiceCreationFromEngagement;
 import es.upm.api.domain.model.criteria.InvoiceFindCriteria;
 import es.upm.api.domain.model.external.EngagementSnapshot;
-import es.upm.api.domain.model.external.LegalProcedureSnapshot;
 import es.upm.api.domain.model.external.UserSnapshot;
 import es.upm.api.domain.ports.out.billing.ExpenseGateway;
 import es.upm.api.domain.ports.out.billing.InvoiceGateway;
@@ -20,8 +20,10 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
+import java.util.UUID;
 import java.util.stream.Stream;
 
 @Service
@@ -46,36 +48,7 @@ public class InvoiceService {
         this.invoiceGateway.create(invoice);
     }
 
-    public void createFromPayments(UUID engagementId, List<BigDecimal> discounts) {
-        EngagementSnapshot engagement = this.engagementFinder.read(engagementId);
-        String procedures = engagement.getLegalProcedures().stream()
-                .map(LegalProcedureSnapshot::getTitle)
-                .collect(Collectors.joining(", "));
-        String concept = String
-                .format("Provisión de Fondos.%nHoja de encargo aceptada el %s.%nProcedimientos legales: %s.",
-                        engagement.getLastUpdatedDate().format(DATE_FORMAT), procedures);
-        Map<UUID, List<InvoicedPayment>> paymentsByUser = paymentGateway
-                .findNotInvoicedByEngagementId(engagementId)
-                .map(InvoicedPayment::new)
-                .collect(Collectors.groupingBy(p -> p.user().getId()));
-        paymentsByUser.forEach((userId, userPayments) -> {
-            Invoice invoice = Invoice.builder()
-                    .id(UUID.randomUUID())
-                    .billingInfo(BillingInfo.builder().userId(userId).concept(concept).build())
-                    .engagement(engagement)
-                    .payments(userPayments)
-                    .priorPayments(this.getInvoicedPayments(engagementId))
-                    .vatRate(DEFAULT_VAT_RATE)
-                    .discounts(discounts)
-                    .build();
-            invoice.getBillingInfo().updateFrom(this.userFinder.readById(userId));
-            invoice.applyBaseAmount(invoice.paymentsAmount()
-                    .add(invoice.priorPaymentsAmount()).add(invoice.discountsAmount()));
-            this.invoiceGateway.create(invoice);
-        });
-    }
-
-    private List<InvoicedPayment> getInvoicedPayments(UUID engagementId) {
+    private List<InvoicedPayment> priorPayments(UUID engagementId) {
         return this.paymentGateway
                 .findInvoicedByEngagementId(engagementId)
                 .map(payment -> {
@@ -85,34 +58,65 @@ public class InvoiceService {
                 .toList();
     }
 
-    public void createFromEngagement(UUID engagementId, BigDecimal totalBudget,
-                                     List<InvoiceBillingPercentageCreation> userPercentages, String concept) {
-        EngagementSnapshot engagement = this.engagementFinder.read(engagementId);
-        List<InvoicedExpense> expenses = this.expenseGateway.findByEngagementId(engagementId)
-                .map(this::toInvoicedExpense)
+    private List<InvoicedPayment> payments(UUID engagementId) {
+        return this.paymentGateway
+                .findNotInvoicedByEngagementId(engagementId)
+                .map(payment -> {
+                    payment.setUser(this.userFinder.readById(payment.getUser().getId()));
+                    return new InvoicedPayment(payment);
+                })
                 .toList();
-        userPercentages.stream()
+    }
+
+    private InvoicedExpense toInvoicedExpense(Expense expense) {
+        BigDecimal vatAmount = expense.getBaseAmount()
+                .multiply(BigDecimal.valueOf(expense.getVatRate()))
+                .divide(new BigDecimal("100"), 4, RoundingMode.HALF_UP);
+        return new InvoicedExpense(
+                expense.getId(),
+                expense.getIssueDate(),
+                expense.getDescription(),
+                expense.getBaseAmount(),
+                vatAmount
+        );
+    }
+
+    public void createFromEngagement(InvoiceCreationFromEngagement creation) {
+        EngagementSnapshot engagement = this.engagementFinder.read(creation.getEngagementId());
+        List<InvoicedExpense> expenses;
+        if (Boolean.TRUE.equals(creation.getCloseEngagement())) {
+            expenses = this.expenseGateway.findByEngagementId(creation.getEngagementId())
+                    .map(this::toInvoicedExpense)
+                    .toList();
+        } else {
+            expenses = null;
+        }
+        Invoice invoice = Invoice.builder()
+                .billingInfo(BillingInfo.builder()
+                        .concept("FACTURA por ingreso de Provisón de Fondos." + System.lineSeparator() + System.lineSeparator()
+                                + creation.buildProceduresText())
+                        .build()
+                )
+                .vatRate(DEFAULT_VAT_RATE)
+                .engagement(engagement)
+                .payments(this.payments(creation.getEngagementId()))
+                .priorPayments(this.priorPayments(creation.getEngagementId()))
+                .expenses(expenses)
+                .build();
+        if (Boolean.TRUE.equals(creation.getCloseEngagement())) {
+            invoice.applyBaseAmount(creation.totalBudget());
+        } else {
+            invoice.applyBaseAmount(invoice.paymentsAmount().add(invoice.priorPaymentsAmount()));
+        }
+        creation.getBillingPercentages().stream()
                 .filter(userPercentage -> userPercentage.getPercentage().compareTo(BigDecimal.ZERO) > 0)
                 .forEach(userPercentage -> {
-                    BigDecimal baseAmount = totalBudget
-                            .multiply(userPercentage.getPercentage())
-                            .divide(new BigDecimal("100"), 4, RoundingMode.HALF_UP);
-                    Invoice invoice = Invoice.builder()
-                            .billingInfo(BillingInfo.builder()
-                                    .userId(userPercentage.getUserId())
-                                    .concept(concept + userPercentage.getPercentage() + "%")
-                                    .build())
-                            .engagement(engagement)
-                            .priorPayments(this.getInvoicedPayments(engagementId))
-                            .expenses(expenses)
-                            .baseAmount(baseAmount)
-                            .vatRate(DEFAULT_VAT_RATE)
-                            .build();
+                    invoice.setId(UUID.randomUUID());
+                    invoice.setPercentage(userPercentage.getPercentage());
                     invoice.getBillingInfo().updateFrom(this.userFinder.readById(userPercentage.getUserId()));
                     this.invoiceGateway.create(invoice);
                 });
     }
-
 
     public void emission(UUID id) {
         Invoice invoice = this.read(id);
@@ -247,6 +251,10 @@ public class InvoiceService {
                 .paragraph(invoice.getBillingInfo().getConcept())
                 .space();
 
+        pdf.section("PARTICIPACIÓN DEL CLIENTE")
+                .paragraph(invoice.getPercentage() + " %")
+                .space();
+
         pdf.section("IMPORTE DE LA PRESENTE FACTURA");
         List<String[]> amountRows = List.of(
                 new String[]{"Base imponible", baseAmount.toPlainString() + " €"},
@@ -273,15 +281,16 @@ public class InvoiceService {
         }
 
         if (invoice.getPayments() != null && !invoice.getPayments().isEmpty()) {
-            pdf.section("INGRESOS ASOCIADOS DEL CLIENTE EN LA PRESENTE FACTURA");
+            pdf.section("INGRESOS ASOCIADOS A LA PRESENTE FACTURA");
             List<String[]> paymentRows = invoice.getPayments().stream()
                     .map(p -> new String[]{
+                            p.user().toFullName(),
                             p.date().format(DATE_FORMAT),
                             p.amount().setScale(2, RoundingMode.HALF_UP).toPlainString() + " €",
                             p.method().name()
                     })
                     .toList();
-            pdf.table(new String[]{"Fecha", "Importe", "Tipo de Ingreso"}, paymentRows);
+            pdf.table(new String[]{"Cliente", "Fecha", "Importe", "Tipo de Ingreso"}, paymentRows);
         }
 
         if (invoice.getExpenses() != null && !invoice.getExpenses().isEmpty()) {
@@ -313,7 +322,7 @@ public class InvoiceService {
                             p.method().name()
                     })
                     .toList();
-            pdf.table(new String[]{"User", "Fecha", "Importe", "Tipo de Ingreso"}, paymentRows);
+            pdf.table(new String[]{"Cliente", "Fecha", "Importe", "Tipo de Ingreso"}, paymentRows);
         }
 
 
@@ -323,18 +332,5 @@ public class InvoiceService {
         return pdf.build();
     }
 
-
-    private InvoicedExpense toInvoicedExpense(Expense expense) {
-        BigDecimal vatAmount = expense.getBaseAmount()
-                .multiply(BigDecimal.valueOf(expense.getVatRate()))
-                .divide(new BigDecimal("100"), 2, RoundingMode.HALF_UP);
-        return new InvoicedExpense(
-                expense.getId(),
-                expense.getIssueDate(),
-                expense.getDescription(),
-                expense.getBaseAmount(),
-                vatAmount
-        );
-    }
 
 }

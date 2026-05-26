@@ -22,7 +22,6 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -34,17 +33,15 @@ import static org.mockito.Mockito.when;
 @ActiveProfiles("test")
 class PaymentAdapterIT {
 
-    @Autowired
-    private PaymentAdapter paymentAdapter;
-
-    @MockitoBean
-    private PaymentRepository paymentRepository;
-
-    private Payment payment;
     private final PaymentFindCriteria criteria = new PaymentFindCriteria();
     private final UUID engagementId = UUID.fromString("aaaaaaaa-bbbb-cccc-dddd-eeeeee000000");
     private final UUID userId = UUID.fromString("aaaaaaaa-bbbb-cccc-dddd-eeeeee000001");
     private final LocalDate date = LocalDate.of(2026, 3, 20);
+    @Autowired
+    private PaymentAdapter paymentAdapter;
+    @MockitoBean
+    private PaymentRepository paymentRepository;
+    private Payment payment;
 
     @BeforeEach
     void setUp() {

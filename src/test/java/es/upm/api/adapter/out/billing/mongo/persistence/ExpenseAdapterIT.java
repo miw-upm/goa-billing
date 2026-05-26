@@ -34,16 +34,14 @@ import static org.mockito.Mockito.when;
 @ActiveProfiles("test")
 class ExpenseAdapterIT {
 
-    @Autowired
-    private ExpenseAdapter expensePersistenceMongodb;
-
-    @MockitoBean
-    private ExpenseRepository expenseRepository;
-
-    private Expense expense;
     private final ExpenseFindCriteria criteria = new ExpenseFindCriteria();
     private final UUID engagementUuid = UUID.fromString("aaaaaaaa-bbbb-cccc-dddd-eeeeee000000");
     private final LocalDate date = LocalDate.of(2026, 3, 20);
+    @Autowired
+    private ExpenseAdapter expensePersistenceMongodb;
+    @MockitoBean
+    private ExpenseRepository expenseRepository;
+    private Expense expense;
 
     @BeforeEach
     void setUp() {
@@ -116,7 +114,7 @@ class ExpenseAdapterIT {
         verify(this.expenseRepository).findById(this.expense.getId());
     }
 
-       @Test
+    @Test
     void shouldDeleteExpense() {
         UUID id = this.expense.getId();
         ExpenseEntity expenseEntity = new ExpenseEntity(this.expense);

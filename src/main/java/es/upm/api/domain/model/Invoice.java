@@ -22,6 +22,7 @@ import java.util.function.Function;
 public class Invoice {
     private UUID id;
     private BillingInfo billingInfo;
+    private BigDecimal percentage;
     @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate emissionDate;
     @JsonFormat(pattern = "yyyy-MM-dd")
@@ -104,16 +105,22 @@ public class Invoice {
                 .divide(new BigDecimal("100"), 4, RoundingMode.HALF_UP);
     }
 
+    public BigDecimal percentageFactor(){
+        return this.percentage.divide(new BigDecimal("100"), 4, RoundingMode.HALF_UP);
+    }
+
     public BigDecimal totalBaseAmount() {
         return baseAmount
                 .subtract(priorPaymentsBaseAmount())
                 .subtract(discountsAmount())
-                .add(expensesBaseAmount());
+                .add(expensesBaseAmount())
+                .multiply(this.percentageFactor());
     }
 
     public BigDecimal totalVatAmount() {
         return vatAmount
                 .subtract(priorPaymentsVatAmount())
-                .add(expensesVatAmount());
+                .add(expensesVatAmount())
+                .multiply(this.percentageFactor());
     }
 }

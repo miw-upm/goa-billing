@@ -10,7 +10,6 @@ import es.upm.api.domain.ports.out.engagement.EngagementFinder;
 import es.upm.api.domain.ports.out.user.UserFinder;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
@@ -21,32 +20,23 @@ import java.time.LocalDate;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.eq;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @SpringBootTest
 @ActiveProfiles("test")
 class PaymentServiceIT {
+    private final PaymentFindCriteria criteria = new PaymentFindCriteria();
     @Autowired
     private PaymentService paymentService;
-
     @MockitoBean
     private PaymentGateway paymentGateway;
-
     @MockitoBean
     private EngagementFinder engagementFinder;
-
     @MockitoBean
     private UserFinder userFinder;
-
     private Payment payment;
     private UUID engagementId;
     private UUID userId;
-    private final PaymentFindCriteria criteria = new PaymentFindCriteria();
 
     @BeforeEach
     void setUp() {
@@ -77,7 +67,6 @@ class PaymentServiceIT {
         verify(this.engagementFinder).read(this.engagementId);
         verify(this.userFinder).readById(this.userId);
     }
-
 
 
     @Test

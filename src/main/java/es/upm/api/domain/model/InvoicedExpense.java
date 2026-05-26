@@ -10,4 +10,5 @@ public record InvoicedExpense(
         String description,
         BigDecimal baseAmount,
         BigDecimal vatAmount
-) {}
+) {
+}

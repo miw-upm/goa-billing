@@ -1,4 +1,4 @@
-package es.upm.api.domain.model;
+package es.upm.api.domain.model.creation;
 
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;

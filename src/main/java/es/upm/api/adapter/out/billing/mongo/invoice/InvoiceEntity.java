@@ -1,10 +1,6 @@
 package es.upm.api.adapter.out.billing.mongo.invoice;
 
-import es.upm.api.domain.model.BillingInfo;
-import es.upm.api.domain.model.Invoice;
-import es.upm.api.domain.model.InvoicedExpense;
-import es.upm.api.domain.model.InvoicedPayment;
-import es.upm.api.domain.model.Rectification;
+import es.upm.api.domain.model.*;
 import es.upm.api.domain.model.external.EngagementSnapshot;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -28,6 +24,8 @@ public class InvoiceEntity {
     @Id
     private UUID id;
     private BillingInfo billingInfo;
+    private BigDecimal percentage;
+    private BigDecimal amount;
     private LocalDate emissionDate;
     private LocalDate operationDate;
     private String series;

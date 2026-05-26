@@ -9,7 +9,6 @@ import es.upm.api.domain.ports.out.billing.ExpenseGateway;
 import es.upm.api.domain.ports.out.engagement.EngagementFinder;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
@@ -20,24 +19,22 @@ import java.time.LocalDate;
 import java.util.UUID;
 import java.util.stream.Stream;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
 @SpringBootTest
 @ActiveProfiles("test")
 class ExpenseServiceIT {
 
+    private final ExpenseFindCriteria criteria = new ExpenseFindCriteria();
     @Autowired
     private ExpenseService expenseService;
-
     @MockitoBean
     private ExpenseGateway expenseGateway;
-
     @MockitoBean
     private EngagementFinder engagementFinder;
-
     private Expense expense;
-    private final ExpenseFindCriteria criteria = new ExpenseFindCriteria();
     private UUID engagementId;
     private EngagementSnapshot engagement;
 
@@ -56,7 +53,6 @@ class ExpenseServiceIT {
                 .documentPath("doc/path")
                 .build();
     }
-
 
 
     @Test

@@ -1,7 +1,7 @@
 package es.upm.api.adapter.out.billing.mongo.repositories;
 
-import es.upm.api.adapter.out.billing.mongo.expense.ExpenseRepository;
 import es.upm.api.adapter.out.billing.mongo.expense.ExpenseEntity;
+import es.upm.api.adapter.out.billing.mongo.expense.ExpenseRepository;
 import es.upm.api.domain.model.Expense;
 import es.upm.api.domain.model.SupplierInfo;
 import es.upm.api.domain.model.TaxCategory;

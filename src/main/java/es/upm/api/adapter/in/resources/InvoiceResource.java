@@ -1,11 +1,9 @@
 package es.upm.api.adapter.in.resources;
 
 import es.upm.api.adapter.in.resources.dtos.InvoiceCreationDto;
-import es.upm.api.adapter.in.resources.dtos.InvoiceCreationFromEngagementDto;
-import es.upm.api.adapter.in.resources.dtos.InvoiceCreationFromPaymentsDto;
-import es.upm.api.adapter.in.resources.dtos.LegalProcedureCreationDto;
 import es.upm.api.domain.model.BillingInfo;
 import es.upm.api.domain.model.Invoice;
+import es.upm.api.domain.model.creation.InvoiceCreationFromEngagement;
 import es.upm.api.domain.model.criteria.InvoiceFindCriteria;
 import es.upm.api.domain.services.InvoiceService;
 import es.upm.miw.security.Security;
@@ -14,10 +12,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import java.math.BigDecimal;
-import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @PreAuthorize(Security.ADMIN_MANAGER_OPERATOR)
@@ -45,35 +40,9 @@ public class InvoiceResource {
         this.invoiceService.create(invoice);
     }
 
-    @PostMapping(FROM_PAYMENTS)
-    public void createFromPayments(@RequestBody @Valid InvoiceCreationFromPaymentsDto creation) {
-        this.invoiceService.createFromPayments(creation.getEngagementId(), creation.getDiscounts());
-    }
-
     @PostMapping(FROM_ENGAGEMENT)
-    public void createFromEngagement(@RequestBody @Valid InvoiceCreationFromEngagementDto creation) {
-
-        this.invoiceService.createFromEngagement(
-                creation.getEngagementId(),
-                creation.totalBudget(),
-                creation.getBillingPercentages(),
-                this.buildProceduresText(creation.getLegalProcedures()));
-    }
-
-    private String buildProceduresText(List<LegalProcedureCreationDto> procedures) {
-        if (procedures == null || procedures.isEmpty()) {
-            return "";
-        }
-        return procedures.stream()
-                .map(procedure -> {
-                    String header = procedure.getTitle() + " - " +
-                            procedure.getBudget().setScale(2, java.math.RoundingMode.HALF_UP).toPlainString() + " €";
-                    String tasks = procedure.getLegalTasks().stream()
-                                    .map(task -> "- " + task)
-                                    .collect(Collectors.joining(System.lineSeparator()));
-                    return tasks.isBlank() ? header : header + System.lineSeparator() + tasks;
-                })
-                .collect(Collectors.joining(System.lineSeparator() + System.lineSeparator()));
+    public void createFromEngagement(@RequestBody @Valid InvoiceCreationFromEngagement creation) {
+        this.invoiceService.createFromEngagement(creation);
     }
 
     @GetMapping("/{id}")

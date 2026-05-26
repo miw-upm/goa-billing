@@ -23,14 +23,8 @@ import java.util.UUID;
 import java.util.stream.Stream;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -39,15 +33,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ActiveProfiles("test")
 class PaymentResourceIT {
 
+    private final PaymentFindCriteria criteria = new PaymentFindCriteria();
     @Autowired
     private MockMvc mockMvc;
-
     @MockitoBean
     private PaymentService paymentService;
 
-    private final PaymentFindCriteria criteria = new PaymentFindCriteria();
-
-       @Test
+    @Test
     @WithMockUser(roles = "admin")
     void shouldReturnBadRequestWhenInvalidPaymentBody() throws Exception {
         String requestBody = """
@@ -101,7 +93,7 @@ class PaymentResourceIT {
         verify(this.paymentService).read(paymentId);
     }
 
-       @Test
+    @Test
     @WithMockUser(roles = "admin")
     void shouldDeletePayment() throws Exception {
         UUID paymentId = UUID.randomUUID();

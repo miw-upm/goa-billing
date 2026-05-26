@@ -2,7 +2,7 @@ package es.upm.api.adapter.in.resources;
 
 import es.upm.api.domain.model.BillingInfo;
 import es.upm.api.domain.model.Invoice;
-import es.upm.api.domain.model.InvoiceBillingPercentageCreation;
+import es.upm.api.domain.model.creation.InvoiceCreationFromEngagement;
 import es.upm.api.domain.model.criteria.InvoiceFindCriteria;
 import es.upm.api.domain.services.InvoiceService;
 import es.upm.miw.exception.NotFoundException;
@@ -20,37 +20,26 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
-import java.util.List;
 import java.util.UUID;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest
 @AutoConfigureMockMvc(addFilters = false)
 @ActiveProfiles("test")
 class InvoiceResourceIT {
 
+    private final InvoiceFindCriteria criteria = new InvoiceFindCriteria();
     @Autowired
     private MockMvc mockMvc;
-
     @MockitoBean
     private InvoiceService invoiceService;
-
-    private final InvoiceFindCriteria criteria = new InvoiceFindCriteria();
 
     @Test
     @WithMockUser(roles = "admin")
@@ -188,34 +177,13 @@ class InvoiceResourceIT {
 
     @Test
     @WithMockUser(roles = "admin")
-    void shouldCreateInvoicesFromPayments() throws Exception {
-        UUID engagementId = UUID.randomUUID();
-        String requestBody = """
-                {
-                  "engagementId": "%s",
-                  "discounts": [10.00, 5.00]
-                }
-                """.formatted(engagementId);
-
-        this.mockMvc.perform(post("/invoices/from-payments")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(requestBody))
-                .andExpect(status().isOk());
-
-        verify(this.invoiceService).createFromPayments(
-                engagementId,
-                java.util.List.of(new BigDecimal("10.00"), new BigDecimal("5.00"))
-        );
-    }
-
-    @Test
-    @WithMockUser(roles = "admin")
     void shouldCreateInvoiceFromEngagement() throws Exception {
         UUID engagementId = UUID.randomUUID();
         UUID userId = UUID.randomUUID();
         String requestBody = """
                 {
                   "engagementId": "%s",
+                  "closeEngagement": true,
                   "legalProcedures": [
                     {
                       "title": "Penal",
@@ -242,26 +210,17 @@ class InvoiceResourceIT {
                         .content(requestBody))
                 .andExpect(status().isOk());
 
-        List<InvoiceBillingPercentageCreation> billingPercentages = List.of(
-                InvoiceBillingPercentageCreation.builder()
-                        .userId(userId)
-                        .percentage(new BigDecimal("100.00"))
-                        .build()
-        );
-        String expectedConcept = String.join(System.lineSeparator(),
-                "Penal - 300.00 €",
-                "- Tarea 1",
-                "- Tarea 2",
-                "",
-                "Civil - 200.00 €",
-                "- Tarea A"
-        );
-        verify(this.invoiceService).createFromEngagement(
-                eq(engagementId),
-                eq(new BigDecimal("500.00")),
-                eq(billingPercentages),
-                argThat(expectedConcept::equals)
-        );
+        ArgumentCaptor<InvoiceCreationFromEngagement> creationCaptor =
+                ArgumentCaptor.forClass(InvoiceCreationFromEngagement.class);
+        verify(this.invoiceService).createFromEngagement(creationCaptor.capture());
+        InvoiceCreationFromEngagement creation = creationCaptor.getValue();
+        assertEquals(engagementId, creation.getEngagementId());
+        assertEquals(Boolean.TRUE, creation.getCloseEngagement());
+        assertEquals(2, creation.getLegalProcedures().size());
+        assertEquals(new BigDecimal("500.00"), creation.totalBudget());
+        assertEquals(1, creation.getBillingPercentages().size());
+        assertEquals(userId, creation.getBillingPercentages().get(0).getUserId());
+        assertEquals(new BigDecimal("100.00"), creation.getBillingPercentages().get(0).getPercentage());
     }
 
     @Test

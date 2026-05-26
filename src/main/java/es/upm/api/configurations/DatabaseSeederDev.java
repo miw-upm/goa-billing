@@ -51,6 +51,7 @@ public class DatabaseSeederDev {
     private final ExpenseRepository expenseRepository;
     private final InvoiceRepository invoiceRepository;
     private final PaymentRepository paymentRepository;
+
     public DatabaseSeederDev(ExpenseRepository expenseRepository, InvoiceRepository invoiceRepository, PaymentRepository paymentRepository) {
         this.expenseRepository = expenseRepository;
         this.invoiceRepository = invoiceRepository;
@@ -176,6 +177,7 @@ public class DatabaseSeederDev {
                                 .fullAddress("Madrid, Spain")
                                 .concept("Servicios")
                                 .build())
+                        .percentage(new BigDecimal("100"))
                         .emissionDate(LocalDate.of(2026, 3, 20))
                         .operationDate(LocalDate.of(2026, 3, 20))
                         .series("2026")
@@ -198,6 +200,7 @@ public class DatabaseSeederDev {
                                 .fullAddress("Madrid, Spain")
                                 .concept("Consultoria")
                                 .build())
+                        .percentage(new BigDecimal("100"))
                         .baseAmount(new BigDecimal("1075.00"))
                         .vatRate(new BigDecimal("21"))
                         .vatAmount(new BigDecimal("225.75"))

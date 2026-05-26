@@ -1,11 +1,7 @@
 package es.upm.api.adapter.out.billing.mongo.entities;
 
 import es.upm.api.adapter.out.billing.mongo.invoice.InvoiceEntity;
-import es.upm.api.domain.model.BillingInfo;
-import es.upm.api.domain.model.Invoice;
-import es.upm.api.domain.model.InvoicedExpense;
-import es.upm.api.domain.model.InvoicedPayment;
-import es.upm.api.domain.model.PaymentMethod;
+import es.upm.api.domain.model.*;
 import es.upm.api.domain.model.external.EngagementSnapshot;
 import es.upm.api.domain.model.external.UserSnapshot;
 import org.junit.jupiter.api.BeforeEach;

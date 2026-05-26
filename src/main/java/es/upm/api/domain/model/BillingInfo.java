@@ -33,6 +33,7 @@ public class BillingInfo {
     private String concept;
 
     public void updateFrom(UserSnapshot userSnapshot) {
+        this.userId = userSnapshot.getId();
         this.fullName = Stream.of(userSnapshot.getFirstName(), userSnapshot.getFamilyName())
                 .filter(part -> part != null && !part.isBlank())
                 .map(String::trim)
