@@ -8,12 +8,14 @@ import es.upm.api.domain.model.external.UserSnapshot;
 import es.upm.api.domain.ports.out.billing.ExpenseGateway;
 import es.upm.api.domain.ports.out.billing.InvoiceGateway;
 import es.upm.api.domain.ports.out.billing.PaymentGateway;
+import es.upm.api.domain.ports.out.email.EmailWriter;
 import es.upm.api.domain.ports.out.engagement.EngagementGateway;
 import es.upm.api.domain.ports.out.user.UserFinder;
 import es.upm.miw.exception.BadRequestException;
 import es.upm.miw.exception.InvalidTransitionException;
 import es.upm.miw.pdf.PdfBuilder;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -41,6 +43,12 @@ public class InvoiceService {
     private final ExpenseGateway expenseGateway;
     private final EngagementGateway engagementGateway;
     private final UserFinder userFinder;
+    private final EmailWriter emailWriter;
+    private final InvoiceTemplateService invoiceTemplateService;
+    @Value("${app.administration.name}")
+    private String name;
+    @Value("${app.administration.email}")
+    private String email;
 
     public void create(Invoice invoice) {
         invoice.setId(UUID.randomUUID());
@@ -143,7 +151,21 @@ public class InvoiceService {
         if (Boolean.TRUE.equals(invoice.getClosed())) {
             this.engagementGateway.close(invoice.getEngagement().getId());
         }
-        //TODO enviar por email
+        UserSnapshot user = this.userFinder.readById(invoice.getBillingInfo().getUserId());
+        byte[] pdf = this.generatePdf(id);
+        String fileName = "Ocanabogados-" + invoice.getSeries() + "-" + invoice.getNumber() + ".pdf";
+        this.emailWriter.sendHtml(
+                this.invoiceTemplateService.buildHtmlEmail(this.email,this.name),
+                pdf,
+                fileName
+        );
+        this.emailWriter.sendHtml(
+                this.invoiceTemplateService.buildHtmlEmail(user.getEmail(),user.getFirstName()),
+                pdf,
+                fileName
+        );
+
+        //TODO guardar en S3 AWS
     }
 
     public Invoice read(UUID id) {

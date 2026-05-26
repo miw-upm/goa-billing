@@ -21,6 +21,7 @@ public class UserSnapshot {
     private String city;
     private String province;
     private Integer postalCode;
+    private String email;
 
 
     public String toFullName() {
