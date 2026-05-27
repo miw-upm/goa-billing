@@ -52,6 +52,7 @@ public class InvoiceService {
 
     public void create(Invoice invoice) {
         invoice.setId(UUID.randomUUID());
+        invoice.setPercentage(new BigDecimal("100"));
         invoice.getBillingInfo().updateFrom(this.userFinder.readById(invoice.getBillingInfo().getUserId()));
         invoice.applyVatRate(DEFAULT_VAT_RATE);
         this.invoiceGateway.create(invoice);
@@ -95,14 +96,6 @@ public class InvoiceService {
         if (engagement.getClosingDate()!=null) {
             throw new BadRequestException("Engagement is closed, no more invoices can be created, id: " + creation.getEngagementId());
         }
-        List<InvoicedExpense> expenses;
-        if (Boolean.TRUE.equals(creation.getCloseEngagement())) {
-            expenses = this.expenseGateway.findByEngagementId(creation.getEngagementId())
-                    .map(this::toInvoicedExpense)
-                    .toList();
-        } else {
-            expenses = null;
-        }
         Invoice invoice = Invoice.builder()
                 .billingInfo(BillingInfo.builder()
                         .concept("FACTURA por ingreso de Provisón de Fondos." + System.lineSeparator() + System.lineSeparator()
@@ -113,13 +106,18 @@ public class InvoiceService {
                 .engagement(engagement)
                 .payments(this.payments(creation.getEngagementId()))
                 .priorPayments(this.priorPayments(creation.getEngagementId()))
-                .expenses(expenses)
                 .closed(creation.getCloseEngagement())
                 .build();
+
         if (Boolean.TRUE.equals(creation.getCloseEngagement())) {
+            List<InvoicedExpense> expenses = this.expenseGateway.findByEngagementId(creation.getEngagementId())
+                    .map(this::toInvoicedExpense)
+                    .toList();
+            invoice.setExpenses(expenses);
             invoice.applyBaseAmount(creation.totalBudget());
+            invoice.setDiscounts(engagement.getDiscounts());
         } else {
-            invoice.applyBaseAmount(invoice.paymentsAmount().add(invoice.priorPaymentsAmount()));
+            invoice.applyTotalAmount(invoice.paymentsAmount().add(invoice.priorPaymentsAmount()));
         }
         creation.getBillingPercentages().stream()
                 .filter(userPercentage -> userPercentage.getPercentage().compareTo(BigDecimal.ZERO) > 0)

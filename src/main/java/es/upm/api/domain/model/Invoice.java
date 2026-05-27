@@ -70,9 +70,7 @@ public class Invoice {
     }
 
     public BigDecimal priorPaymentsBaseAmount() {
-        BigDecimal divisor = BigDecimal.ONE.add(
-                vatRate.divide(new BigDecimal("100"), 4, RoundingMode.HALF_UP));
-        return sum(priorPayments, p -> p.amount().divide(divisor, 4, RoundingMode.HALF_UP));
+        return this.sum(this.priorPayments, payment -> payment.amount().multiply(this.baseShare()));
     }
 
     public BigDecimal priorPaymentsVatAmount() {
@@ -92,18 +90,17 @@ public class Invoice {
 
     public void applyVatRate(BigDecimal vatRate) {
         this.vatRate = vatRate;
-        this.vatAmount = baseAmount
-                .multiply(vatRate)
-                .divide(new BigDecimal("100"), 4, RoundingMode.HALF_UP);
+        this.vatAmount = this.baseAmount.multiply(this.vatFactor());
     }
 
-    public void applyBaseAmount(BigDecimal totalAmount) {
-        BigDecimal divisor = BigDecimal.ONE.add(
-                this.vatRate.divide(new BigDecimal("100"), 4, RoundingMode.HALF_UP));
-        this.baseAmount = totalAmount.divide(divisor, 4, RoundingMode.HALF_UP);
-        this.vatAmount = baseAmount
-                .multiply(vatRate)
-                .divide(new BigDecimal("100"), 4, RoundingMode.HALF_UP);
+    public void applyBaseAmount(BigDecimal baseAmount) {
+        this.baseAmount = baseAmount;
+        this.vatAmount = this.baseAmount.multiply(this.vatFactor());
+    }
+
+    public void applyTotalAmount(BigDecimal totalAmount) {
+        this.baseAmount = totalAmount.multiply(this.baseShare());
+        this.vatAmount = this.baseAmount.multiply(this.vatFactor());
     }
 
     public BigDecimal percentageFactor(){
@@ -112,16 +109,33 @@ public class Invoice {
 
     public BigDecimal totalBaseAmount() {
         return baseAmount
-                .subtract(priorPaymentsBaseAmount())
-                .subtract(discountsAmount())
-                .add(expensesBaseAmount())
+                .subtract(this.priorPaymentsBaseAmount())
+                .subtract(this.discountsAmount())
+                .add(this.expensesBaseAmount())
                 .multiply(this.percentageFactor());
     }
 
     public BigDecimal totalVatAmount() {
         return vatAmount
-                .subtract(priorPaymentsVatAmount())
-                .add(expensesVatAmount())
+                .subtract(this.priorPaymentsVatAmount())
+                .add(this.expensesVatAmount())
                 .multiply(this.percentageFactor());
     }
+
+    private BigDecimal vatFactor() {
+        return vatRate.divide(new BigDecimal("100"), 4, RoundingMode.HALF_UP);
+    }
+
+    private BigDecimal vatTotal() {
+        return BigDecimal.ONE.add(vatFactor());
+    }
+
+    private BigDecimal vatShare() {
+        return vatFactor().divide(vatTotal(), 4, RoundingMode.HALF_UP);
+    }
+
+    private BigDecimal baseShare() {
+        return BigDecimal.ONE.divide(vatTotal(), 4, RoundingMode.HALF_UP);
+    }
+
 }
