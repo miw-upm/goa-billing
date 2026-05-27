@@ -100,10 +100,10 @@ public class Invoice {
 
     public void applyTotalAmount(BigDecimal totalAmount) {
         this.baseAmount = totalAmount.multiply(this.baseShare());
-        this.vatAmount = this.baseAmount.multiply(this.vatFactor());
+        this.vatAmount = totalAmount.subtract(this.baseAmount);
     }
 
-    public BigDecimal percentageFactor(){
+    public BigDecimal percentageFactor() {
         return this.percentage.divide(new BigDecimal("100"), 4, RoundingMode.HALF_UP);
     }
 
