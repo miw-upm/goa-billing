@@ -98,8 +98,7 @@ public class InvoiceService {
         }
         Invoice invoice = Invoice.builder()
                 .billingInfo(BillingInfo.builder()
-                        .concept("FACTURA por ingreso de Provisón de Fondos." + System.lineSeparator() + System.lineSeparator()
-                                + creation.buildProceduresText())
+                        .concept(creation.buildProceduresText())
                         .build()
                 )
                 .vatRate(DEFAULT_VAT_RATE)
@@ -116,8 +115,14 @@ public class InvoiceService {
             invoice.setExpenses(expenses);
             invoice.applyBaseAmount(creation.totalBudget());
             invoice.setDiscounts(engagement.getDiscounts());
+            invoice.getBillingInfo()
+                    .setConcept("FACTURA por cierre de Hoja de Encargos." + System.lineSeparator() + System.lineSeparator()
+                    + invoice.getBillingInfo().getConcept());
         } else {
             invoice.applyTotalAmount(invoice.paymentsAmount().add(invoice.priorPaymentsAmount()));
+            invoice.getBillingInfo()
+                    .setConcept("FACTURA por ingreso de Provisón de Fondos." + System.lineSeparator() + System.lineSeparator()
+                            + invoice.getBillingInfo().getConcept());
         }
         creation.getBillingPercentages().stream()
                 .filter(userPercentage -> userPercentage.getPercentage().compareTo(BigDecimal.ZERO) > 0)
@@ -283,16 +288,8 @@ public class InvoiceService {
                 .paragraph(invoice.getPercentage() + " %")
                 .space();
 
-        pdf.section("IMPORTE DE LA PRESENTE FACTURA");
-        List<String[]> amountRows = List.of(
-                new String[]{"Base imponible", baseAmount.toPlainString() + " €"},
-                new String[]{"IVA (" + vatRate.toPlainString() + "%)", vatAmount.toPlainString() + " €"},
-                new String[]{"TOTAL", totalAmount.toPlainString() + " €"}
-        );
-        pdf.table(new String[]{"Concepto", "Importe"}, amountRows);
-
         if (invoice.getDiscounts() != null && !invoice.getDiscounts().isEmpty()) {
-            pdf.section("DESCUENTOS APLICADOS A LA HOJA DE ENCARGO");
+            pdf.section("Descuentos aplicados a la Hoja de Encargo");
             List<String[]> discountRows = new ArrayList<>(invoice.getDiscounts().stream()
                     .map(d -> new String[]{
                             "",
@@ -309,7 +306,7 @@ public class InvoiceService {
         }
 
         if (invoice.getPayments() != null && !invoice.getPayments().isEmpty()) {
-            pdf.section("INGRESOS ASOCIADOS A LA PRESENTE FACTURA");
+            pdf.section("Ingresos Asociados, pendientes de facturar, a la Hoja de Encargo");
             List<String[]> paymentRows = invoice.getPayments().stream()
                     .map(p -> new String[]{
                             p.user().toFullName(),
@@ -322,7 +319,7 @@ public class InvoiceService {
         }
 
         if (invoice.getExpenses() != null && !invoice.getExpenses().isEmpty()) {
-            pdf.section("GASTOS ASOCIADOS A LA HOJA DE ENCARGO");
+            pdf.section("Gastos asociados a la Hoja de Encargo");
 
             List<String[]> expenseRows = invoice.getExpenses().stream()
                     .map(e -> {
@@ -342,7 +339,7 @@ public class InvoiceService {
 
 
         if (invoice.getPriorPayments() != null && !invoice.getPriorPayments().isEmpty()) {
-            pdf.section("ANTERIORES INGRESOS YA FACTURADOS DE LA HOJA DE ENCARGO");
+            pdf.section("Anteriores ingresos, Ya Facturados, de la Hoja de encargo");
             List<String[]> paymentRows = invoice.getPriorPayments().stream()
                     .map(p -> new String[]{
                             p.user().toFullName(),
@@ -352,6 +349,21 @@ public class InvoiceService {
                     })
                     .toList();
             pdf.table(new String[]{"Cliente", "Fecha", "Importe", "Tipo de Ingreso"}, paymentRows);
+        }
+
+        pdf.section("IMPORTE DE LA PRESENTE FACTURA");
+        List<String[]> amountRows = List.of(
+                new String[]{"Base imponible", baseAmount.toPlainString() + " €"},
+                new String[]{"IVA (" + vatRate.toPlainString() + "%)", vatAmount.toPlainString() + " €"},
+                new String[]{"TOTAL", totalAmount.toPlainString() + " €"}
+        );
+        pdf.table(new String[]{"Concepto", "Importe"}, amountRows);
+
+        //TODO falta por ingresar
+        BigDecimal debt = totalAmount.subtract(invoice.paymentsAmount());
+        if (debt.compareTo(new BigDecimal("4")) > 0) {
+            pdf.section("PENDIENTE DE INGRESAR: " + debt.toPlainString() + " €");
+            pdf.paragraphBold("Ruego que ingrese en la cuenta bancaria: ES00 1111 2222 3333 4444 5555");
         }
 
 
