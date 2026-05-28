@@ -1,6 +1,7 @@
 package es.upm.api.adapter.out.billing.mongo.invoice;
 
 import es.upm.api.domain.model.*;
+import es.upm.api.domain.model.creation.InvoiceLegalProcedure;
 import es.upm.api.domain.model.external.EngagementSnapshot;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -23,9 +24,10 @@ import java.util.UUID;
 public class InvoiceEntity {
     @Id
     private UUID id;
+    private String concept;
+    private Boolean closed;
     private BillingInfo billingInfo;
     private BigDecimal percentage;
-    private BigDecimal amount;
     private LocalDate emissionDate;
     private LocalDate operationDate;
     private String series;
@@ -34,11 +36,11 @@ public class InvoiceEntity {
     private BigDecimal vatAmount;
     private BigDecimal vatRate;
     private UUID engagementId;
+    private List<InvoiceLegalProcedure> legalProcedures;
     private List<InvoicedPayment> payments;
     private List<InvoicedPayment> priorPayments;
     private List<InvoicedExpense> expenses;
     private List<BigDecimal> discounts;
-    private Boolean closed;
     private String pdfPath;
     private Rectification rectification;
 

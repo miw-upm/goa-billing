@@ -2,6 +2,7 @@ package es.upm.api.adapter.out.billing.mongo.entities;
 
 import es.upm.api.adapter.out.billing.mongo.invoice.InvoiceEntity;
 import es.upm.api.domain.model.*;
+import es.upm.api.domain.model.creation.InvoiceLegalProcedure;
 import es.upm.api.domain.model.external.EngagementSnapshot;
 import es.upm.api.domain.model.external.UserSnapshot;
 import org.junit.jupiter.api.BeforeEach;
@@ -25,12 +26,15 @@ class InvoiceEntityTest {
         UUID paymentId = UUID.randomUUID();
         this.invoice = Invoice.builder()
                 .id(UUID.randomUUID())
+                .concept("Servicios")
+                .closed(true)
                 .billingInfo(BillingInfo.builder()
                         .userId(userId)
                         .fullName("John Doe")
                         .identity("12345678A")
                         .fullAddress("Madrid")
                         .build())
+                .percentage(new BigDecimal("100"))
                 .emissionDate(LocalDate.of(2026, 3, 20))
                 .operationDate(LocalDate.of(2026, 3, 19))
                 .series("A")
@@ -39,6 +43,11 @@ class InvoiceEntityTest {
                 .vatAmount(BigDecimal.valueOf(18.9))
                 .vatRate(BigDecimal.valueOf(21))
                 .engagement(EngagementSnapshot.builder().id(engagementId).build())
+                .legalProcedures(List.of(InvoiceLegalProcedure.builder()
+                        .title("Procedimiento")
+                        .budget(new BigDecimal("90.00"))
+                        .legalTasks(List.of("Tarea 1"))
+                        .build()))
                 .payments(List.of(new InvoicedPayment(
                         paymentId,
                         LocalDate.of(2026, 3, 18),
@@ -70,7 +79,10 @@ class InvoiceEntityTest {
         InvoiceEntity entity = new InvoiceEntity(this.invoice);
 
         assertEquals(this.invoice.getId(), entity.getId());
+        assertEquals(this.invoice.getConcept(), entity.getConcept());
+        assertEquals(this.invoice.getClosed(), entity.getClosed());
         assertEquals(this.invoice.getBillingInfo(), entity.getBillingInfo());
+        assertEquals(this.invoice.getPercentage(), entity.getPercentage());
         assertEquals(this.invoice.getEmissionDate(), entity.getEmissionDate());
         assertEquals(this.invoice.getOperationDate(), entity.getOperationDate());
         assertEquals(this.invoice.getSeries(), entity.getSeries());
@@ -79,6 +91,7 @@ class InvoiceEntityTest {
         assertEquals(this.invoice.getVatAmount(), entity.getVatAmount());
         assertEquals(this.invoice.getVatRate(), entity.getVatRate());
         assertEquals(this.invoice.getEngagement().getId(), entity.getEngagementId());
+        assertEquals(this.invoice.getLegalProcedures(), entity.getLegalProcedures());
         assertEquals(this.invoice.getPayments(), entity.getPayments());
         assertEquals(this.invoice.getPriorPayments(), entity.getPriorPayments());
         assertEquals(this.invoice.getExpenses(), entity.getExpenses());
@@ -93,7 +106,10 @@ class InvoiceEntityTest {
         Invoice mapped = entity.toDomain();
 
         assertEquals(entity.getId(), mapped.getId());
+        assertEquals(entity.getConcept(), mapped.getConcept());
+        assertEquals(entity.getClosed(), mapped.getClosed());
         assertEquals(entity.getBillingInfo(), mapped.getBillingInfo());
+        assertEquals(entity.getPercentage(), mapped.getPercentage());
         assertEquals(entity.getEmissionDate(), mapped.getEmissionDate());
         assertEquals(entity.getOperationDate(), mapped.getOperationDate());
         assertEquals(entity.getSeries(), mapped.getSeries());
@@ -102,6 +118,7 @@ class InvoiceEntityTest {
         assertEquals(entity.getVatAmount(), mapped.getVatAmount());
         assertEquals(entity.getVatRate(), mapped.getVatRate());
         assertEquals(entity.getEngagementId(), mapped.getEngagement().getId());
+        assertEquals(entity.getLegalProcedures(), mapped.getLegalProcedures());
         assertEquals(entity.getPayments(), mapped.getPayments());
         assertEquals(entity.getPriorPayments(), mapped.getPriorPayments());
         assertEquals(entity.getExpenses(), mapped.getExpenses());

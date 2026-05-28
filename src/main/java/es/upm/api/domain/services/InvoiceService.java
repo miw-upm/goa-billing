@@ -26,6 +26,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Stream;
 
@@ -37,6 +38,7 @@ public class InvoiceService {
 
 
     private static final BigDecimal DEFAULT_VAT_RATE = new BigDecimal("21");
+    public static final BigDecimal MIN_VALUE_FOR_TRANSFER = new BigDecimal("5");
 
     private final InvoiceGateway invoiceGateway;
     private final PaymentGateway paymentGateway;
@@ -53,7 +55,7 @@ public class InvoiceService {
     public void create(Invoice invoice) {
         invoice.setId(UUID.randomUUID());
         invoice.setPercentage(new BigDecimal("100"));
-        invoice.getBillingInfo().updateFrom(this.userFinder.readById(invoice.getBillingInfo().getUserId()));
+        invoice.setBillingInfo(new BillingInfo(this.userFinder.readById(invoice.getBillingInfo().getUserId())));
         invoice.applyVatRate(DEFAULT_VAT_RATE);
         this.invoiceGateway.create(invoice);
     }
@@ -78,17 +80,10 @@ public class InvoiceService {
                 .toList();
     }
 
-    private InvoicedExpense toInvoicedExpense(Expense expense) {
-        BigDecimal vatAmount = expense.getBaseAmount()
-                .multiply(BigDecimal.valueOf(expense.getVatRate()))
-                .divide(new BigDecimal("100"), 4, RoundingMode.HALF_UP);
-        return new InvoicedExpense(
-                expense.getId(),
-                expense.getIssueDate(),
-                expense.getDescription(),
-                expense.getBaseAmount(),
-                vatAmount
-        );
+    private List<InvoicedExpense> expenses(UUID engagementId) {
+        return this.expenseGateway.findByEngagementId(engagementId)
+                .map(InvoicedExpense::new)
+                .toList();
     }
 
     public void createFromEngagement(InvoiceCreationFromEngagement creation) {
@@ -96,41 +91,30 @@ public class InvoiceService {
         if (engagement.getClosingDate() != null) {
             throw new BadRequestException("Engagement is closed, no more invoices can be created, id: " + creation.getEngagementId());
         }
-        Invoice invoice = Invoice.builder()
-                .billingInfo(BillingInfo.builder()
-                        .concept(creation.buildProceduresText())
-                        .build()
-                )
+        Invoice invoiceTemplate = Invoice.builder()
+                .concept(creation.getConcept())
+                .closed(creation.getCloseEngagement())
                 .vatRate(DEFAULT_VAT_RATE)
                 .engagement(engagement)
+                .legalProcedures(creation.getLegalProcedures())
                 .payments(this.payments(creation.getEngagementId()))
                 .priorPayments(this.priorPayments(creation.getEngagementId()))
-                .closed(creation.getCloseEngagement())
                 .build();
 
-        if (Boolean.TRUE.equals(creation.getCloseEngagement())) {
-            List<InvoicedExpense> expenses = this.expenseGateway.findByEngagementId(creation.getEngagementId())
-                    .map(this::toInvoicedExpense)
-                    .toList();
-            invoice.setExpenses(expenses);
-            invoice.applyBaseAmount(creation.totalBudget());
-            invoice.setDiscounts(engagement.getDiscounts());
-            invoice.getBillingInfo()
-                    .setConcept("FACTURA por cierre de Hoja de Encargos." + System.lineSeparator() + System.lineSeparator()
-                            + invoice.getBillingInfo().getConcept());
+        if (Boolean.TRUE.equals(invoiceTemplate.getClosed())) {
+            invoiceTemplate.setExpenses(this.expenses(engagement.getId()));
+            invoiceTemplate.applyBaseAmount(creation.totalBudget());
+            invoiceTemplate.setDiscounts(engagement.getDiscounts());
         } else {
-            invoice.applyTotalAmount(invoice.paymentsAmount().add(invoice.priorPaymentsAmount()));
-            invoice.getBillingInfo()
-                    .setConcept("FACTURA por ingreso de Provisón de Fondos." + System.lineSeparator() + System.lineSeparator()
-                            + invoice.getBillingInfo().getConcept());
+            invoiceTemplate.applyTotalAmount(invoiceTemplate.paymentsAmount().add(invoiceTemplate.priorPaymentsAmount()));
         }
         creation.getBillingPercentages().stream()
                 .filter(userPercentage -> userPercentage.getPercentage().compareTo(BigDecimal.ZERO) > 0)
                 .forEach(userPercentage -> {
-                    invoice.setId(UUID.randomUUID());
-                    invoice.setPercentage(userPercentage.getPercentage());
-                    invoice.getBillingInfo().updateFrom(this.userFinder.readById(userPercentage.getUserId()));
-                    this.invoiceGateway.create(invoice);
+                    invoiceTemplate.setId(UUID.randomUUID());
+                    invoiceTemplate.setBillingInfo(new BillingInfo(this.userFinder.readById(userPercentage.getUserId())));
+                    invoiceTemplate.setPercentage(userPercentage.getPercentage());
+                    this.invoiceGateway.create(invoiceTemplate);
                 });
     }
 
@@ -222,8 +206,6 @@ public class InvoiceService {
         if (invoice.getEngagement() != null && invoice.getEngagement().getId() != null) {
             invoice.setEngagement(this.engagementGateway.read(invoice.getEngagement().getId()));
         }
-        invoice.setBillingInfo(this.hydrateBillingInfo(invoice.getBillingInfo()));
-
         if (invoice.getPayments() != null && !invoice.getPayments().isEmpty()) {
             BigDecimal paymentsTotal = invoice.getPayments().stream()
                     .map(InvoicedPayment::amount)
@@ -242,24 +224,13 @@ public class InvoiceService {
         }
     }
 
-    private BillingInfo hydrateBillingInfo(BillingInfo billingInfo) {
-        if (billingInfo == null || billingInfo.getUserId() == null) {
-            return billingInfo;
-        }
-        billingInfo.updateFrom(this.userFinder.readById(billingInfo.getUserId()));
-        billingInfo.setConcept(billingInfo.getConcept());
-        return billingInfo;
-    }
-
     public byte[] generatePdf(UUID id) {
         final NumberFormat EUR = NumberFormat.getCurrencyInstance(Locale.forLanguageTag("es-ES"));
         Invoice invoice = this.read(id);
-
         BigDecimal baseAmount = invoice.totalBaseAmount().setScale(2, RoundingMode.HALF_UP);
         BigDecimal vatAmount = invoice.totalVatAmount().setScale(2, RoundingMode.HALF_UP);
         BigDecimal totalAmount = baseAmount.add(vatAmount);
         BigDecimal vatRate = invoice.getVatRate();
-
         String title = invoice.isIssued() ? "FACTURA" : "FACTURA PROFORMA";
         String invoiceNumber = invoice.isIssued()
                 ? invoice.getSeries() + "-" + invoice.getNumber()
@@ -279,8 +250,20 @@ public class InvoiceService {
                 .paragraph("N.I.F. " + invoice.getBillingInfo().getIdentity())
                 .paragraph(invoice.getBillingInfo().getFullAddress());
 
-        pdf.section("CONCEPTO")
-                .paragraph(invoice.getBillingInfo().getConcept());
+        pdf.section("CONCEPTO");
+        if (Boolean.TRUE.equals(invoice.getClosed())) {
+            pdf.paragraphBold("FACTURA por cierre de Hoja de Encargos.");
+        } else {
+            pdf.paragraphBold("FACTURA por ingreso de Provisón de Fondos.");
+        }
+        invoice.getLegalProcedures()
+                .forEach(procedure -> {
+                    pdf.paragraph(procedure.getTitle() + "  -  " + EUR.format(procedure.getBudget()))
+                            .list(procedure.getLegalTasks());
+                });
+        if (Objects.nonNull(invoice.getConcept())) {
+            pdf.paragraph(invoice.getConcept());
+        }
 
         pdf.section("IMPORTE DE LA PRESENTE FACTURA");
         pdf.table(
@@ -292,7 +275,7 @@ public class InvoiceService {
                 new String[]{"TOTAL", EUR.format(totalAmount)}
         );
         BigDecimal debt = totalAmount.subtract(invoice.paymentsAmount());
-        if (debt.compareTo(new BigDecimal("4")) > 0) {
+        if (debt.compareTo(MIN_VALUE_FOR_TRANSFER) > 0) {
             pdf.paragraphHighlight("PENDIENTE DE INGRESAR: " + EUR.format(debt));
             pdf.paragraphHighlight("Ruego que ingrese en la cuenta bancaria: ES00 1111 2222 3333 4444 5555");
         }
@@ -313,7 +296,7 @@ public class InvoiceService {
                     new String[]{"Base original", "Descuentos", "Base final"},
                     discountRows,
                     new String[]{
-                            EUR.format(invoice.totalBaseAmount().add(invoice.discountsAmount())),
+                            EUR.format(invoice.totalBudget()),
                             EUR.format(invoice.discountsAmount()),
                             EUR.format(invoice.totalBaseAmount())
                     }

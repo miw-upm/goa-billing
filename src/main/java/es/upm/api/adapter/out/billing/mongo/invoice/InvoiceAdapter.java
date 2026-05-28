@@ -30,7 +30,10 @@ public class InvoiceAdapter implements InvoiceGateway {
         InvoiceEntity invoiceEntity = this.invoiceRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Invoice id: " + id));
 
+        invoiceEntity.setConcept(invoice.getConcept());
+        invoiceEntity.setClosed(invoice.getClosed());
         invoiceEntity.setBillingInfo(invoice.getBillingInfo());
+        invoiceEntity.setPercentage(invoice.getPercentage());
         invoiceEntity.setEmissionDate(invoice.getEmissionDate());
         invoiceEntity.setOperationDate(invoice.getOperationDate());
         invoiceEntity.setSeries(invoice.getSeries());
@@ -39,6 +42,7 @@ public class InvoiceAdapter implements InvoiceGateway {
         invoiceEntity.setVatAmount(invoice.getVatAmount());
         invoiceEntity.setVatRate(invoice.getVatRate());
         invoiceEntity.setEngagementId(invoice.getEngagement() == null ? null : invoice.getEngagement().getId());
+        invoiceEntity.setLegalProcedures(invoice.getLegalProcedures());
         invoiceEntity.setPayments(invoice.getPayments());
         invoiceEntity.setPriorPayments(invoice.getPriorPayments());
         invoiceEntity.setExpenses(invoice.getExpenses());

@@ -18,7 +18,6 @@ import java.util.UUID;
 public class EngagementSnapshot {
     private UUID id;
     private UserSnapshot owner;
-    private List<LegalProcedureSnapshot> legalProcedures;
     @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate lastUpdatedDate;
     private LocalDate closingDate;

@@ -30,9 +30,10 @@ public class BillingInfo {
     @NotBlank
     private String fullAddress;
 
-    private String concept;
-
-    public void updateFrom(UserSnapshot userSnapshot) {
+    public BillingInfo(UserSnapshot userSnapshot) {
+        if (identity == null || identity.isBlank() || fullAddress.isBlank()) {
+            throw new BadRequestException("User data is incomplete to build billingInfo");
+        }
         this.userId = userSnapshot.getId();
         this.fullName = Stream.of(userSnapshot.getFirstName(), userSnapshot.getFamilyName())
                 .filter(part -> part != null && !part.isBlank())
@@ -49,8 +50,6 @@ public class BillingInfo {
                 .map(String::trim)
                 .collect(Collectors.joining(", "));
 
-        if (identity == null || identity.isBlank() || fullAddress.isBlank()) {
-            throw new BadRequestException("User data is incomplete to build billingInfo");
-        }
+
     }
 }

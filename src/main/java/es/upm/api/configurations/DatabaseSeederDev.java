@@ -10,6 +10,7 @@ import es.upm.api.domain.model.BillingInfo;
 import es.upm.api.domain.model.PaymentMethod;
 import es.upm.api.domain.model.SupplierInfo;
 import es.upm.api.domain.model.TaxCategory;
+import es.upm.api.domain.model.creation.InvoiceLegalProcedure;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.context.annotation.Profile;
@@ -170,14 +171,22 @@ public class DatabaseSeederDev {
         this.invoiceRepository.saveAll(List.of(
                 InvoiceEntity.builder()
                         .id(ID_14)
+                        .concept("Cierre de hoja de encargo")
+                        .closed(true)
                         .billingInfo(BillingInfo.builder()
                                 .userId(C_0)
                                 .fullName("User 0000")
                                 .identity("ID-00000000A")
                                 .fullAddress("Madrid, Spain")
-                                .concept("Servicios")
                                 .build())
                         .percentage(new BigDecimal("100"))
+                        .legalProcedures(List.of(
+                                InvoiceLegalProcedure.builder()
+                                        .title("Procedimiento penal")
+                                        .budget(new BigDecimal("450.00"))
+                                        .legalTasks(List.of("Revision", "Escrito"))
+                                        .build()
+                        ))
                         .emissionDate(LocalDate.of(2026, 3, 20))
                         .operationDate(LocalDate.of(2026, 3, 20))
                         .series("2026")
@@ -193,14 +202,22 @@ public class DatabaseSeederDev {
                         .build(),
                 InvoiceEntity.builder()
                         .id(ID_15)
+                        .concept("Provision de fondos")
+                        .closed(false)
                         .billingInfo(BillingInfo.builder()
                                 .userId(C_1)
                                 .fullName("User 0001")
                                 .identity("ID-00000001B")
                                 .fullAddress("Madrid, Spain")
-                                .concept("Consultoria")
                                 .build())
                         .percentage(new BigDecimal("100"))
+                        .legalProcedures(List.of(
+                                InvoiceLegalProcedure.builder()
+                                        .title("Procedimiento civil")
+                                        .budget(new BigDecimal("1200.00"))
+                                        .legalTasks(List.of("Demanda"))
+                                        .build()
+                        ))
                         .baseAmount(new BigDecimal("1075.00"))
                         .vatRate(new BigDecimal("21"))
                         .vatAmount(new BigDecimal("225.75"))

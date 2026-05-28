@@ -4,6 +4,7 @@ import es.upm.api.adapter.out.billing.mongo.invoice.InvoiceAdapter;
 import es.upm.api.adapter.out.billing.mongo.invoice.InvoiceEntity;
 import es.upm.api.adapter.out.billing.mongo.invoice.InvoiceRepository;
 import es.upm.api.domain.model.*;
+import es.upm.api.domain.model.creation.InvoiceLegalProcedure;
 import es.upm.api.domain.model.criteria.InvoiceFindCriteria;
 import es.upm.api.domain.model.external.EngagementSnapshot;
 import es.upm.api.domain.model.external.UserSnapshot;
@@ -62,7 +63,10 @@ class InvoiceAdapterIT {
         ArgumentCaptor<InvoiceEntity> captor = ArgumentCaptor.forClass(InvoiceEntity.class);
         verify(this.invoiceRepository).save(captor.capture());
         assertEquals(this.invoice.getId(), captor.getValue().getId());
+        assertEquals(this.invoice.getConcept(), captor.getValue().getConcept());
+        assertEquals(this.invoice.getClosed(), captor.getValue().getClosed());
         assertEquals(this.invoice.getEngagement().getId(), captor.getValue().getEngagementId());
+        assertEquals(this.invoice.getLegalProcedures(), captor.getValue().getLegalProcedures());
         assertEquals(this.invoice.getBaseAmount(), captor.getValue().getBaseAmount());
         assertEquals(this.invoice.getPriorPayments(), captor.getValue().getPriorPayments());
         assertEquals(this.invoice.getExpenses(), captor.getValue().getExpenses());
@@ -88,12 +92,16 @@ class InvoiceAdapterIT {
 
         Invoice update = this.buildInvoice(id, this.engagementId, this.userId, this.paymentId,
                 LocalDate.of(2026, 3, 21), BigDecimal.valueOf(120));
+        update.setConcept("Servicios 2");
+        update.setClosed(true);
         update.setSeries("B");
         update.setNumber(2);
 
         Invoice updated = this.invoiceAdapter.update(id, update);
 
         assertEquals(BigDecimal.valueOf(120), updated.getBaseAmount());
+        assertEquals("Servicios 2", updated.getConcept());
+        assertEquals(Boolean.TRUE, updated.getClosed());
         assertEquals("B", updated.getSeries());
         assertEquals(2, updated.getNumber());
         verify(this.invoiceRepository).save(any(InvoiceEntity.class));
@@ -149,12 +157,15 @@ class InvoiceAdapterIT {
                                  LocalDate emissionDate, BigDecimal baseAmount) {
         return Invoice.builder()
                 .id(invoiceId)
+                .concept("Servicios")
+                .closed(false)
                 .billingInfo(BillingInfo.builder()
                         .userId(userId)
                         .fullName("John Doe")
                         .identity("12345678A")
                         .fullAddress("Madrid")
                         .build())
+                .percentage(new BigDecimal("100"))
                 .emissionDate(emissionDate)
                 .operationDate(emissionDate.minusDays(1))
                 .series("A")
@@ -163,6 +174,11 @@ class InvoiceAdapterIT {
                 .vatAmount(new BigDecimal("18.90"))
                 .vatRate(BigDecimal.valueOf(21))
                 .engagement(EngagementSnapshot.builder().id(engagementId).build())
+                .legalProcedures(List.of(InvoiceLegalProcedure.builder()
+                        .title("Procedimiento")
+                        .budget(baseAmount)
+                        .legalTasks(List.of("Tarea 1"))
+                        .build()))
                 .payments(List.of(new InvoicedPayment(
                         paymentId,
                         emissionDate.minusDays(2),

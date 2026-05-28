@@ -30,9 +30,9 @@ public class InvoiceResource {
     @PostMapping
     public void create(@Valid @RequestBody InvoiceCreationDto creation) {
         Invoice invoice = Invoice.builder()
+                .concept(creation.getConcept())
                 .billingInfo(BillingInfo.builder()
                         .userId(creation.getUserId())
-                        .concept(creation.getConcept())
                         .build())
                 .baseAmount(creation.getBaseAmount())
                 .discounts(creation.getDiscounts())

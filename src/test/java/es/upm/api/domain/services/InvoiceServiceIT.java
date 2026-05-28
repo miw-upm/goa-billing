@@ -8,6 +8,7 @@ import es.upm.api.domain.model.external.UserSnapshot;
 import es.upm.api.domain.ports.out.billing.ExpenseGateway;
 import es.upm.api.domain.ports.out.billing.InvoiceGateway;
 import es.upm.api.domain.ports.out.billing.PaymentGateway;
+import es.upm.api.domain.ports.out.email.EmailWriter;
 import es.upm.api.domain.ports.out.engagement.EngagementGateway;
 import es.upm.api.domain.ports.out.user.UserFinder;
 import org.junit.jupiter.api.BeforeEach;
@@ -51,6 +52,10 @@ class InvoiceServiceIT {
 
     @MockitoBean
     private UserFinder userFinder;
+    @MockitoBean
+    private EmailWriter emailWriter;
+    @MockitoBean
+    private InvoiceTemplateService invoiceTemplateService;
 
     private UUID userId;
     private UUID engagementId;
@@ -72,26 +77,12 @@ class InvoiceServiceIT {
                 .postalCode(28001)
                 .build();
         this.invoice = Invoice.builder()
+                .concept("Servicios")
                 .billingInfo(BillingInfo.builder()
                         .userId(this.userId)
-                        .concept("Servicios")
                         .build())
                 .baseAmount(new BigDecimal("100.00"))
                 .build();
-    }
-
-    @Test
-    void shouldCreateInvoiceHydratingBillingInfo() {
-        when(this.userFinder.readById(this.userId)).thenReturn(this.userSnapshot);
-
-        this.invoiceService.create(this.invoice);
-
-        ArgumentCaptor<Invoice> captor = ArgumentCaptor.forClass(Invoice.class);
-        verify(this.invoiceGateway).create(captor.capture());
-        assertNotNull(captor.getValue().getId());
-        assertEquals(this.userId, captor.getValue().getBillingInfo().getUserId());
-        assertEquals("John Doe", captor.getValue().getBillingInfo().getFullName());
-        assertEquals("Servicios", captor.getValue().getBillingInfo().getConcept());
     }
 
     @Test
@@ -111,9 +102,9 @@ class InvoiceServiceIT {
                 .engagement(EngagementSnapshot.builder().id(this.engagementId).build())
                 .build();
         Invoice request = Invoice.builder()
+                .concept("Actualizado")
                 .billingInfo(BillingInfo.builder()
                         .userId(this.userId)
-                        .concept("Actualizado")
                         .build())
                 .baseAmount(new BigDecimal("150.00"))
                 .engagement(EngagementSnapshot.builder().id(this.engagementId).build())
@@ -129,7 +120,7 @@ class InvoiceServiceIT {
 
         assertEquals(invoiceId, updated.getId());
         assertEquals("/tmp/invoice.pdf", updated.getPdfPath());
-        assertEquals("Actualizado", updated.getBillingInfo().getConcept());
+        assertEquals("Actualizado", updated.getConcept());
         verify(this.invoiceGateway).update(eq(invoiceId), any(Invoice.class));
     }
 

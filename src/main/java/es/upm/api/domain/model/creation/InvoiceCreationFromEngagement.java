@@ -23,9 +23,11 @@ public class InvoiceCreationFromEngagement {
 
     private Boolean closeEngagement;
 
+    private String concept;
+
     @NotEmpty
     @Valid
-    private List<LegalProcedureCreation> legalProcedures;
+    private List<InvoiceLegalProcedure> legalProcedures;
 
     @NotEmpty
     @Valid
@@ -33,21 +35,8 @@ public class InvoiceCreationFromEngagement {
 
     public BigDecimal totalBudget() {
         return legalProcedures.stream()
-                .map(LegalProcedureCreation::getBudget)
+                .map(InvoiceLegalProcedure::getBudget)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
-    }
-
-    public String buildProceduresText() {
-        return legalProcedures.stream()
-                .map(procedure -> {
-                    String header = procedure.getTitle() + " - " +
-                            procedure.getBudget().setScale(2, java.math.RoundingMode.HALF_UP).toPlainString() + " €";
-                    String tasks = procedure.getLegalTasks().stream()
-                            .map(task -> "- " + task)
-                            .collect(Collectors.joining(System.lineSeparator()));
-                    return header + System.lineSeparator() + tasks;
-                })
-                .collect(Collectors.joining(System.lineSeparator() + System.lineSeparator()));
     }
 
 }

@@ -1,6 +1,7 @@
 package es.upm.api.domain.model;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import es.upm.api.domain.model.creation.InvoiceLegalProcedure;
 import es.upm.api.domain.model.external.EngagementSnapshot;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -21,6 +22,8 @@ import java.util.function.Function;
 @AllArgsConstructor
 public class Invoice {
     private UUID id;
+    private String concept;
+    private Boolean closed;
     private BillingInfo billingInfo;
     private BigDecimal percentage;
     @JsonFormat(pattern = "yyyy-MM-dd")
@@ -33,11 +36,12 @@ public class Invoice {
     private BigDecimal vatAmount;
     private BigDecimal vatRate;
     private EngagementSnapshot engagement;
+    private List<InvoiceLegalProcedure> legalProcedures;
     private List<InvoicedPayment> payments;
     private List<InvoicedPayment> priorPayments;
     private List<InvoicedExpense> expenses;
     private List<BigDecimal> discounts;
-    private Boolean closed;
+
     private String pdfPath;
     private Rectification rectification;
 
@@ -120,6 +124,12 @@ public class Invoice {
                 .subtract(this.priorPaymentsVatAmount())
                 .add(this.expensesVatAmount())
                 .multiply(this.percentageFactor());
+    }
+
+    public BigDecimal totalBudget() {
+        return legalProcedures.stream()
+                .map(InvoiceLegalProcedure::getBudget)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
     private BigDecimal vatFactor() {

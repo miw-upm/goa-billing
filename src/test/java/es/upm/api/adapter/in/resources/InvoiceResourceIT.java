@@ -62,7 +62,7 @@ class InvoiceResourceIT {
         ArgumentCaptor<Invoice> invoiceCaptor = ArgumentCaptor.forClass(Invoice.class);
         verify(this.invoiceService).create(invoiceCaptor.capture());
         assertEquals(userId, invoiceCaptor.getValue().getBillingInfo().getUserId());
-        assertEquals("Servicios", invoiceCaptor.getValue().getBillingInfo().getConcept());
+        assertEquals("Servicios", invoiceCaptor.getValue().getConcept());
         assertEquals(new BigDecimal("100.00"), invoiceCaptor.getValue().getBaseAmount());
         assertEquals(1, invoiceCaptor.getValue().getDiscounts().size());
     }
@@ -241,12 +241,12 @@ class InvoiceResourceIT {
     private Invoice buildInvoice(UUID invoiceId, UUID userId, String baseAmount) {
         return Invoice.builder()
                 .id(invoiceId)
+                .concept("Servicios")
                 .billingInfo(BillingInfo.builder()
                         .userId(userId)
                         .fullName("John Doe")
                         .identity("12345678A")
                         .fullAddress("Madrid")
-                        .concept("Servicios")
                         .build())
                 .emissionDate(LocalDate.of(2026, 3, 20))
                 .operationDate(LocalDate.of(2026, 3, 20))
