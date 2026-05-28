@@ -21,9 +21,9 @@ import org.springframework.util.StringUtils;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.text.NumberFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
@@ -93,7 +93,7 @@ public class InvoiceService {
 
     public void createFromEngagement(InvoiceCreationFromEngagement creation) {
         EngagementSnapshot engagement = this.engagementGateway.read(creation.getEngagementId());
-        if (engagement.getClosingDate()!=null) {
+        if (engagement.getClosingDate() != null) {
             throw new BadRequestException("Engagement is closed, no more invoices can be created, id: " + creation.getEngagementId());
         }
         Invoice invoice = Invoice.builder()
@@ -117,7 +117,7 @@ public class InvoiceService {
             invoice.setDiscounts(engagement.getDiscounts());
             invoice.getBillingInfo()
                     .setConcept("FACTURA por cierre de Hoja de Encargos." + System.lineSeparator() + System.lineSeparator()
-                    + invoice.getBillingInfo().getConcept());
+                            + invoice.getBillingInfo().getConcept());
         } else {
             invoice.applyTotalAmount(invoice.paymentsAmount().add(invoice.priorPaymentsAmount()));
             invoice.getBillingInfo()
@@ -158,12 +158,12 @@ public class InvoiceService {
         byte[] pdf = this.generatePdf(id);
         String fileName = "Ocanabogados-" + invoice.getSeries() + "-" + invoice.getNumber() + ".pdf";
         this.emailWriter.sendHtml(
-                this.invoiceTemplateService.buildHtmlEmail(this.email,this.name),
+                this.invoiceTemplateService.buildHtmlEmail(this.email, this.name),
                 pdf,
                 fileName
         );
         this.emailWriter.sendHtml(
-                this.invoiceTemplateService.buildHtmlEmail(user.getEmail(),user.getFirstName()),
+                this.invoiceTemplateService.buildHtmlEmail(user.getEmail(), user.getFirstName()),
                 pdf,
                 fileName
         );
@@ -252,6 +252,7 @@ public class InvoiceService {
     }
 
     public byte[] generatePdf(UUID id) {
+        final NumberFormat EUR = NumberFormat.getCurrencyInstance(Locale.forLanguageTag("es-ES"));
         Invoice invoice = this.read(id);
 
         BigDecimal baseAmount = invoice.totalBaseAmount().setScale(2, RoundingMode.HALF_UP);
@@ -269,106 +270,107 @@ public class InvoiceService {
 
         PdfBuilder pdf = new PdfBuilder()
                 .header()
-                .space(2)
                 .title(title)
-                .paragraphBold("Nº " + invoiceNumber + "   ·   " + issueDate)
-                .space(2);
+                .space()
+                .paragraphBold("Nº " + invoiceNumber + "   ·   " + issueDate);
 
-        pdf.section("FACTURAR A")
+        pdf.section("FACTURAR A, CON PARTICIPACIÓN DEL : " + invoice.getPercentage() + " %")
                 .paragraphBold(invoice.getBillingInfo().getFullName())
                 .paragraph("N.I.F. " + invoice.getBillingInfo().getIdentity())
-                .paragraph(invoice.getBillingInfo().getFullAddress())
-                .space();
+                .paragraph(invoice.getBillingInfo().getFullAddress());
 
         pdf.section("CONCEPTO")
-                .paragraph(invoice.getBillingInfo().getConcept())
-                .space();
+                .paragraph(invoice.getBillingInfo().getConcept());
 
-        pdf.section("PARTICIPACIÓN DEL CLIENTE")
-                .paragraph(invoice.getPercentage() + " %")
-                .space();
+        pdf.section("IMPORTE DE LA PRESENTE FACTURA");
+        pdf.table(
+                new String[]{"Concepto", "Importe"},
+                List.of(
+                        new String[]{"Base imponible", EUR.format(baseAmount)},
+                        new String[]{"IVA (" + vatRate.toPlainString() + "%)", EUR.format(vatAmount)}
+                ),
+                new String[]{"TOTAL", EUR.format(totalAmount)}
+        );
+        BigDecimal debt = totalAmount.subtract(invoice.paymentsAmount());
+        if (debt.compareTo(new BigDecimal("4")) > 0) {
+            pdf.paragraphHighlight("PENDIENTE DE INGRESAR: " + EUR.format(debt));
+            pdf.paragraphHighlight("Ruego que ingrese en la cuenta bancaria: ES00 1111 2222 3333 4444 5555");
+        }
+
+        pdf.signatureLine("Doña Nuria Ocaña Pérez");
+
+        pdf.pageBreak().section("Información detallada");
 
         if (invoice.getDiscounts() != null && !invoice.getDiscounts().isEmpty()) {
-            pdf.section("Descuentos aplicados a la Hoja de Encargo");
-            List<String[]> discountRows = new ArrayList<>(invoice.getDiscounts().stream()
-                    .map(d -> new String[]{
+            pdf.paragraphBold("Descuentos aplicados a la Hoja de Encargo");
+            List<String[]> discountRows = invoice.getDiscounts().stream()
+                    .map(discount -> new String[]{
                             "",
-                            "− " + d.setScale(2, RoundingMode.HALF_UP).toPlainString() + " €",
+                            "− " + EUR.format(discount),
                             ""
-                    })
-                    .toList());
-            discountRows.add(new String[]{
-                    invoice.totalBaseAmount().add(invoice.discountsAmount()).setScale(2, RoundingMode.HALF_UP).toPlainString() + " €",
-                    "− " + invoice.discountsAmount().setScale(2, RoundingMode.HALF_UP).toPlainString() + " €",
-                    invoice.totalBaseAmount().setScale(2, RoundingMode.HALF_UP).toPlainString() + " €"
-            });
-            pdf.table(new String[]{"Base original", "Descuentos", "Base final"}, discountRows);
+                    }).toList();
+            pdf.table(
+                    new String[]{"Base original", "Descuentos", "Base final"},
+                    discountRows,
+                    new String[]{
+                            EUR.format(invoice.totalBaseAmount().add(invoice.discountsAmount())),
+                            EUR.format(invoice.discountsAmount()),
+                            EUR.format(invoice.totalBaseAmount())
+                    }
+            );
         }
 
         if (invoice.getPayments() != null && !invoice.getPayments().isEmpty()) {
-            pdf.section("Ingresos Asociados, pendientes de facturar, a la Hoja de Encargo");
+            pdf.paragraphBold("Ingresos Asociados a la Hoja de Encargo y facturados en la presente");
             List<String[]> paymentRows = invoice.getPayments().stream()
-                    .map(p -> new String[]{
-                            p.user().toFullName(),
-                            p.date().format(DATE_FORMAT),
-                            p.amount().setScale(2, RoundingMode.HALF_UP).toPlainString() + " €",
-                            p.method().name()
-                    })
-                    .toList();
-            pdf.table(new String[]{"Cliente", "Fecha", "Importe", "Tipo de Ingreso"}, paymentRows);
+                    .map(payment -> new String[]{
+                            payment.user().toFullName(),
+                            payment.date().format(DATE_FORMAT),
+                            EUR.format(payment.amount()),
+                            payment.method().name()
+                    }).toList();
+            pdf.table(
+                    new String[]{"Cliente", "Fecha", "Importe", "Tipo de Ingreso"},
+                    paymentRows,
+                    new String[]{"TOTAL", "", EUR.format(invoice.paymentsAmount()), ""}
+            );
         }
 
         if (invoice.getExpenses() != null && !invoice.getExpenses().isEmpty()) {
-            pdf.section("Gastos asociados a la Hoja de Encargo");
-
+            pdf.paragraphBold("Gastos asociados a la Hoja de Encargo");
             List<String[]> expenseRows = invoice.getExpenses().stream()
-                    .map(e -> {
-                        BigDecimal base = e.baseAmount().setScale(2, RoundingMode.HALF_UP);
-                        BigDecimal vat = e.vatAmount().setScale(2, RoundingMode.HALF_UP);
+                    .map(expense -> {
+                        BigDecimal base = expense.baseAmount().setScale(2, RoundingMode.HALF_UP);
+                        BigDecimal vat = expense.vatAmount().setScale(2, RoundingMode.HALF_UP);
                         return new String[]{
-                                e.issueDate().format(DATE_FORMAT),
-                                e.description(),
-                                base.toPlainString() + " €",
-                                vat.toPlainString() + " €"
+                                expense.issueDate().format(DATE_FORMAT),
+                                expense.description(),
+                                EUR.format(base),
+                                EUR.format(vat)
                         };
-                    })
-                    .toList();
-
-            pdf.table(new String[]{"Fecha", "Descripción", "Base imponible", "IVA"}, expenseRows);
+                    }).toList();
+            pdf.table(
+                    new String[]{"Fecha", "Descripción", "Base imponible", "IVA"},
+                    expenseRows,
+                    new String[]{"TOTAL", "", EUR.format(invoice.expensesBaseAmount()), EUR.format(invoice.expensesVatAmount())}
+            );
         }
-
 
         if (invoice.getPriorPayments() != null && !invoice.getPriorPayments().isEmpty()) {
-            pdf.section("Anteriores ingresos, Ya Facturados, de la Hoja de encargo");
+            pdf.paragraphBold("Anteriores ingresos, Ya Facturados, de la Hoja de Encargo");
             List<String[]> paymentRows = invoice.getPriorPayments().stream()
-                    .map(p -> new String[]{
-                            p.user().toFullName(),
-                            p.date().format(DATE_FORMAT),
-                            p.amount().setScale(2, RoundingMode.HALF_UP).toPlainString() + " €",
-                            p.method().name()
-                    })
-                    .toList();
-            pdf.table(new String[]{"Cliente", "Fecha", "Importe", "Tipo de Ingreso"}, paymentRows);
+                    .map(payment -> new String[]{
+                            payment.user().toFullName(),
+                            payment.date().format(DATE_FORMAT),
+                            EUR.format(payment.amount()),
+                            payment.method().name()
+                    }).toList();
+            pdf.table(
+                    new String[]{"Cliente", "Fecha", "Importe", "Tipo de Ingreso"},
+                    paymentRows,
+                    new String[]{"TOTAL", "", EUR.format(invoice.priorPaymentsAmount()), ""}
+            );
         }
-
-        pdf.section("IMPORTE DE LA PRESENTE FACTURA");
-        List<String[]> amountRows = List.of(
-                new String[]{"Base imponible", baseAmount.toPlainString() + " €"},
-                new String[]{"IVA (" + vatRate.toPlainString() + "%)", vatAmount.toPlainString() + " €"},
-                new String[]{"TOTAL", totalAmount.toPlainString() + " €"}
-        );
-        pdf.table(new String[]{"Concepto", "Importe"}, amountRows);
-
-        //TODO falta por ingresar
-        BigDecimal debt = totalAmount.subtract(invoice.paymentsAmount());
-        if (debt.compareTo(new BigDecimal("4")) > 0) {
-            pdf.section("PENDIENTE DE INGRESAR: " + debt.toPlainString() + " €");
-            pdf.paragraphBold("Ruego que ingrese en la cuenta bancaria: ES00 1111 2222 3333 4444 5555");
-        }
-
-
-        pdf.space(3)
-                .signatureLine("Doña Nuria Ocaña Pérez");
 
         return pdf.build();
     }

@@ -61,6 +61,7 @@ public class InvoiceResource {
         this.invoiceService.delete(id);
     }
 
+    @PreAuthorize(Security.ADMIN)
     @PostMapping("/{id}/emission")
     public void emission(@PathVariable UUID id) {
         this.invoiceService.emission(id);

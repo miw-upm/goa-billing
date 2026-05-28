@@ -4,10 +4,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import es.upm.api.domain.model.external.EngagementSnapshot;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Past;
-import jakarta.validation.constraints.Positive;
-import jakarta.validation.constraints.PositiveOrZero;
+import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -33,7 +30,7 @@ public class Expense {
 
     @JsonFormat(pattern = "yyyy-MM-dd")
     @NotNull
-    @Past
+    @PastOrPresent
     private LocalDate issueDate;
 
     @NotNull
