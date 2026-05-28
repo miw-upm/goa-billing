@@ -113,23 +113,26 @@ public class Invoice {
 
     public BigDecimal totalBaseAmount() {
         return baseAmount
-                .subtract(this.priorPaymentsBaseAmount())
                 .subtract(this.discountsAmount())
-                .add(this.expensesBaseAmount())
+                .subtract(this.priorPaymentsBaseAmount())
                 .multiply(this.percentageFactor());
     }
 
     public BigDecimal totalVatAmount() {
         return vatAmount
                 .subtract(this.priorPaymentsVatAmount())
-                .add(this.expensesVatAmount())
                 .multiply(this.percentageFactor());
     }
 
     public BigDecimal totalBudget() {
-        return legalProcedures.stream()
-                .map(InvoiceLegalProcedure::getBudget)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        if (this.getLegalProcedures() != null) {
+            return legalProcedures.stream()
+                    .map(InvoiceLegalProcedure::getBudget)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+        }else {
+            return this.baseAmount;
+        }
+
     }
 
     private BigDecimal vatFactor() {

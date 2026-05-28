@@ -24,6 +24,5 @@ public class InvoiceCreationDto {
     @NotNull
     @Positive
     private BigDecimal baseAmount;
-    //TODO ELIMINAR
     private List<BigDecimal> discounts;
 }

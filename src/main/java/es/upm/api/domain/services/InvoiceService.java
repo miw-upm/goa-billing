@@ -15,6 +15,7 @@ import es.upm.miw.exception.BadRequestException;
 import es.upm.miw.exception.InvalidTransitionException;
 import es.upm.miw.pdf.PdfBuilder;
 import lombok.RequiredArgsConstructor;
+import org.jspecify.annotations.NonNull;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -35,6 +36,7 @@ import java.util.stream.Stream;
 public class InvoiceService {
     private static final DateTimeFormatter DATE_FORMAT =
             DateTimeFormatter.ofPattern("EEEE, d 'de' MMMM 'de' yyyy", new Locale("es", "ES"));
+    private static final NumberFormat EUR = NumberFormat.getCurrencyInstance(Locale.forLanguageTag("es-ES"));
 
 
     private static final BigDecimal DEFAULT_VAT_RATE = new BigDecimal("21");
@@ -103,7 +105,7 @@ public class InvoiceService {
 
         if (Boolean.TRUE.equals(invoiceTemplate.getClosed())) {
             invoiceTemplate.setExpenses(this.expenses(engagement.getId()));
-            invoiceTemplate.applyBaseAmount(creation.totalBudget());
+            invoiceTemplate.applyBaseAmount(invoiceTemplate.totalBudget());
             invoiceTemplate.setDiscounts(engagement.getDiscounts());
         } else {
             invoiceTemplate.applyTotalAmount(invoiceTemplate.paymentsAmount().add(invoiceTemplate.priorPaymentsAmount()));
@@ -225,11 +227,7 @@ public class InvoiceService {
     }
 
     public byte[] generatePdf(UUID id) {
-        final NumberFormat EUR = NumberFormat.getCurrencyInstance(Locale.forLanguageTag("es-ES"));
         Invoice invoice = this.read(id);
-        BigDecimal baseAmount = invoice.totalBaseAmount().setScale(2, RoundingMode.HALF_UP);
-        BigDecimal vatAmount = invoice.totalVatAmount().setScale(2, RoundingMode.HALF_UP);
-        BigDecimal totalAmount = baseAmount.add(vatAmount);
         BigDecimal vatRate = invoice.getVatRate();
         String title = invoice.isIssued() ? "FACTURA" : "FACTURA PROFORMA";
         String invoiceNumber = invoice.isIssued()
@@ -251,28 +249,43 @@ public class InvoiceService {
                 .paragraph(invoice.getBillingInfo().getFullAddress());
 
         pdf.section("CONCEPTO");
-        if (Boolean.TRUE.equals(invoice.getClosed())) {
-            pdf.paragraphBold("FACTURA por cierre de Hoja de Encargos.");
-        } else {
-            pdf.paragraphBold("FACTURA por ingreso de Provisón de Fondos.");
+        if (invoice.getClosed() != null) {
+            if (invoice.getClosed()) {
+                pdf.paragraphBold("Factura por cierre de Hoja de Encargos.");
+            } else {
+                pdf.paragraphBold("Factura por ingreso de Provisión de Fondos.");
+            }
         }
-        invoice.getLegalProcedures()
-                .forEach(procedure -> {
-                    pdf.paragraph(procedure.getTitle() + "  -  " + EUR.format(procedure.getBudget()))
-                            .list(procedure.getLegalTasks());
-                });
+        if (Objects.nonNull(invoice.getLegalProcedures())) {
+            invoice.getLegalProcedures()
+                    .forEach(procedure -> pdf.paragraph(procedure.getTitle() + "  -  " +
+                                    EUR.format(procedure.getBudget()))
+                            .list(procedure.getLegalTasks()));
+        }
         if (Objects.nonNull(invoice.getConcept())) {
             pdf.paragraph(invoice.getConcept());
         }
 
         pdf.section("IMPORTE DE LA PRESENTE FACTURA");
+        BigDecimal baseAmount = invoice.totalBaseAmount().setScale(2, RoundingMode.HALF_UP);
+        BigDecimal vatAmount = invoice.totalVatAmount().setScale(2, RoundingMode.HALF_UP);
+        BigDecimal totalAmount = baseAmount.add(vatAmount);
         pdf.table(
-                new String[]{"Concepto", "Importe"},
+                new String[]{"Concepto", "Base Imponible", "IVA", "Total"},
                 List.of(
-                        new String[]{"Base imponible", EUR.format(baseAmount)},
-                        new String[]{"IVA (" + vatRate.toPlainString() + "%)", EUR.format(vatAmount)}
+                        new String[]{"Honorarios", EUR.format(baseAmount), EUR.format(vatAmount)
+                                + "   (" + invoice.getVatRate().toPlainString() +"%)",
+                                EUR.format(baseAmount.add(vatAmount))
+                        },
+                        new String[]{"Gastos", EUR.format(invoice.expensesBaseAmount()),
+                                EUR.format(invoice.expensesVatAmount()),
+                                EUR.format(invoice.expensesVatAmount().add(invoice.expensesBaseAmount()))
+                        }
                 ),
-                new String[]{"TOTAL", EUR.format(totalAmount)}
+                new String[]{"TOTAL", EUR.format(baseAmount.add(invoice.expensesBaseAmount())),
+                        EUR.format(vatAmount.add(invoice.expensesVatAmount())),
+                        EUR.format(baseAmount.add(invoice.expensesBaseAmount()).add(vatAmount.add(invoice.expensesVatAmount()))),
+                }
         );
         BigDecimal debt = totalAmount.subtract(invoice.paymentsAmount());
         if (debt.compareTo(MIN_VALUE_FOR_TRANSFER) > 0) {
@@ -285,7 +298,7 @@ public class InvoiceService {
         pdf.pageBreak().section("Información detallada");
 
         if (invoice.getDiscounts() != null && !invoice.getDiscounts().isEmpty()) {
-            pdf.paragraphBold("Descuentos aplicados a la Hoja de Encargo");
+            pdf.paragraphBold("Descuentos aplicados");
             List<String[]> discountRows = invoice.getDiscounts().stream()
                     .map(discount -> new String[]{
                             "",
@@ -298,7 +311,8 @@ public class InvoiceService {
                     new String[]{
                             EUR.format(invoice.totalBudget()),
                             EUR.format(invoice.discountsAmount()),
-                            EUR.format(invoice.totalBaseAmount())
+                            EUR.format(invoice.totalBudget().subtract(invoice.discountsAmount()))
+                                    + this.applyPercentage(invoice.getPercentage(),invoice.totalBudget().subtract(invoice.discountsAmount()))
                     }
             );
         }
@@ -315,7 +329,7 @@ public class InvoiceService {
             pdf.table(
                     new String[]{"Cliente", "Fecha", "Importe", "Tipo de Ingreso"},
                     paymentRows,
-                    new String[]{"TOTAL", "", EUR.format(invoice.paymentsAmount()), ""}
+                    new String[]{"TOTAL", "", EUR.format(invoice.paymentsAmount()), this.applyPercentage(invoice.getPercentage(),invoice.paymentsAmount())}
             );
         }
 
@@ -335,7 +349,10 @@ public class InvoiceService {
             pdf.table(
                     new String[]{"Fecha", "Descripción", "Base imponible", "IVA"},
                     expenseRows,
-                    new String[]{"TOTAL", "", EUR.format(invoice.expensesBaseAmount()), EUR.format(invoice.expensesVatAmount())}
+                    new String[]{"TOTAL", "", EUR.format(invoice.expensesBaseAmount())
+                            + this.applyPercentage(invoice.getPercentage(),invoice.expensesBaseAmount()),
+                            EUR.format(invoice.expensesVatAmount())
+                                    +  this.applyPercentage(invoice.getPercentage(),invoice.expensesVatAmount())}
             );
         }
 
@@ -351,11 +368,20 @@ public class InvoiceService {
             pdf.table(
                     new String[]{"Cliente", "Fecha", "Importe", "Tipo de Ingreso"},
                     paymentRows,
-                    new String[]{"TOTAL", "", EUR.format(invoice.priorPaymentsAmount()), ""}
+                    new String[]{"TOTAL", "", EUR.format(invoice.priorPaymentsAmount()),
+                            this.applyPercentage(invoice.getPercentage(), invoice.priorPaymentsAmount())}
             );
         }
 
         return pdf.build();
+    }
+
+    private String applyPercentage(BigDecimal percentage, BigDecimal value) {
+        if (percentage.compareTo(new BigDecimal("100")) < 0) {
+            return "   (" + percentage + "%  -  " + EUR.format(value.multiply(percentage).divide(new BigDecimal("100"), RoundingMode.HALF_UP)) + ")";
+        } else {
+            return "";
+        }
     }
 
 
