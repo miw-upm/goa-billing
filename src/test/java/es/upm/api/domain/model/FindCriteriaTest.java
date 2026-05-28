@@ -28,6 +28,10 @@ class FindCriteriaTest {
         criteria = new ExpenseFindCriteria();
         criteria.setSupplier("Taxi");
         assertFalse(criteria.isEmpty());
+
+        criteria = new ExpenseFindCriteria();
+        criteria.setEngagementReference("2H60");
+        assertFalse(criteria.isEmpty());
     }
 
     @Test
@@ -37,6 +41,10 @@ class FindCriteriaTest {
         assertTrue(criteria.all());
 
         criteria.setClient("client");
+        assertFalse(criteria.all());
+
+        criteria = new PaymentFindCriteria();
+        criteria.setEngagementReference("2H60");
         assertFalse(criteria.all());
     }
 
@@ -51,6 +59,10 @@ class FindCriteriaTest {
 
         criteria = new InvoiceFindCriteria();
         criteria.setFromDate(LocalDate.now());
+        assertFalse(criteria.isEmpty());
+
+        criteria = new InvoiceFindCriteria();
+        criteria.setEngagementReference("ZW5nYWdlbWVudA==");
         assertFalse(criteria.isEmpty());
     }
 }

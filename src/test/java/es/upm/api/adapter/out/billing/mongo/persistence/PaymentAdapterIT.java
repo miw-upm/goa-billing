@@ -155,5 +155,37 @@ class PaymentAdapterIT {
         verify(this.paymentRepository).findByEngagementIdAndInvoicedTrueOrderByDateDesc(this.engagementId);
     }
 
+    @Test
+    void shouldFindByEngagementReference() {
+        String encodedEngagementId = PaymentEntity.encodeEngagementId(this.engagementId);
+        this.criteria.setEngagementReference(encodedEngagementId.substring(0, 4));
+        when(this.paymentRepository.findByEngagementIdCode64StartingWithOrderByDateDesc(encodedEngagementId.substring(0, 4)))
+                .thenReturn(List.of(new PaymentEntity(this.payment)));
+
+        List<Payment> result = this.paymentAdapter.find(this.criteria).toList();
+
+        assertEquals(1, result.size());
+        assertEquals(this.payment.getId(), result.get(0).getId());
+        verify(this.paymentRepository).findByEngagementIdCode64StartingWithOrderByDateDesc(encodedEngagementId.substring(0, 4));
+    }
+
+    @Test
+    void shouldFindByEngagementReferenceAndFromDateAndInvoiced() {
+        String encodedEngagementId = PaymentEntity.encodeEngagementId(this.engagementId);
+        this.criteria.setEngagementReference(encodedEngagementId.substring(0, 4));
+        this.criteria.setFromDate(this.date.minusDays(1));
+        this.criteria.setInvoiced(Boolean.FALSE);
+        when(this.paymentRepository.findByEngagementIdCode64StartingWithAndDateGreaterThanEqualAndInvoicedOrderByDateDesc(
+                encodedEngagementId.substring(0, 4), this.date.minusDays(1), Boolean.FALSE))
+                .thenReturn(List.of(new PaymentEntity(this.payment)));
+
+        List<Payment> result = this.paymentAdapter.find(this.criteria).toList();
+
+        assertEquals(1, result.size());
+        assertEquals(this.payment.getId(), result.get(0).getId());
+        verify(this.paymentRepository).findByEngagementIdCode64StartingWithAndDateGreaterThanEqualAndInvoicedOrderByDateDesc(
+                encodedEngagementId.substring(0, 4), this.date.minusDays(1), Boolean.FALSE);
+    }
+
 
 }

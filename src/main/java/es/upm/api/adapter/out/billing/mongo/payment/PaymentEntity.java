@@ -13,7 +13,9 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.math.BigDecimal;
+import java.nio.ByteBuffer;
 import java.time.LocalDate;
+import java.util.Base64;
 import java.util.UUID;
 
 @Builder
@@ -25,6 +27,7 @@ public class PaymentEntity {
     @Id
     private UUID id;
     private UUID engagementId;
+    private String engagementIdCode64;
     private UUID userId;
     private BigDecimal amount;
     private PaymentMethod method;
@@ -34,6 +37,7 @@ public class PaymentEntity {
     public PaymentEntity(Payment payment) {
         BeanUtils.copyProperties(payment, this);
         this.engagementId = payment.getEngagement() == null ? null : payment.getEngagement().getId();
+        this.engagementIdCode64 = this.engagementId == null ? null : PaymentEntity.encodeEngagementId(this.engagementId);
         this.userId = payment.getUser() == null ? null : payment.getUser().getId();
     }
 
@@ -46,5 +50,11 @@ public class PaymentEntity {
                 : UserSnapshot.builder().id(this.userId).build());
         return payment;
     }
-}
 
+    public static String encodeEngagementId(UUID engagementId) {
+        ByteBuffer byteBuffer = ByteBuffer.allocate(16);
+        byteBuffer.putLong(engagementId.getMostSignificantBits());
+        byteBuffer.putLong(engagementId.getLeastSignificantBits());
+        return Base64.getEncoder().withoutPadding().encodeToString(byteBuffer.array());
+    }
+}

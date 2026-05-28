@@ -12,8 +12,14 @@ import java.time.LocalDate;
 public class InvoiceFindCriteria {
     private String client;
     private LocalDate fromDate;
+    private String engagementReference;
+
+    public InvoiceFindCriteria(String client, LocalDate fromDate) {
+        this.client = client;
+        this.fromDate = fromDate;
+    }
 
     public boolean isEmpty() {
-        return this.client == null && this.fromDate == null;
+        return this.client == null && this.fromDate == null && this.engagementReference == null;
     }
 }

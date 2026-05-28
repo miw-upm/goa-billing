@@ -188,7 +188,9 @@ public class InvoiceService {
         }
 
         return invoices.map(invoice -> {
-            if (invoice.getEngagement() != null) {
+            if (invoice.getEngagement() != null
+                    && invoice.getEngagement().getId() != null
+                    && !StringUtils.hasText(invoice.getEngagement().getReference())) {
                 UUID engagementId = invoice.getEngagement().getId();
                 invoice.setEngagement(engagementGateway.read(engagementId));
             }

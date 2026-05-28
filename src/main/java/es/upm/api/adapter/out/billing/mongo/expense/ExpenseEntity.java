@@ -13,8 +13,10 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.math.BigDecimal;
+import java.nio.ByteBuffer;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Base64;
 import java.util.UUID;
 
 @Builder
@@ -27,6 +29,7 @@ public class ExpenseEntity {
     private UUID id;
     private LocalDateTime recordedAt;
     private UUID engagementId;
+    private String engagementIdCode64;
     private BigDecimal baseAmount;
     private Integer vatRate;
     private SupplierInfo supplier;
@@ -39,6 +42,7 @@ public class ExpenseEntity {
     public ExpenseEntity(Expense expense) {
         BeanUtils.copyProperties(expense, this);
         this.engagementId = expense.getEngagement() == null ? null : expense.getEngagement().getId();
+        this.engagementIdCode64 = this.engagementId == null ? null : ExpenseEntity.encodeEngagementId(this.engagementId);
     }
 
     public Expense toDomain() {
@@ -47,5 +51,12 @@ public class ExpenseEntity {
         expense.setEngagement(this.engagementId == null ? null
                 : EngagementSnapshot.builder().id(this.engagementId).build());
         return expense;
+    }
+
+    public static String encodeEngagementId(UUID engagementId) {
+        ByteBuffer byteBuffer = ByteBuffer.allocate(16);
+        byteBuffer.putLong(engagementId.getMostSignificantBits());
+        byteBuffer.putLong(engagementId.getLeastSignificantBits());
+        return Base64.getEncoder().withoutPadding().encodeToString(byteBuffer.array());
     }
 }

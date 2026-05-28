@@ -11,8 +11,10 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import java.nio.ByteBuffer;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.Base64;
 import java.util.List;
 import java.util.UUID;
 
@@ -36,6 +38,7 @@ public class InvoiceEntity {
     private BigDecimal vatAmount;
     private BigDecimal vatRate;
     private UUID engagementId;
+    private String engagementIdCode64;
     private List<InvoiceLegalProcedure> legalProcedures;
     private List<InvoicedPayment> payments;
     private List<InvoicedPayment> priorPayments;
@@ -47,6 +50,7 @@ public class InvoiceEntity {
     public InvoiceEntity(Invoice invoice) {
         BeanUtils.copyProperties(invoice, this);
         this.engagementId = invoice.getEngagement() == null ? null : invoice.getEngagement().getId();
+        this.engagementIdCode64 = this.engagementId == null ? null : InvoiceEntity.encodeEngagementId(this.engagementId);
     }
 
     public Invoice toDomain() {
@@ -55,5 +59,12 @@ public class InvoiceEntity {
         invoice.setEngagement(this.engagementId == null ? null
                 : EngagementSnapshot.builder().id(this.engagementId).build());
         return invoice;
+    }
+
+    public static String encodeEngagementId(UUID engagementId) {
+        ByteBuffer byteBuffer = ByteBuffer.allocate(16);
+        byteBuffer.putLong(engagementId.getMostSignificantBits());
+        byteBuffer.putLong(engagementId.getLeastSignificantBits());
+        return Base64.getEncoder().withoutPadding().encodeToString(byteBuffer.array());
     }
 }

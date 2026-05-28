@@ -6,6 +6,7 @@ import es.upm.api.domain.ports.out.billing.PaymentGateway;
 import es.upm.miw.exception.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
+import org.springframework.util.StringUtils;
 
 import java.util.List;
 import java.util.UUID;
@@ -27,6 +28,8 @@ public class PaymentAdapter implements PaymentGateway {
                 .orElseThrow(() -> new NotFoundException("Payment id: " + id));
 
         paymentEntity.setEngagementId(payment.getEngagement().getId());
+        paymentEntity.setEngagementIdCode64(payment.getEngagement() == null || payment.getEngagement().getId() == null ? null
+                : PaymentEntity.encodeEngagementId(payment.getEngagement().getId()));
         paymentEntity.setUserId(payment.getUser().getId());
         paymentEntity.setAmount(payment.getAmount());
         paymentEntity.setMethod(payment.getMethod());
@@ -53,7 +56,23 @@ public class PaymentAdapter implements PaymentGateway {
     @Override
     public Stream<Payment> find(PaymentFindCriteria criteria) {
         List<PaymentEntity> result;
-        if (criteria.all()) {
+        if (StringUtils.hasText(criteria.getEngagementReference()) && criteria.getFromDate() != null && criteria.getInvoiced() != null) {
+            result = this.paymentRepository.findByEngagementIdCode64StartingWithAndDateGreaterThanEqualAndInvoicedOrderByDateDesc(
+                    this.normalizeEngagementReference(criteria.getEngagementReference()), criteria.getFromDate(), criteria.getInvoiced()
+            );
+        } else if (StringUtils.hasText(criteria.getEngagementReference()) && criteria.getFromDate() != null) {
+            result = this.paymentRepository.findByEngagementIdCode64StartingWithAndDateGreaterThanEqualOrderByDateDesc(
+                    this.normalizeEngagementReference(criteria.getEngagementReference()), criteria.getFromDate()
+            );
+        } else if (StringUtils.hasText(criteria.getEngagementReference()) && criteria.getInvoiced() != null) {
+            result = this.paymentRepository.findByEngagementIdCode64StartingWithAndInvoicedOrderByDateDesc(
+                    this.normalizeEngagementReference(criteria.getEngagementReference()), criteria.getInvoiced()
+            );
+        } else if (StringUtils.hasText(criteria.getEngagementReference())) {
+            result = this.paymentRepository.findByEngagementIdCode64StartingWithOrderByDateDesc(
+                    this.normalizeEngagementReference(criteria.getEngagementReference())
+            );
+        } else if (criteria.all()) {
             result = this.paymentRepository.findAllByOrderByDateDesc();
         } else if (criteria.getFromDate() != null && criteria.getInvoiced() != null) {
             result = this.paymentRepository.findByDateGreaterThanEqualAndInvoicedOrderByDateDesc(
@@ -69,6 +88,10 @@ public class PaymentAdapter implements PaymentGateway {
 
         return result.stream()
                 .map(PaymentEntity::toDomain);
+    }
+
+    private String normalizeEngagementReference(String engagementReference) {
+        return engagementReference.trim().replace("=", "");
     }
 
     @Override

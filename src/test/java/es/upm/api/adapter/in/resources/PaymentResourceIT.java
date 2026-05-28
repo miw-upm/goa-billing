@@ -8,6 +8,7 @@ import es.upm.api.domain.model.external.UserSnapshot;
 import es.upm.api.domain.services.PaymentService;
 import es.upm.miw.exception.NotFoundException;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -22,6 +23,7 @@ import java.time.LocalDate;
 import java.util.UUID;
 import java.util.stream.Stream;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -126,6 +128,25 @@ class PaymentResourceIT {
         verify(this.paymentService).find(this.criteria);
     }
 
+    @Test
+    @WithMockUser(roles = "admin")
+    void shouldFindPaymentsByEngagementReference() throws Exception {
+        UUID paymentId = UUID.randomUUID();
+        UUID engagementId = UUID.randomUUID();
+        UUID userId = UUID.randomUUID();
+        Payment response = this.buildPayment(paymentId, engagementId, userId, "200", PaymentMethod.OTHER, LocalDate.of(2026, 3, 19));
+        when(this.paymentService.find(any(PaymentFindCriteria.class))).thenReturn(Stream.of(response));
+
+        this.mockMvc.perform(get("/payments")
+                        .param("engagementReference", "2H60"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].id").value(paymentId.toString()));
+
+        ArgumentCaptor<PaymentFindCriteria> criteriaCaptor = ArgumentCaptor.forClass(PaymentFindCriteria.class);
+        verify(this.paymentService).find(criteriaCaptor.capture());
+        assertEquals("2H60", criteriaCaptor.getValue().getEngagementReference());
+    }
+
     private Payment buildPayment(UUID paymentId, UUID engagementId, UUID userId, String amount,
                                  PaymentMethod method, LocalDate date) {
         return Payment.builder()
@@ -138,4 +159,3 @@ class PaymentResourceIT {
                 .build();
     }
 }
-

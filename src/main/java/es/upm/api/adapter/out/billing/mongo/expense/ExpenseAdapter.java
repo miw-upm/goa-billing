@@ -7,6 +7,7 @@ import es.upm.api.domain.ports.out.billing.ExpenseGateway;
 import es.upm.miw.exception.BadRequestException;
 import es.upm.miw.exception.NotFoundException;
 import org.springframework.stereotype.Repository;
+import org.springframework.util.StringUtils;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -56,7 +57,11 @@ public class ExpenseAdapter implements ExpenseGateway {
     @Override
     public Stream<Expense> find(ExpenseFindCriteria criteria) {
         List<ExpenseEntity> result;
-        if (criteria.getSupplier() == null) {
+        if (StringUtils.hasText(criteria.getEngagementReference())) {
+            result = this.expenseRepository.findByEngagementIdCode64StartingWithOrderByIssueDateDesc(
+                    this.normalizeEngagementReference(criteria.getEngagementReference())
+            );
+        } else if (criteria.getSupplier() == null) {
             result = this.expenseRepository.findAllByOrderByIssueDateDesc();
         } else {
             result = this.expenseRepository.findBySupplierNameContainingIgnoreCaseOrSupplierIdentityContainingIgnoreCaseOrderByIssueDateDesc(
@@ -64,6 +69,15 @@ public class ExpenseAdapter implements ExpenseGateway {
             );
         }
         Stream<ExpenseEntity> stream = result.stream();
+        if (StringUtils.hasText(criteria.getEngagementReference()) && StringUtils.hasText(criteria.getSupplier())) {
+            String supplier = criteria.getSupplier().toLowerCase(Locale.ROOT);
+            stream = stream.filter(expenseEntity ->
+                    expenseEntity.getSupplier() != null
+                            && ((expenseEntity.getSupplier().getName() != null
+                            && expenseEntity.getSupplier().getName().toLowerCase(Locale.ROOT).contains(supplier))
+                            || (expenseEntity.getSupplier().getIdentity() != null
+                            && expenseEntity.getSupplier().getIdentity().toLowerCase(Locale.ROOT).contains(supplier))));
+        }
         if (criteria.getCategory() != null) {
             String category = criteria.getCategory().toLowerCase(Locale.ROOT);
             stream = stream.filter(expenseEntity -> expenseEntity.getTaxCategory() != null
@@ -75,6 +89,10 @@ public class ExpenseAdapter implements ExpenseGateway {
                     && !expenseEntity.getIssueDate().isBefore(fromDate));
         }
         return stream.map(ExpenseEntity::toDomain);
+    }
+
+    private String normalizeEngagementReference(String engagementReference) {
+        return engagementReference.trim().replace("=", "");
     }
 
     @Override

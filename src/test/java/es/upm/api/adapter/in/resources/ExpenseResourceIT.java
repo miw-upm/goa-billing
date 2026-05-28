@@ -5,6 +5,7 @@ import es.upm.api.domain.model.criteria.ExpenseFindCriteria;
 import es.upm.api.domain.services.ExpenseService;
 import es.upm.miw.exception.NotFoundException;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -15,7 +16,9 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.UUID;
+import java.util.stream.Stream;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -147,5 +150,19 @@ class ExpenseResourceIT {
                 .andExpect(status().isOk());
 
         verify(this.expenseService).delete(expenseId);
+    }
+
+    @Test
+    @WithMockUser(roles = "admin")
+    void shouldFindExpensesByEngagementReference() throws Exception {
+        when(this.expenseService.find(any(ExpenseFindCriteria.class))).thenReturn(Stream.empty());
+
+        this.mockMvc.perform(get("/expenses")
+                        .param("engagementReference", "2H60"))
+                .andExpect(status().isOk());
+
+        ArgumentCaptor<ExpenseFindCriteria> criteriaCaptor = ArgumentCaptor.forClass(ExpenseFindCriteria.class);
+        verify(this.expenseService).find(criteriaCaptor.capture());
+        assertEquals("2H60", criteriaCaptor.getValue().getEngagementReference());
     }
 }

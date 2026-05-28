@@ -12,5 +12,10 @@ public interface InvoiceRepository extends MongoRepository<InvoiceEntity, UUID> 
 
     List<InvoiceEntity> findByEmissionDateGreaterThanEqualOrderByEmissionDateDesc(LocalDate emissionDate);
 
+    List<InvoiceEntity> findByEngagementIdCode64StartingWithOrderByEmissionDateDesc(String engagementIdCode64Prefix);
+
+    List<InvoiceEntity> findByEngagementIdCode64StartingWithAndEmissionDateGreaterThanEqualOrderByEmissionDateDesc(
+            String engagementIdCode64Prefix, LocalDate emissionDate);
+
     Optional<InvoiceEntity> findFirstBySeriesOrderByNumberDesc(String series);
 }

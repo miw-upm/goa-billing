@@ -5,6 +5,7 @@ import es.upm.api.domain.model.criteria.InvoiceFindCriteria;
 import es.upm.api.domain.ports.out.billing.InvoiceGateway;
 import es.upm.miw.exception.NotFoundException;
 import org.springframework.stereotype.Repository;
+import org.springframework.util.StringUtils;
 
 import java.util.List;
 import java.util.Optional;
@@ -42,6 +43,8 @@ public class InvoiceAdapter implements InvoiceGateway {
         invoiceEntity.setVatAmount(invoice.getVatAmount());
         invoiceEntity.setVatRate(invoice.getVatRate());
         invoiceEntity.setEngagementId(invoice.getEngagement() == null ? null : invoice.getEngagement().getId());
+        invoiceEntity.setEngagementIdCode64(invoice.getEngagement() == null || invoice.getEngagement().getId() == null ? null
+                : InvoiceEntity.encodeEngagementId(invoice.getEngagement().getId()));
         invoiceEntity.setLegalProcedures(invoice.getLegalProcedures());
         invoiceEntity.setPayments(invoice.getPayments());
         invoiceEntity.setPriorPayments(invoice.getPriorPayments());
@@ -71,7 +74,15 @@ public class InvoiceAdapter implements InvoiceGateway {
     public Stream<Invoice> find(InvoiceFindCriteria criteria) {
         List<InvoiceEntity> result;
 
-        if (criteria.isEmpty() || criteria.getFromDate() == null) {
+        if (StringUtils.hasText(criteria.getEngagementReference())) {
+            String engagementReferencePrefix = this.normalizeEngagementReference(criteria.getEngagementReference());
+            if (criteria.getFromDate() == null) {
+                result = this.invoiceRepository.findByEngagementIdCode64StartingWithOrderByEmissionDateDesc(engagementReferencePrefix);
+            } else {
+                result = this.invoiceRepository.findByEngagementIdCode64StartingWithAndEmissionDateGreaterThanEqualOrderByEmissionDateDesc(
+                        engagementReferencePrefix, criteria.getFromDate());
+            }
+        } else if (criteria.isEmpty() || criteria.getFromDate() == null) {
             result = this.invoiceRepository.findAllByOrderByEmissionDateDesc();
         } else {
             result = this.invoiceRepository.findByEmissionDateGreaterThanEqualOrderByEmissionDateDesc(criteria.getFromDate());
@@ -79,6 +90,10 @@ public class InvoiceAdapter implements InvoiceGateway {
 
         return result.stream()
                 .map(InvoiceEntity::toDomain);
+    }
+
+    private String normalizeEngagementReference(String engagementReference) {
+        return engagementReference.trim().replace("=", "");
     }
 
     @Override

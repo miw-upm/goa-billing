@@ -165,4 +165,26 @@ class InvoiceServiceIT {
         verify(this.userFinder, never()).find(any());
     }
 
+    @Test
+    void shouldFindByEngagementReferenceUsingGatewayQuery() {
+        UUID engagementId = UUID.randomUUID();
+        String encodedEngagementId = "ZW5jb2RlZA==";
+        Invoice matching = Invoice.builder()
+                .id(UUID.randomUUID())
+                .engagement(EngagementSnapshot.builder().id(engagementId).build())
+                .build();
+        InvoiceFindCriteria criteria = new InvoiceFindCriteria();
+        criteria.setEngagementReference(encodedEngagementId);
+
+        when(this.invoiceGateway.find(criteria)).thenReturn(Stream.of(matching));
+        when(this.engagementGateway.read(engagementId))
+                .thenReturn(EngagementSnapshot.builder().id(engagementId).reference("ENG-260001").build());
+
+        List<Invoice> invoices = this.invoiceService.find(criteria).toList();
+
+        assertEquals(1, invoices.size());
+        assertEquals(matching.getId(), invoices.get(0).getId());
+        verify(this.invoiceGateway).find(criteria);
+    }
+
 }

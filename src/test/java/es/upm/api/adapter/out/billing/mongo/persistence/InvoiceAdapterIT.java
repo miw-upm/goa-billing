@@ -153,6 +153,40 @@ class InvoiceAdapterIT {
         verify(this.invoiceRepository).findByEmissionDateGreaterThanEqualOrderByEmissionDateDesc(fromDate);
     }
 
+    @Test
+    void shouldFindInvoicesByEngagementReference() {
+        String encodedEngagementId = InvoiceEntity.encodeEngagementId(this.engagementId);
+        InvoiceFindCriteria findCriteria = new InvoiceFindCriteria();
+        findCriteria.setEngagementReference(encodedEngagementId.substring(0, 4));
+        when(this.invoiceRepository.findByEngagementIdCode64StartingWithOrderByEmissionDateDesc(encodedEngagementId.substring(0, 4)))
+                .thenReturn(List.of(new InvoiceEntity(this.invoice)));
+
+        List<Invoice> result = this.invoiceAdapter.find(findCriteria).toList();
+
+        assertEquals(1, result.size());
+        assertEquals(this.invoice.getId(), result.get(0).getId());
+        verify(this.invoiceRepository).findByEngagementIdCode64StartingWithOrderByEmissionDateDesc(encodedEngagementId.substring(0, 4));
+    }
+
+    @Test
+    void shouldFindInvoicesByEngagementReferenceAndFromDate() {
+        LocalDate fromDate = LocalDate.of(2026, 3, 20);
+        String encodedEngagementId = InvoiceEntity.encodeEngagementId(this.engagementId);
+        InvoiceFindCriteria findCriteria = new InvoiceFindCriteria();
+        findCriteria.setFromDate(fromDate);
+        findCriteria.setEngagementReference(encodedEngagementId.substring(0, 4));
+        when(this.invoiceRepository.findByEngagementIdCode64StartingWithAndEmissionDateGreaterThanEqualOrderByEmissionDateDesc(
+                encodedEngagementId.substring(0, 4), fromDate))
+                .thenReturn(List.of(new InvoiceEntity(this.invoice)));
+
+        List<Invoice> result = this.invoiceAdapter.find(findCriteria).toList();
+
+        assertEquals(1, result.size());
+        assertEquals(this.invoice.getId(), result.get(0).getId());
+        verify(this.invoiceRepository).findByEngagementIdCode64StartingWithAndEmissionDateGreaterThanEqualOrderByEmissionDateDesc(
+                encodedEngagementId.substring(0, 4), fromDate);
+    }
+
     private Invoice buildInvoice(UUID invoiceId, UUID engagementId, UUID userId, UUID paymentId,
                                  LocalDate emissionDate, BigDecimal baseAmount) {
         return Invoice.builder()
