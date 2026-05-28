@@ -6,5 +6,6 @@ import java.util.UUID;
 
 public interface EngagementGateway {
     EngagementSnapshot read(UUID id);
+
     void close(UUID id);
 }

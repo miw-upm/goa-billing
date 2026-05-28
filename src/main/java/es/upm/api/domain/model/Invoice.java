@@ -21,6 +21,7 @@ import java.util.function.Function;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Invoice {
+    private static final BigDecimal HUNDRED = new BigDecimal("100");
     private UUID id;
     private String concept;
     private Boolean closed;
@@ -49,6 +50,31 @@ public class Invoice {
         return this.emissionDate != null;
     }
 
+    // === Factores ===
+    public BigDecimal vatFactor() {        // 0.21 Base*vatFactor = IVA
+        return vatRate.divide(HUNDRED, 6, RoundingMode.HALF_UP);
+    }
+
+    public BigDecimal vatTotal() {         // 1.21 Base * vatTotal = Total
+        return BigDecimal.ONE.add(vatFactor());
+    }
+
+    public BigDecimal baseShare() {        // 1/1.21  → bruto × baseShare = base
+        return BigDecimal.ONE.divide(vatTotal(), 6, RoundingMode.HALF_UP);
+    }
+
+    public BigDecimal percentageFactor() { // 0.60
+        return percentage.divide(HUNDRED, 4, RoundingMode.HALF_UP);
+    }
+
+    /**
+     * Base imponible contenida en un importe bruto (IVA incluido).
+     */
+    private BigDecimal baseOf(BigDecimal grossAmount) {
+        return grossAmount.multiply(baseShare());
+    }
+
+    // === Sumatorios ===
     private <T> BigDecimal sum(List<T> list, Function<T, BigDecimal> mapper) {
         return Optional.ofNullable(list)
                 .orElse(List.of())
@@ -57,10 +83,33 @@ public class Invoice {
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
+    // === Pagos de la presente ===
     public BigDecimal paymentsAmount() {
         return sum(payments, InvoicedPayment::amount);
     }
 
+    public BigDecimal paymentsBaseAmount() {
+        return sum(payments, p -> baseOf(p.amount()));
+    }
+
+    public BigDecimal paymentsVatAmount() {
+        return paymentsAmount().subtract(paymentsBaseAmount());
+    }
+
+    // === Pagos anteriores ===
+    public BigDecimal priorPaymentsAmount() {
+        return sum(priorPayments, InvoicedPayment::amount);
+    }
+
+    public BigDecimal priorPaymentsBaseAmount() {
+        return sum(priorPayments, p -> baseOf(p.amount()));
+    }
+
+    public BigDecimal priorPaymentsVatAmount() {
+        return priorPaymentsAmount().subtract(priorPaymentsBaseAmount());
+    }
+
+    // === Gastos ===
     public BigDecimal expensesBaseAmount() {
         return sum(expenses, InvoicedExpense::baseAmount);
     }
@@ -69,20 +118,24 @@ public class Invoice {
         return sum(expenses, InvoicedExpense::vatAmount);
     }
 
-    public BigDecimal priorPaymentsAmount() {
-        return sum(priorPayments, InvoicedPayment::amount);
-    }
-
-    public BigDecimal priorPaymentsBaseAmount() {
-        return this.sum(this.priorPayments, payment -> payment.amount().multiply(this.baseShare()));
-    }
-
-    public BigDecimal priorPaymentsVatAmount() {
-        return priorPaymentsAmount().subtract(priorPaymentsBaseAmount());
-    }
-
+    // === Descuentos ===
     public BigDecimal discountsAmount() {
         return sum(discounts, Function.identity());
+    }
+
+    // === Totales de la factura (aplicando %) ===
+    public BigDecimal totalBaseAmount() {
+        if (Boolean.TRUE.equals(closed)) {
+            return baseAmount
+                    .subtract(discountsAmount())
+                    .subtract(priorPaymentsBaseAmount())
+                    .multiply(percentageFactor());
+        }
+        return baseAmount.multiply(percentageFactor());
+    }
+
+    public BigDecimal totalVatAmount() {
+        return totalBaseAmount().multiply(vatFactor());
     }
 
     public BigDecimal totalAmount() {
@@ -92,63 +145,38 @@ public class Invoice {
                 .add(expensesVatAmount());
     }
 
+    public BigDecimal totalBudget() {
+        if (legalProcedures != null) {
+            return sum(legalProcedures, InvoiceLegalProcedure::getBudget);
+        }
+        return baseAmount;
+    }
+
+    // === Mutadores ===
     public void applyVatRate(BigDecimal vatRate) {
         this.vatRate = vatRate;
-        this.vatAmount = this.baseAmount.multiply(this.vatFactor());
+        this.vatAmount = baseAmount.multiply(vatFactor());
     }
 
     public void applyBaseAmount(BigDecimal baseAmount) {
         this.baseAmount = baseAmount;
-        this.vatAmount = this.baseAmount.multiply(this.vatFactor());
+        this.vatAmount = baseAmount.multiply(vatFactor());
     }
 
     public void applyTotalAmount(BigDecimal totalAmount) {
-        this.baseAmount = totalAmount.multiply(this.baseShare());
+        this.baseAmount = baseOf(totalAmount);
         this.vatAmount = totalAmount.subtract(this.baseAmount);
     }
 
-    public BigDecimal percentageFactor() {
-        return this.percentage.divide(new BigDecimal("100"), 4, RoundingMode.HALF_UP);
+    public BigDecimal baseFromTotal(BigDecimal total) {
+        return total.divide(
+                BigDecimal.ONE.add(vatRate.divide(HUNDRED, 6, RoundingMode.HALF_UP)),
+                2,
+                RoundingMode.HALF_UP
+        );
     }
 
-    public BigDecimal totalBaseAmount() {
-        return baseAmount
-                .subtract(this.discountsAmount())
-                .subtract(this.priorPaymentsBaseAmount())
-                .multiply(this.percentageFactor());
+    public BigDecimal applyPercentage(BigDecimal value) {
+            return value.multiply(percentage).divide(HUNDRED, RoundingMode.HALF_UP);
     }
-
-    public BigDecimal totalVatAmount() {
-        return vatAmount
-                .subtract(this.priorPaymentsVatAmount())
-                .multiply(this.percentageFactor());
-    }
-
-    public BigDecimal totalBudget() {
-        if (this.getLegalProcedures() != null) {
-            return legalProcedures.stream()
-                    .map(InvoiceLegalProcedure::getBudget)
-                    .reduce(BigDecimal.ZERO, BigDecimal::add);
-        }else {
-            return this.baseAmount;
-        }
-
-    }
-
-    private BigDecimal vatFactor() {
-        return vatRate.divide(new BigDecimal("100"), 4, RoundingMode.HALF_UP);
-    }
-
-    private BigDecimal vatTotal() {
-        return BigDecimal.ONE.add(vatFactor());
-    }
-
-    private BigDecimal vatShare() {
-        return vatFactor().divide(vatTotal(), 4, RoundingMode.HALF_UP);
-    }
-
-    private BigDecimal baseShare() {
-        return BigDecimal.ONE.divide(vatTotal(), 4, RoundingMode.HALF_UP);
-    }
-
 }
