@@ -13,6 +13,8 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.Field;
+import org.springframework.data.mongodb.core.mapping.FieldType;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -30,12 +32,15 @@ public class InvoiceEntity {
     private String concept;
     private Boolean closed;
     private BillingInfoEntity billingInfo;
+    @Field(targetType = FieldType.DECIMAL128)
     private BigDecimal percentage;
     private LocalDate emissionDate;
     private LocalDate operationDate;
     private String series;
     private Integer number;
+    @Field(targetType = FieldType.DECIMAL128)
     private BigDecimal baseAmount;
+    @Field(targetType = FieldType.DECIMAL128)
     private BigDecimal vatAmount;
     private BigDecimal vatRate;
     private String engagementId;

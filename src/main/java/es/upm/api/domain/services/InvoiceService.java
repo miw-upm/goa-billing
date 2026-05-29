@@ -31,6 +31,7 @@ import java.util.stream.Stream;
 @Service
 @RequiredArgsConstructor
 public class InvoiceService {
+    private static final int SCALE = 6;
     private static final BigDecimal DEFAULT_VAT_RATE = new BigDecimal("21");
     private final InvoiceGateway invoiceGateway;
     private final PaymentGateway paymentGateway;
@@ -140,7 +141,7 @@ public class InvoiceService {
             this.engagementGateway.close(invoice.getEngagement().getId());
         }
         UserSnapshot user = this.userFinder.readById(invoice.getBillingInfo().getUserId());
-        byte[] pdf = this.generatePdf(id);
+        byte[] pdf = this.invoicePdfService.generatePdf(invoice, true);
         String fileName = "Ocanabogados-" + invoice.getSeries() + "-" + invoice.getNumber() + ".pdf";
         this.emailWriter.sendHtml(
                 this.invoiceTemplateService.buildHtmlEmail(this.email, this.name),
@@ -223,12 +224,12 @@ public class InvoiceService {
         if (invoice.getVatAmount() == null && invoice.getBaseAmount() != null) {
             invoice.setVatAmount(invoice.getBaseAmount()
                     .multiply(invoice.getVatRate())
-                    .divide(new BigDecimal("100"), 2, RoundingMode.HALF_UP));
+                    .divide(new BigDecimal("100"), SCALE, RoundingMode.HALF_UP));
         }
     }
 
     public byte[] generatePdf(UUID id) {
         Invoice invoice = this.read(id);
-        return this.invoicePdfService.generatePdf(invoice);
+        return this.invoicePdfService.generatePdf(invoice,false);
     }
 }

@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.text.NumberFormat;
+import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Locale;
@@ -19,8 +20,9 @@ public class InvoicePdfService {
             DateTimeFormatter.ofPattern("EEEE, d 'de' MMMM 'de' yyyy", new Locale("es", "ES"));
     private static final NumberFormat EUR = NumberFormat.getCurrencyInstance(Locale.forLanguageTag("es-ES"));
 
-    public byte[] generatePdf(Invoice invoice) {
-        String title = invoice.isIssued() ? "FACTURA" : "FACTURA PROFORMA";
+    public byte[] generatePdf(Invoice invoice, boolean original) {
+        String title = invoice.isIssued() ? "FACTURA  " : "FACTURA PROFORMA";
+        title = original ? title + "   ORIGINAL" : title + "  COPIA (" + LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) + ")";
         String invoiceNumber = invoice.isIssued()
                 ? invoice.getSeries() + "-" + invoice.getNumber()
                 : "—";
@@ -80,9 +82,13 @@ public class InvoicePdfService {
                         EUR.format(totalAmount.add(totalExpense))
                 }
         );
-        BigDecimal debt = invoice.totalBudget().multiply(invoice.percentageFactor())
-                .subtract(invoice.priorPaymentsAmount().multiply(invoice.percentageFactor())
-                        .subtract(totalAmount));
+        BigDecimal debt = BigDecimal.ZERO;
+        if (invoice.getClosed() != null && invoice.getClosed()) {
+            debt = invoice.totalBudget().multiply(invoice.percentageFactor())
+                    .subtract(invoice.priorPaymentsAmount().multiply(invoice.percentageFactor())
+                            .subtract(totalAmount));
+
+        }
         if (debt.compareTo(MIN_VALUE_FOR_TRANSFER) > 0) {
             pdf.paragraphHighlight("PENDIENTE DE INGRESAR: " + EUR.format(debt));
             pdf.paragraphHighlight("Ruego que ingrese en la cuenta bancaria: ES00 1111 2222 3333 4444 5555");
@@ -141,10 +147,10 @@ public class InvoicePdfService {
             pdf.paragraphBold("Gastos asociados a la Hoja de Encargo");
             List<String[]> expenseRows = invoice.getExpenses().stream()
                     .map(expense -> {
-                        BigDecimal base = expense.getBaseAmount().setScale(2, RoundingMode.HALF_UP);
+                        BigDecimal base = expense.getBaseAmount().setScale(6, RoundingMode.HALF_UP);
                         BigDecimal vat = base
                                 .multiply(BigDecimal.valueOf(expense.getVatRate()))
-                                .divide(new BigDecimal("100"), 2, RoundingMode.HALF_UP);
+                                .divide(new BigDecimal("100"), 6, RoundingMode.HALF_UP);
                         return new String[]{
                                 expense.getIssueDate().format(DATE_FORMAT),
                                 expense.getDescription(),

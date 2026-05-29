@@ -21,6 +21,7 @@ import java.util.function.Function;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Invoice {
+    private static final int SCALE = 6;
     private static final BigDecimal HUNDRED = new BigDecimal("100");
     private UUID id;
     private String concept;
@@ -52,7 +53,7 @@ public class Invoice {
 
     // === Factores ===
     public BigDecimal vatFactor() {        // 0.21 Base*vatFactor = IVA
-        return vatRate.divide(HUNDRED, 6, RoundingMode.HALF_UP);
+        return vatRate.divide(HUNDRED, SCALE, RoundingMode.HALF_UP);
     }
 
     public BigDecimal vatTotal() {         // 1.21 Base * vatTotal = Total
@@ -60,18 +61,11 @@ public class Invoice {
     }
 
     public BigDecimal baseShare() {        // 1/1.21  → bruto × baseShare = base
-        return BigDecimal.ONE.divide(vatTotal(), 6, RoundingMode.HALF_UP);
+        return BigDecimal.ONE.divide(vatTotal(), SCALE, RoundingMode.HALF_UP);
     }
 
     public BigDecimal percentageFactor() { // 0.60
-        return percentage.divide(HUNDRED, 4, RoundingMode.HALF_UP);
-    }
-
-    /**
-     * Base imponible contenida en un importe bruto (IVA incluido).
-     */
-    private BigDecimal baseOf(BigDecimal grossAmount) {
-        return grossAmount.multiply(baseShare());
+        return percentage.divide(HUNDRED, SCALE, RoundingMode.HALF_UP);
     }
 
     // === Sumatorios ===
@@ -89,7 +83,7 @@ public class Invoice {
     }
 
     public BigDecimal paymentsBaseAmount() {
-        return sum(payments, p -> baseOf(p.getAmount()));
+        return sum(payments, p -> p.getAmount().multiply(baseShare())).setScale(SCALE, RoundingMode.HALF_UP);
     }
 
     public BigDecimal paymentsVatAmount() {
@@ -102,7 +96,7 @@ public class Invoice {
     }
 
     public BigDecimal priorPaymentsBaseAmount() {
-        return sum(priorPayments, p -> baseOf(p.getAmount()));
+        return sum(priorPayments, p -> p.getAmount().multiply(baseShare())).setScale(SCALE, RoundingMode.HALF_UP);
     }
 
     public BigDecimal priorPaymentsVatAmount() {
@@ -121,7 +115,7 @@ public class Invoice {
             }
             return expense.getBaseAmount()
                     .multiply(BigDecimal.valueOf(expense.getVatRate()))
-                    .divide(HUNDRED, 4, RoundingMode.HALF_UP);
+                    .divide(HUNDRED, SCALE, RoundingMode.HALF_UP);
         });
     }
 
@@ -171,19 +165,18 @@ public class Invoice {
     }
 
     public void applyTotalAmount(BigDecimal totalAmount) {
-        this.baseAmount = baseOf(totalAmount);
-        this.vatAmount = totalAmount.subtract(this.baseAmount);
+        this.baseAmount = totalAmount.multiply(this.baseShare()).setScale(SCALE, RoundingMode.HALF_UP);
+        this.vatAmount = totalAmount.subtract(this.baseAmount).setScale(SCALE, RoundingMode.HALF_UP);
     }
 
     public BigDecimal baseFromTotal(BigDecimal total) {
         return total.divide(
-                BigDecimal.ONE.add(vatRate.divide(HUNDRED, 6, RoundingMode.HALF_UP)),
-                2,
-                RoundingMode.HALF_UP
+                BigDecimal.ONE.add(vatRate
+                        .divide(HUNDRED, SCALE, RoundingMode.HALF_UP)), SCALE, RoundingMode.HALF_UP
         );
     }
 
     public BigDecimal applyPercentage(BigDecimal value) {
-        return value.multiply(percentage).divide(HUNDRED, RoundingMode.HALF_UP);
+        return value.multiply(percentage).divide(HUNDRED, SCALE, RoundingMode.HALF_UP);
     }
 }

@@ -11,6 +11,8 @@ import lombok.NoArgsConstructor;
 import org.springframework.beans.BeanUtils;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.Field;
+import org.springframework.data.mongodb.core.mapping.FieldType;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -29,6 +31,7 @@ public class ExpenseEntity {
     private String series;
     private Integer number;
     private String engagementId;
+    @Field(targetType = FieldType.DECIMAL128)
     private BigDecimal baseAmount;
     private Integer vatRate;
     private SupplierInfoEntity supplier;

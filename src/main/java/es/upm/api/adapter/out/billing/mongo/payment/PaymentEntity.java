@@ -11,6 +11,8 @@ import lombok.NoArgsConstructor;
 import org.springframework.beans.BeanUtils;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.Field;
+import org.springframework.data.mongodb.core.mapping.FieldType;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -26,6 +28,7 @@ public class PaymentEntity {
     private String id;
     private String engagementId;
     private String userId;
+    @Field(targetType = FieldType.DECIMAL128)
     private BigDecimal amount;
     private PaymentMethod method;
     private LocalDate date;
