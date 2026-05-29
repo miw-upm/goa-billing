@@ -118,30 +118,6 @@ class ExpenseAdapterIT {
     }
 
     @Test
-    void shouldDeleteExpense() {
-        UUID id = this.expense.getId();
-        ExpenseEntity expenseEntity = new ExpenseEntity(this.expense);
-        when(this.expenseRepository.findById(id.toString())).thenReturn(Optional.of(expenseEntity));
-
-        this.expensePersistenceMongodb.delete(id);
-
-        verify(this.expenseRepository).findById(id.toString());
-        verify(this.expenseRepository).delete(expenseEntity);
-    }
-
-    @Test
-    void shouldThrowNotFoundWhenDeleteMissing() {
-        UUID id = this.expense.getId();
-        when(this.expenseRepository.findById(id.toString())).thenReturn(Optional.empty());
-
-        NotFoundException thrown = assertThrows(NotFoundException.class,
-                () -> this.expensePersistenceMongodb.delete(id));
-
-        assertEquals("Not Found Exception. Expense id: " + id, thrown.getMessage());
-        verify(this.expenseRepository).findById(id.toString());
-    }
-
-    @Test
     void shouldFindWithDate() {
         this.criteria.setFromDate(date);
         Expense oldExpense = Expense.builder()

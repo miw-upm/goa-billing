@@ -148,17 +148,6 @@ class ExpenseResourceIT {
 
     @Test
     @WithMockUser(roles = "admin")
-    void shouldDeleteExpense() throws Exception {
-        UUID expenseId = UUID.randomUUID();
-
-        this.mockMvc.perform(delete("/expenses/{id}", expenseId))
-                .andExpect(status().isOk());
-
-        verify(this.expenseService).delete(expenseId);
-    }
-
-    @Test
-    @WithMockUser(roles = "admin")
     void shouldFindExpensesByEngagementId() throws Exception {
         when(this.expenseService.find(any(ExpenseFindCriteria.class))).thenReturn(Stream.empty());
 

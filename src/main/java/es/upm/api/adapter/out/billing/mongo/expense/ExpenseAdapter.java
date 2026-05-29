@@ -50,13 +50,6 @@ public class ExpenseAdapter implements ExpenseGateway {
     }
 
     @Override
-    public void delete(UUID id) {
-        ExpenseEntity expenseEntity = this.expenseRepository.findById(id.toString())
-                .orElseThrow(() -> new NotFoundException("Expense id: " + id));
-        this.expenseRepository.delete(expenseEntity);
-    }
-
-    @Override
     public Stream<Expense> find(ExpenseFindCriteria criteria) {
         List<ExpenseEntity> result;
         if (StringUtils.hasText(criteria.getEngagementId())) {

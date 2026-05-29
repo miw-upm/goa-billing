@@ -40,12 +40,6 @@ public class ExpenseResource {
         this.expenseService.update(id, expense);
     }
 
-    @PreAuthorize(Security.ADMIN)
-    @DeleteMapping("/{id}")
-    public void delete(@PathVariable UUID id) {
-        this.expenseService.delete(id);
-    }
-
     @GetMapping
     public List<Expense> find(@ModelAttribute ExpenseFindCriteria criteria) {
         return this.expenseService.find(criteria).toList();

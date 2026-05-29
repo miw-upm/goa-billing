@@ -17,8 +17,6 @@ public interface ExpenseGateway {
 
     Expense read(UUID id);
 
-    void delete(UUID id);
-
     Stream<Expense> find(ExpenseFindCriteria criteria);
 
     Stream<Expense> findByEngagementId(UUID engagementId);

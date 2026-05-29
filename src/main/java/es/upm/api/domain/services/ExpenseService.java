@@ -53,10 +53,6 @@ public class ExpenseService {
         this.expenseGateway.update(id, expense);
     }
 
-    public void delete(UUID id) {
-        this.expenseGateway.delete(id);
-    }
-
     public Stream<Expense> find(ExpenseFindCriteria criteria) {
         return this.expenseGateway.find(criteria)
                 .map(expense -> {
