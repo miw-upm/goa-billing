@@ -57,8 +57,8 @@ public class InvoiceEntity {
 
     public InvoiceEntity(Invoice invoice) {
         BeanUtils.copyProperties(invoice, this);
-        this.id = invoice.getId() == null ? null : invoice.getId().toString();
-        this.billingInfo = invoice.getBillingInfo() == null ? null : new BillingInfoEntity(invoice.getBillingInfo());
+        this.id = invoice.getId().toString();
+        this.billingInfo = new BillingInfoEntity(invoice.getBillingInfo());
         this.engagementId = invoice.getEngagement() == null || invoice.getEngagement().getId() == null
                 ? null : invoice.getEngagement().getId().toString();
         this.legalProcedures = invoice.getLegalProcedures() == null ? null

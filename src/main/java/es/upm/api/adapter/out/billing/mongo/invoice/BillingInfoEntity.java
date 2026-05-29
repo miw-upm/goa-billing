@@ -19,13 +19,13 @@ public class BillingInfoEntity {
 
     public BillingInfoEntity(BillingInfo billingInfo) {
         BeanUtils.copyProperties(billingInfo, this);
-        this.userId = billingInfo.getUserId() == null ? null : billingInfo.getUserId().toString();
+        this.userId = billingInfo.getUserId().toString();
     }
 
     public BillingInfo toDomain() {
         BillingInfo billingInfo = new BillingInfo();
         BeanUtils.copyProperties(this, billingInfo);
-        billingInfo.setUserId(this.userId == null ? null : UUID.fromString(this.userId));
+        billingInfo.setUserId(UUID.fromString(this.userId));
         return billingInfo;
     }
 }

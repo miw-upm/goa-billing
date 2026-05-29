@@ -1,7 +1,10 @@
 package es.upm.api.domain.services;
 
 import es.upm.api.domain.model.Invoice;
+import es.upm.api.domain.model.external.UserSnapshot;
+import es.upm.api.domain.ports.out.user.UserFinder;
 import es.upm.miw.pdf.PdfBuilder;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -14,11 +17,14 @@ import java.util.Locale;
 import java.util.Objects;
 
 @Service
+@RequiredArgsConstructor
 public class InvoicePdfService {
     public static final BigDecimal MIN_VALUE_FOR_TRANSFER = new BigDecimal("5");
     private static final DateTimeFormatter DATE_FORMAT =
             DateTimeFormatter.ofPattern("EEEE, d 'de' MMMM 'de' yyyy", new Locale("es", "ES"));
     private static final NumberFormat EUR = NumberFormat.getCurrencyInstance(Locale.forLanguageTag("es-ES"));
+
+    private final UserFinder userFinder;
 
     public byte[] generatePdf(Invoice invoice, boolean original) {
         String title = invoice.isIssued() ? "FACTURA  " : "FACTURA PROFORMA";
@@ -84,10 +90,7 @@ public class InvoicePdfService {
         );
         BigDecimal debt = BigDecimal.ZERO;
         if (invoice.getClosed() != null && invoice.getClosed()) {
-            debt = invoice.totalBudget().multiply(invoice.percentageFactor())
-                    .subtract(invoice.priorPaymentsAmount().multiply(invoice.percentageFactor())
-                            .subtract(totalAmount));
-
+            debt = totalAmount.add(totalExpense).subtract((invoice.paymentsAmount()).multiply(invoice.percentageFactor()));
         }
         if (debt.compareTo(MIN_VALUE_FOR_TRANSFER) > 0) {
             pdf.paragraphHighlight("PENDIENTE DE INGRESAR: " + EUR.format(debt));
@@ -123,7 +126,7 @@ public class InvoicePdfService {
             pdf.paragraphBold("Ingresos Asociados a la Hoja de Encargo y facturados en la presente");
             List<String[]> paymentRows = invoice.getPayments().stream()
                     .map(payment -> new String[]{
-                            payment.getUser().toFullName(),
+                            this.userFinder.readById(payment.getUser().getId()).toFullName(),
                             payment.getDate().format(DATE_FORMAT),
                             EUR.format(invoice.baseFromTotal(payment.getAmount())),
                             EUR.format(payment.getAmount().subtract(invoice.baseFromTotal(payment.getAmount()))),
@@ -178,14 +181,14 @@ public class InvoicePdfService {
             pdf.paragraphBold("Anteriores ingresos, Ya Facturados, de la Hoja de Encargo");
             List<String[]> paymentRows = invoice.getPriorPayments().stream()
                     .map(payment -> new String[]{
-                            payment.getUser().toFullName(),
+                            this.userFinder.readById(payment.getUser().getId()).toFullName(),
                             payment.getDate().format(DATE_FORMAT),
                             EUR.format(invoice.baseFromTotal(payment.getAmount())),
                             EUR.format(payment.getAmount().subtract(invoice.baseFromTotal(payment.getAmount()))),
                             EUR.format(payment.getAmount()),
                             payment.getMethod().name()
                     }).toList();
-            BigDecimal base = invoice.priorPaymentsAmount();
+            BigDecimal base = invoice.baseFromTotal(invoice.priorPaymentsAmount());
             BigDecimal vat = invoice.priorPaymentsAmount().subtract(base);
             pdf.table(
                     new String[]{"Cliente", "Fecha", "Base Imponible", "IVA", "Importe", "Tipo de Ingreso"},
