@@ -1,8 +1,7 @@
 package es.upm.api.domain.services;
 
 import es.upm.api.domain.model.BillingInfo;
-import es.upm.api.domain.model.InvoicedExpense;
-import es.upm.api.domain.model.InvoicedPayment;
+import es.upm.api.domain.model.Expense;
 import es.upm.api.domain.model.Invoice;
 import es.upm.api.domain.model.Payment;
 import es.upm.api.domain.model.creation.InvoiceCreationFromEngagement;
@@ -54,29 +53,28 @@ public class InvoiceService {
         this.invoiceGateway.create(invoice);
     }
 
-    private List<InvoicedPayment> priorPayments(UUID engagementId) {
+    private List<Payment> priorPayments(UUID engagementId) {
         return this.paymentGateway
                 .findInvoicedByEngagementId(engagementId)
                 .map(payment -> {
                     payment.setUser(this.userFinder.readById(payment.getUser().getId()));
-                    return new InvoicedPayment(payment);
+                    return payment;
                 })
                 .toList();
     }
 
-    private List<InvoicedPayment> payments(UUID engagementId) {
+    private List<Payment> payments(UUID engagementId) {
         return this.paymentGateway
                 .findNotInvoicedByEngagementId(engagementId)
                 .map(payment -> {
                     payment.setUser(this.userFinder.readById(payment.getUser().getId()));
-                    return new InvoicedPayment(payment);
+                    return payment;
                 })
                 .toList();
     }
 
-    private List<InvoicedExpense> expenses(UUID engagementId) {
+    private List<Expense> expenses(UUID engagementId) {
         return this.expenseGateway.findByEngagementId(engagementId)
-                .map(InvoicedExpense::new)
                 .toList();
     }
 
@@ -123,10 +121,10 @@ public class InvoiceService {
         invoice.setEmissionDate(LocalDate.now());
         this.invoiceGateway.update(id, invoice);
         if (invoice.getPayments() != null) {
-            invoice.getPayments().forEach(invoicedPayment -> {
-                Payment payment = this.paymentGateway.read(invoicedPayment.paymentId());
+            invoice.getPayments().forEach(invoicePayment -> {
+                Payment payment = this.paymentGateway.read(invoicePayment.getId());
                 payment.setInvoiced(true);
-                paymentGateway.update(invoicedPayment.paymentId(), payment);
+                paymentGateway.update(invoicePayment.getId(), payment);
             });
         }
         if (Boolean.TRUE.equals(invoice.getClosed())) {
@@ -204,7 +202,7 @@ public class InvoiceService {
         }
         if (invoice.getPayments() != null && !invoice.getPayments().isEmpty()) {
             BigDecimal paymentsTotal = invoice.getPayments().stream()
-                    .map(InvoicedPayment::amount)
+                    .map(Payment::getAmount)
                     .reduce(BigDecimal.ZERO, BigDecimal::add);
             BigDecimal discountsTotal = invoice.getDiscounts() == null ? BigDecimal.ZERO
                     : invoice.getDiscounts().stream().reduce(BigDecimal.ZERO, BigDecimal::add);

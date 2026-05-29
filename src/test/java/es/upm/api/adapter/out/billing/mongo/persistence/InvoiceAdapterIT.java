@@ -71,7 +71,7 @@ class InvoiceAdapterIT {
                 captor.getValue().getLegalProcedures().stream().map(LegalProcedureEntity::toDomain).toList());
         assertEquals(this.invoice.getBaseAmount(), captor.getValue().getBaseAmount());
         assertEquals(this.invoice.getPriorPayments(),
-                captor.getValue().getPriorPayments().stream().map(paymentEntity -> new InvoicedPayment(paymentEntity.toDomain())).toList());
+                captor.getValue().getPriorPayments().stream().map(paymentEntity -> paymentEntity.toDomain()).toList());
         assertEquals(this.invoice.getExpenses(), captor.getValue().toDomain().getExpenses());
     }
 
@@ -216,27 +216,27 @@ class InvoiceAdapterIT {
                         .budget(baseAmount)
                         .legalTasks(List.of("Tarea 1"))
                         .build()))
-                .payments(List.of(new InvoicedPayment(
-                        paymentId,
-                        emissionDate.minusDays(2),
-                        baseAmount.add(BigDecimal.TEN),
-                        PaymentMethod.TRANSFER,
-                        UserSnapshot.builder().id(userId).build()
-                )))
-                .priorPayments(List.of(new InvoicedPayment(
-                        UUID.randomUUID(),
-                        emissionDate.minusDays(5),
-                        BigDecimal.TEN,
-                        PaymentMethod.CASH,
-                        UserSnapshot.builder().id(userId).build()
-                )))
-                .expenses(List.of(new InvoicedExpense(
-                        UUID.randomUUID(),
-                        emissionDate.minusDays(3),
-                        "gasto",
-                        BigDecimal.valueOf(30),
-                        BigDecimal.valueOf(6.30)
-                )))
+                .payments(List.of(Payment.builder()
+                        .id(paymentId)
+                        .date(emissionDate.minusDays(2))
+                        .amount(baseAmount.add(BigDecimal.TEN))
+                        .method(PaymentMethod.TRANSFER)
+                        .user(UserSnapshot.builder().id(userId).build())
+                        .build()))
+                .priorPayments(List.of(Payment.builder()
+                        .id(UUID.randomUUID())
+                        .date(emissionDate.minusDays(5))
+                        .amount(BigDecimal.TEN)
+                        .method(PaymentMethod.CASH)
+                        .user(UserSnapshot.builder().id(userId).build())
+                        .build()))
+                .expenses(List.of(Expense.builder()
+                        .id(UUID.randomUUID())
+                        .issueDate(emissionDate.minusDays(3))
+                        .description("gasto")
+                        .baseAmount(BigDecimal.valueOf(30))
+                        .vatRate(21)
+                        .build()))
                 .discounts(List.of(BigDecimal.TEN))
                 .pdfPath("/tmp/invoice.pdf")
                 .build();

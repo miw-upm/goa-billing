@@ -117,12 +117,12 @@ public class InvoicePdfService {
             pdf.paragraphBold("Ingresos Asociados a la Hoja de Encargo y facturados en la presente");
             List<String[]> paymentRows = invoice.getPayments().stream()
                     .map(payment -> new String[]{
-                            payment.user().toFullName(),
-                            payment.date().format(DATE_FORMAT),
-                            EUR.format(invoice.baseFromTotal(payment.amount())),
-                            EUR.format(payment.amount().subtract(invoice.baseFromTotal(payment.amount()))),
-                            EUR.format(payment.amount()),
-                            payment.method().name()
+                            payment.getUser().toFullName(),
+                            payment.getDate().format(DATE_FORMAT),
+                            EUR.format(invoice.baseFromTotal(payment.getAmount())),
+                            EUR.format(payment.getAmount().subtract(invoice.baseFromTotal(payment.getAmount()))),
+                            EUR.format(payment.getAmount()),
+                            payment.getMethod().name()
                     }).toList();
             BigDecimal base = invoice.paymentsBaseAmount();
             BigDecimal vat = invoice.paymentsAmount().subtract(base);
@@ -141,11 +141,13 @@ public class InvoicePdfService {
             pdf.paragraphBold("Gastos asociados a la Hoja de Encargo");
             List<String[]> expenseRows = invoice.getExpenses().stream()
                     .map(expense -> {
-                        BigDecimal base = expense.baseAmount().setScale(2, RoundingMode.HALF_UP);
-                        BigDecimal vat = expense.vatAmount().setScale(2, RoundingMode.HALF_UP);
+                        BigDecimal base = expense.getBaseAmount().setScale(2, RoundingMode.HALF_UP);
+                        BigDecimal vat = base
+                                .multiply(BigDecimal.valueOf(expense.getVatRate()))
+                                .divide(new BigDecimal("100"), 2, RoundingMode.HALF_UP);
                         return new String[]{
-                                expense.issueDate().format(DATE_FORMAT),
-                                expense.description(),
+                                expense.getIssueDate().format(DATE_FORMAT),
+                                expense.getDescription(),
                                 EUR.format(base),
                                 EUR.format(vat),
                                 EUR.format(base.add(vat))
@@ -170,12 +172,12 @@ public class InvoicePdfService {
             pdf.paragraphBold("Anteriores ingresos, Ya Facturados, de la Hoja de Encargo");
             List<String[]> paymentRows = invoice.getPriorPayments().stream()
                     .map(payment -> new String[]{
-                            payment.user().toFullName(),
-                            payment.date().format(DATE_FORMAT),
-                            EUR.format(invoice.baseFromTotal(payment.amount())),
-                            EUR.format(payment.amount().subtract(invoice.baseFromTotal(payment.amount()))),
-                            EUR.format(payment.amount()),
-                            payment.method().name()
+                            payment.getUser().toFullName(),
+                            payment.getDate().format(DATE_FORMAT),
+                            EUR.format(invoice.baseFromTotal(payment.getAmount())),
+                            EUR.format(payment.getAmount().subtract(invoice.baseFromTotal(payment.getAmount()))),
+                            EUR.format(payment.getAmount()),
+                            payment.getMethod().name()
                     }).toList();
             BigDecimal base = invoice.priorPaymentsAmount();
             BigDecimal vat = invoice.priorPaymentsAmount().subtract(base);

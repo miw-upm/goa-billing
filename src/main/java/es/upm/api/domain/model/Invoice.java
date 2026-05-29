@@ -38,9 +38,9 @@ public class Invoice {
     private BigDecimal vatRate;
     private EngagementSnapshot engagement;
     private List<LegalProcedure> legalProcedures;
-    private List<InvoicedPayment> payments;
-    private List<InvoicedPayment> priorPayments;
-    private List<InvoicedExpense> expenses;
+    private List<Payment> payments;
+    private List<Payment> priorPayments;
+    private List<Expense> expenses;
     private List<BigDecimal> discounts;
 
     private String pdfPath;
@@ -85,11 +85,11 @@ public class Invoice {
 
     // === Pagos de la presente ===
     public BigDecimal paymentsAmount() {
-        return sum(payments, InvoicedPayment::amount);
+        return sum(payments, Payment::getAmount);
     }
 
     public BigDecimal paymentsBaseAmount() {
-        return sum(payments, p -> baseOf(p.amount()));
+        return sum(payments, p -> baseOf(p.getAmount()));
     }
 
     public BigDecimal paymentsVatAmount() {
@@ -98,11 +98,11 @@ public class Invoice {
 
     // === Pagos anteriores ===
     public BigDecimal priorPaymentsAmount() {
-        return sum(priorPayments, InvoicedPayment::amount);
+        return sum(priorPayments, Payment::getAmount);
     }
 
     public BigDecimal priorPaymentsBaseAmount() {
-        return sum(priorPayments, p -> baseOf(p.amount()));
+        return sum(priorPayments, p -> baseOf(p.getAmount()));
     }
 
     public BigDecimal priorPaymentsVatAmount() {
@@ -111,11 +111,18 @@ public class Invoice {
 
     // === Gastos ===
     public BigDecimal expensesBaseAmount() {
-        return sum(expenses, InvoicedExpense::baseAmount);
+        return sum(expenses, Expense::getBaseAmount);
     }
 
     public BigDecimal expensesVatAmount() {
-        return sum(expenses, InvoicedExpense::vatAmount);
+        return sum(expenses, expense -> {
+            if (expense.getBaseAmount() == null || expense.getVatRate() == null) {
+                return BigDecimal.ZERO;
+            }
+            return expense.getBaseAmount()
+                    .multiply(BigDecimal.valueOf(expense.getVatRate()))
+                    .divide(HUNDRED, 4, RoundingMode.HALF_UP);
+        });
     }
 
     // === Descuentos ===

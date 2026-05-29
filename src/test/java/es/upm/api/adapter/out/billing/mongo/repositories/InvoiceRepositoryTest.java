@@ -50,27 +50,27 @@ class InvoiceRepositoryTest {
                 .vatAmount(BigDecimal.valueOf(18.9))
                 .vatRate(BigDecimal.valueOf(21))
                 .engagement(EngagementSnapshot.builder().id(engagementId).build())
-                .payments(List.of(new InvoicedPayment(
-                        paymentId,
-                        LocalDate.of(2026, 3, 18),
-                        BigDecimal.valueOf(100),
-                        PaymentMethod.TRANSFER,
-                        UserSnapshot.builder().id(userId).build()
-                )))
-                .priorPayments(List.of(new InvoicedPayment(
-                        UUID.randomUUID(),
-                        LocalDate.of(2026, 3, 10),
-                        BigDecimal.valueOf(80),
-                        PaymentMethod.CASH,
-                        UserSnapshot.builder().id(userId).build()
-                )))
-                .expenses(List.of(new InvoicedExpense(
-                        UUID.randomUUID(),
-                        LocalDate.of(2026, 3, 11),
-                        "gasto",
-                        BigDecimal.valueOf(15),
-                        BigDecimal.valueOf(1.5)
-                )))
+                .payments(List.of(Payment.builder()
+                        .id(paymentId)
+                        .date(LocalDate.of(2026, 3, 18))
+                        .amount(BigDecimal.valueOf(100))
+                        .method(PaymentMethod.TRANSFER)
+                        .user(UserSnapshot.builder().id(userId).build())
+                        .build()))
+                .priorPayments(List.of(Payment.builder()
+                        .id(UUID.randomUUID())
+                        .date(LocalDate.of(2026, 3, 10))
+                        .amount(BigDecimal.valueOf(80))
+                        .method(PaymentMethod.CASH)
+                        .user(UserSnapshot.builder().id(userId).build())
+                        .build()))
+                .expenses(List.of(Expense.builder()
+                        .id(UUID.randomUUID())
+                        .issueDate(LocalDate.of(2026, 3, 11))
+                        .description("gasto")
+                        .baseAmount(BigDecimal.valueOf(15))
+                        .vatRate(10)
+                        .build()))
                 .discounts(List.of(BigDecimal.TEN))
                 .pdfPath("/tmp/invoice.pdf")
                 .build();
@@ -84,8 +84,8 @@ class InvoiceRepositoryTest {
         assertEquals(this.invoice.getId().toString(), saved.getId());
         assertEquals(this.invoice.getEngagement().getId().toString(), saved.getEngagementId());
         assertEquals(this.invoice.getBillingInfo(), saved.getBillingInfo().toDomain());
-        assertEquals(this.invoice.getPayments(), saved.getPayments().stream().map(paymentEntity -> new InvoicedPayment(paymentEntity.toDomain())).toList());
-        assertEquals(this.invoice.getPriorPayments(), saved.getPriorPayments().stream().map(paymentEntity -> new InvoicedPayment(paymentEntity.toDomain())).toList());
+        assertEquals(this.invoice.getPayments(), saved.getPayments().stream().map(paymentEntity -> paymentEntity.toDomain()).toList());
+        assertEquals(this.invoice.getPriorPayments(), saved.getPriorPayments().stream().map(paymentEntity -> paymentEntity.toDomain()).toList());
         assertEquals(this.invoice.getExpenses(), saved.toDomain().getExpenses());
     }
 

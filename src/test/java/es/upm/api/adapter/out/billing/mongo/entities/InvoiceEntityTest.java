@@ -49,27 +49,27 @@ class InvoiceEntityTest {
                         .budget(new BigDecimal("90.00"))
                         .legalTasks(List.of("Tarea 1"))
                         .build()))
-                .payments(List.of(new InvoicedPayment(
-                        paymentId,
-                        LocalDate.of(2026, 3, 18),
-                        BigDecimal.valueOf(100),
-                        PaymentMethod.TRANSFER,
-                        UserSnapshot.builder().id(userId).build()
-                )))
-                .priorPayments(List.of(new InvoicedPayment(
-                        UUID.randomUUID(),
-                        LocalDate.of(2026, 3, 10),
-                        BigDecimal.valueOf(50),
-                        PaymentMethod.CASH,
-                        UserSnapshot.builder().id(userId).build()
-                )))
-                .expenses(List.of(new InvoicedExpense(
-                        UUID.randomUUID(),
-                        LocalDate.of(2026, 3, 11),
-                        "gasto",
-                        BigDecimal.valueOf(30),
-                        BigDecimal.valueOf(6.3)
-                )))
+                .payments(List.of(Payment.builder()
+                        .id(paymentId)
+                        .date(LocalDate.of(2026, 3, 18))
+                        .amount(BigDecimal.valueOf(100))
+                        .method(PaymentMethod.TRANSFER)
+                        .user(UserSnapshot.builder().id(userId).build())
+                        .build()))
+                .priorPayments(List.of(Payment.builder()
+                        .id(UUID.randomUUID())
+                        .date(LocalDate.of(2026, 3, 10))
+                        .amount(BigDecimal.valueOf(50))
+                        .method(PaymentMethod.CASH)
+                        .user(UserSnapshot.builder().id(userId).build())
+                        .build()))
+                .expenses(List.of(Expense.builder()
+                        .id(UUID.randomUUID())
+                        .issueDate(LocalDate.of(2026, 3, 11))
+                        .description("gasto")
+                        .baseAmount(BigDecimal.valueOf(30))
+                        .vatRate(21)
+                        .build()))
                 .discounts(List.of(BigDecimal.TEN))
                 .pdfPath("/tmp/invoice.pdf")
                 .build();
@@ -94,8 +94,8 @@ class InvoiceEntityTest {
         assertEquals(this.invoice.getEngagement().getId().toString(), entity.getEngagementId());
         assertEquals(this.invoice.getLegalProcedures(),
                 entity.getLegalProcedures().stream().map(LegalProcedureEntity::toDomain).toList());
-        assertEquals(this.invoice.getPayments(), entity.getPayments().stream().map(paymentEntity -> new InvoicedPayment(paymentEntity.toDomain())).toList());
-        assertEquals(this.invoice.getPriorPayments(), entity.getPriorPayments().stream().map(paymentEntity -> new InvoicedPayment(paymentEntity.toDomain())).toList());
+        assertEquals(this.invoice.getPayments(), entity.getPayments().stream().map(paymentEntity -> paymentEntity.toDomain()).toList());
+        assertEquals(this.invoice.getPriorPayments(), entity.getPriorPayments().stream().map(paymentEntity -> paymentEntity.toDomain()).toList());
         assertEquals(this.invoice.getExpenses(), entity.toDomain().getExpenses());
         assertEquals(this.invoice.getDiscounts(), entity.getDiscounts());
         assertEquals(this.invoice.getPdfPath(), entity.getPdfPath());

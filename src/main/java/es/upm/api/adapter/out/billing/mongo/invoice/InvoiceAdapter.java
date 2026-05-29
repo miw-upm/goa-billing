@@ -2,19 +2,13 @@ package es.upm.api.adapter.out.billing.mongo.invoice;
 
 import es.upm.api.adapter.out.billing.mongo.expense.ExpenseEntity;
 import es.upm.api.adapter.out.billing.mongo.payment.PaymentEntity;
-import es.upm.api.domain.model.Expense;
-import es.upm.api.domain.model.InvoicedExpense;
-import es.upm.api.domain.model.InvoicedPayment;
 import es.upm.api.domain.model.Invoice;
-import es.upm.api.domain.model.Payment;
 import es.upm.api.domain.model.criteria.InvoiceFindCriteria;
 import es.upm.api.domain.ports.out.billing.InvoiceGateway;
 import es.upm.miw.exception.NotFoundException;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.StringUtils;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -55,11 +49,11 @@ public class InvoiceAdapter implements InvoiceGateway {
         invoiceEntity.setLegalProcedures(invoice.getLegalProcedures() == null ? null
                 : invoice.getLegalProcedures().stream().map(LegalProcedureEntity::new).toList());
         invoiceEntity.setPayments(invoice.getPayments() == null ? null
-                : invoice.getPayments().stream().map(InvoiceAdapter::toPaymentEntity).toList());
+                : invoice.getPayments().stream().map(PaymentEntity::new).toList());
         invoiceEntity.setPriorPayments(invoice.getPriorPayments() == null ? null
-                : invoice.getPriorPayments().stream().map(InvoiceAdapter::toPaymentEntity).toList());
+                : invoice.getPriorPayments().stream().map(PaymentEntity::new).toList());
         invoiceEntity.setExpenses(invoice.getExpenses() == null ? null
-                : invoice.getExpenses().stream().map(InvoiceAdapter::toExpenseEntity).toList());
+                : invoice.getExpenses().stream().map(ExpenseEntity::new).toList());
         invoiceEntity.setDiscounts(invoice.getDiscounts());
         invoiceEntity.setPdfPath(invoice.getPdfPath());
         invoiceEntity.setRectification(invoice.getRectification());
@@ -106,37 +100,6 @@ public class InvoiceAdapter implements InvoiceGateway {
     private String normalizeEngagementIdPrefix(String engagementId) {
         String normalized = engagementId.trim();
         return normalized.length() <= 4 ? normalized : normalized.substring(0, 4);
-    }
-
-    private static PaymentEntity toPaymentEntity(InvoicedPayment invoicedPayment) {
-        Payment payment = Payment.builder()
-                .id(invoicedPayment.paymentId())
-                .date(invoicedPayment.date())
-                .amount(invoicedPayment.amount())
-                .method(invoicedPayment.method())
-                .user(invoicedPayment.user())
-                .build();
-        return new PaymentEntity(payment);
-    }
-
-    private static ExpenseEntity toExpenseEntity(InvoicedExpense invoicedExpense) {
-        Integer vatRate = null;
-        if (invoicedExpense.baseAmount() != null
-                && invoicedExpense.vatAmount() != null
-                && invoicedExpense.baseAmount().compareTo(BigDecimal.ZERO) != 0) {
-            vatRate = invoicedExpense.vatAmount()
-                    .multiply(BigDecimal.valueOf(100))
-                    .divide(invoicedExpense.baseAmount(), 0, RoundingMode.HALF_UP)
-                    .intValue();
-        }
-        Expense expense = Expense.builder()
-                .id(invoicedExpense.expenseId())
-                .issueDate(invoicedExpense.issueDate())
-                .description(invoicedExpense.description())
-                .baseAmount(invoicedExpense.baseAmount())
-                .vatRate(vatRate)
-                .build();
-        return new ExpenseEntity(expense);
     }
 
     @Override
