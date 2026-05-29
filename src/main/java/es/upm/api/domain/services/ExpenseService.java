@@ -27,7 +27,7 @@ public class ExpenseService {
         }
         String series = String.valueOf(LocalDate.now().getYear());
         expense.setSeries(series);
-        expense.setNumber(this.expenseGateway.findNextNumber(series,expense.getExpenseType()));
+        expense.setNumber(this.expenseGateway.findNextNumber(series, expense.getExpenseType()));
         expense.setDocumentPath(null); //TODO
         this.expenseGateway.create(expense);
     }

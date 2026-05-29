@@ -2,7 +2,8 @@ package es.upm.api.adapter.out.billing.mongo.invoice;
 
 import es.upm.api.adapter.out.billing.mongo.expense.ExpenseEntity;
 import es.upm.api.adapter.out.billing.mongo.payment.PaymentEntity;
-import es.upm.api.domain.model.*;
+import es.upm.api.domain.model.Invoice;
+import es.upm.api.domain.model.Rectification;
 import es.upm.api.domain.model.external.EngagementSnapshot;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

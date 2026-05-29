@@ -83,7 +83,7 @@ public class InvoiceService {
         if (engagement.getClosingDate() != null) {
             throw new BadRequestException("Engagement is closed, no more invoices can be created, id: " + creation.getEngagementId());
         }
-        Invoice invoiceTemplate = Invoice.builder()
+        Invoice invoice = Invoice.builder()
                 .concept(creation.getConcept())
                 .closed(creation.getCloseEngagement())
                 .vatRate(DEFAULT_VAT_RATE)
@@ -92,21 +92,30 @@ public class InvoiceService {
                 .payments(this.payments(creation.getEngagementId()))
                 .priorPayments(this.priorPayments(creation.getEngagementId()))
                 .build();
-
-        if (Boolean.TRUE.equals(invoiceTemplate.getClosed())) {
-            invoiceTemplate.setExpenses(this.expenses(engagement.getId()));
-            invoiceTemplate.applyBaseAmount(invoiceTemplate.totalBudget());
-            invoiceTemplate.setDiscounts(engagement.getDiscounts());
-        } else {
-            invoiceTemplate.applyTotalAmount(invoiceTemplate.paymentsAmount().add(invoiceTemplate.priorPaymentsAmount()));
+        if (Boolean.TRUE.equals(invoice.getClosed())) {
+            invoice.setExpenses(this.expenses(engagement.getId()));
+            invoice.setDiscounts(engagement.getDiscounts());
         }
+
         creation.getBillingPercentages().stream()
                 .filter(userPercentage -> userPercentage.getPercentage().compareTo(BigDecimal.ZERO) > 0)
                 .forEach(userPercentage -> {
-                    invoiceTemplate.setId(UUID.randomUUID());
-                    invoiceTemplate.setBillingInfo(new BillingInfo(this.userFinder.readById(userPercentage.getUserId())));
-                    invoiceTemplate.setPercentage(userPercentage.getPercentage());
-                    this.invoiceGateway.create(invoiceTemplate);
+                    invoice.setId(UUID.randomUUID());
+                    invoice.setPercentage(userPercentage.getPercentage());
+                    if (Boolean.TRUE.equals(invoice.getClosed())) {
+                        BigDecimal base = invoice.totalBudget()
+                                .subtract(invoice.discountsAmount())
+                                .subtract(invoice.priorPaymentsBaseAmount())
+                                .multiply(invoice.percentageFactor());
+                        invoice.applyBaseAmount(base);
+                    } else {
+                        BigDecimal total = invoice.paymentsAmount()
+                                .multiply(invoice.percentageFactor());
+                        invoice.applyTotalAmount(total);
+                    }
+                    invoice.setBillingInfo(new BillingInfo(this.userFinder.readById(userPercentage.getUserId())));
+                    invoice.setPercentage(userPercentage.getPercentage());
+                    this.invoiceGateway.create(invoice);
                 });
     }
 

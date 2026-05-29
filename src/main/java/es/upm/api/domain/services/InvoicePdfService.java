@@ -58,31 +58,31 @@ public class InvoicePdfService {
         }
 
         pdf.section("IMPORTE DE LA PRESENTE FACTURA");
-        BigDecimal baseAmount = invoice.totalBaseAmount().setScale(2, RoundingMode.HALF_UP);
-        BigDecimal vatAmount = baseAmount.multiply(invoice.vatFactor());
-        BigDecimal totalAmount = baseAmount.add(vatAmount);
+        BigDecimal totalAmount = invoice.getBaseAmount().add(invoice.getVatAmount());
         BigDecimal baseExpense = invoice.applyPercentage(invoice.expensesBaseAmount());
         BigDecimal vatExpense = invoice.applyPercentage(invoice.expensesVatAmount());
+        BigDecimal totalExpense = baseExpense.add(vatExpense);
         pdf.table(
                 new String[]{"Concepto", "Base Imponible", "IVA", "Total"},
                 List.of(
-                        new String[]{"Honorarios", EUR.format(baseAmount), EUR.format(vatAmount)
+                        new String[]{"Honorarios", EUR.format(invoice.getBaseAmount()), EUR.format(invoice.getVatAmount())
                                 + "   (" + invoice.getVatRate().toPlainString() + "%)",
                                 EUR.format(totalAmount)
                         },
                         new String[]{"Gastos", EUR.format(baseExpense),
                                 EUR.format(vatExpense),
-                                EUR.format(baseExpense.add(vatExpense))
+                                EUR.format(totalExpense)
                         }
                 ),
                 new String[]{"TOTAL",
-                        EUR.format(baseAmount.add(baseExpense)),
-                        EUR.format(vatAmount.add(vatExpense)),
-                        EUR.format(totalAmount.add(baseExpense.add(vatExpense)))
+                        EUR.format(invoice.getBaseAmount().add(baseExpense)),
+                        EUR.format(invoice.getVatAmount().add(vatExpense)),
+                        EUR.format(totalAmount.add(totalExpense))
                 }
         );
-        BigDecimal debt = totalAmount.add(baseExpense.add(vatExpense))
-                .subtract(invoice.paymentsAmount().multiply(invoice.percentageFactor()));
+        BigDecimal debt = invoice.totalBudget().multiply(invoice.percentageFactor())
+                .subtract(invoice.priorPaymentsAmount().multiply(invoice.percentageFactor())
+                        .subtract(totalAmount));
         if (debt.compareTo(MIN_VALUE_FOR_TRANSFER) > 0) {
             pdf.paragraphHighlight("PENDIENTE DE INGRESAR: " + EUR.format(debt));
             pdf.paragraphHighlight("Ruego que ingrese en la cuenta bancaria: ES00 1111 2222 3333 4444 5555");

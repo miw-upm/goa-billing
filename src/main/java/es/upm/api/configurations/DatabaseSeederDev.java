@@ -1,12 +1,12 @@
 package es.upm.api.configurations;
 
 import es.upm.api.adapter.out.billing.mongo.expense.ExpenseEntity;
+import es.upm.api.adapter.out.billing.mongo.expense.ExpenseRepository;
 import es.upm.api.adapter.out.billing.mongo.expense.SupplierInfoEntity;
 import es.upm.api.adapter.out.billing.mongo.invoice.BillingInfoEntity;
-import es.upm.api.adapter.out.billing.mongo.invoice.LegalProcedureEntity;
-import es.upm.api.adapter.out.billing.mongo.expense.ExpenseRepository;
 import es.upm.api.adapter.out.billing.mongo.invoice.InvoiceEntity;
 import es.upm.api.adapter.out.billing.mongo.invoice.InvoiceRepository;
+import es.upm.api.adapter.out.billing.mongo.invoice.LegalProcedureEntity;
 import es.upm.api.adapter.out.billing.mongo.payment.PaymentEntity;
 import es.upm.api.adapter.out.billing.mongo.payment.PaymentRepository;
 import es.upm.api.domain.model.ExpenseType;

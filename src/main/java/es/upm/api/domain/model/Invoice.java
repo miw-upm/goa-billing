@@ -184,6 +184,6 @@ public class Invoice {
     }
 
     public BigDecimal applyPercentage(BigDecimal value) {
-            return value.multiply(percentage).divide(HUNDRED, RoundingMode.HALF_UP);
+        return value.multiply(percentage).divide(HUNDRED, RoundingMode.HALF_UP);
     }
 }
