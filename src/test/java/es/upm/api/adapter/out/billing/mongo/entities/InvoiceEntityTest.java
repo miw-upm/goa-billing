@@ -1,11 +1,9 @@
 package es.upm.api.adapter.out.billing.mongo.entities;
 
 import es.upm.api.adapter.out.billing.mongo.invoice.InvoiceEntity;
-import es.upm.api.adapter.out.billing.mongo.invoice.InvoicedExpenseEntity;
-import es.upm.api.adapter.out.billing.mongo.invoice.InvoiceLegalProcedureEntity;
-import es.upm.api.adapter.out.billing.mongo.invoice.InvoicedPaymentEntity;
+import es.upm.api.adapter.out.billing.mongo.invoice.LegalProcedureEntity;
 import es.upm.api.domain.model.*;
-import es.upm.api.domain.model.creation.InvoiceLegalProcedure;
+import es.upm.api.domain.model.creation.LegalProcedure;
 import es.upm.api.domain.model.external.EngagementSnapshot;
 import es.upm.api.domain.model.external.UserSnapshot;
 import org.junit.jupiter.api.BeforeEach;
@@ -46,7 +44,7 @@ class InvoiceEntityTest {
                 .vatAmount(BigDecimal.valueOf(18.9))
                 .vatRate(BigDecimal.valueOf(21))
                 .engagement(EngagementSnapshot.builder().id(engagementId).build())
-                .legalProcedures(List.of(InvoiceLegalProcedure.builder()
+                .legalProcedures(List.of(LegalProcedure.builder()
                         .title("Procedimiento")
                         .budget(new BigDecimal("90.00"))
                         .legalTasks(List.of("Tarea 1"))
@@ -95,10 +93,10 @@ class InvoiceEntityTest {
         assertEquals(this.invoice.getVatRate(), entity.getVatRate());
         assertEquals(this.invoice.getEngagement().getId().toString(), entity.getEngagementId());
         assertEquals(this.invoice.getLegalProcedures(),
-                entity.getLegalProcedures().stream().map(InvoiceLegalProcedureEntity::toDomain).toList());
-        assertEquals(this.invoice.getPayments(), entity.getPayments().stream().map(InvoicedPaymentEntity::toDomain).toList());
-        assertEquals(this.invoice.getPriorPayments(), entity.getPriorPayments().stream().map(InvoicedPaymentEntity::toDomain).toList());
-        assertEquals(this.invoice.getExpenses(), entity.getExpenses().stream().map(InvoicedExpenseEntity::toDomain).toList());
+                entity.getLegalProcedures().stream().map(LegalProcedureEntity::toDomain).toList());
+        assertEquals(this.invoice.getPayments(), entity.getPayments().stream().map(paymentEntity -> new InvoicedPayment(paymentEntity.toDomain())).toList());
+        assertEquals(this.invoice.getPriorPayments(), entity.getPriorPayments().stream().map(paymentEntity -> new InvoicedPayment(paymentEntity.toDomain())).toList());
+        assertEquals(this.invoice.getExpenses(), entity.toDomain().getExpenses());
         assertEquals(this.invoice.getDiscounts(), entity.getDiscounts());
         assertEquals(this.invoice.getPdfPath(), entity.getPdfPath());
     }

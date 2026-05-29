@@ -1,8 +1,6 @@
 package es.upm.api.adapter.out.billing.mongo.repositories;
 
 import es.upm.api.adapter.out.billing.mongo.invoice.InvoiceEntity;
-import es.upm.api.adapter.out.billing.mongo.invoice.InvoicedExpenseEntity;
-import es.upm.api.adapter.out.billing.mongo.invoice.InvoicedPaymentEntity;
 import es.upm.api.adapter.out.billing.mongo.invoice.InvoiceRepository;
 import es.upm.api.domain.model.*;
 import es.upm.api.domain.model.external.EngagementSnapshot;
@@ -86,9 +84,9 @@ class InvoiceRepositoryTest {
         assertEquals(this.invoice.getId().toString(), saved.getId());
         assertEquals(this.invoice.getEngagement().getId().toString(), saved.getEngagementId());
         assertEquals(this.invoice.getBillingInfo(), saved.getBillingInfo().toDomain());
-        assertEquals(this.invoice.getPayments(), saved.getPayments().stream().map(InvoicedPaymentEntity::toDomain).toList());
-        assertEquals(this.invoice.getPriorPayments(), saved.getPriorPayments().stream().map(InvoicedPaymentEntity::toDomain).toList());
-        assertEquals(this.invoice.getExpenses(), saved.getExpenses().stream().map(InvoicedExpenseEntity::toDomain).toList());
+        assertEquals(this.invoice.getPayments(), saved.getPayments().stream().map(paymentEntity -> new InvoicedPayment(paymentEntity.toDomain())).toList());
+        assertEquals(this.invoice.getPriorPayments(), saved.getPriorPayments().stream().map(paymentEntity -> new InvoicedPayment(paymentEntity.toDomain())).toList());
+        assertEquals(this.invoice.getExpenses(), saved.toDomain().getExpenses());
     }
 
     @Test

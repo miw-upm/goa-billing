@@ -15,7 +15,7 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class InvoiceLegalProcedure {
+public class LegalProcedure {
     @NotBlank
     private String title;
 

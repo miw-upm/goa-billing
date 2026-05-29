@@ -2,12 +2,10 @@ package es.upm.api.adapter.out.billing.mongo.persistence;
 
 import es.upm.api.adapter.out.billing.mongo.invoice.InvoiceAdapter;
 import es.upm.api.adapter.out.billing.mongo.invoice.InvoiceEntity;
-import es.upm.api.adapter.out.billing.mongo.invoice.InvoicedExpenseEntity;
-import es.upm.api.adapter.out.billing.mongo.invoice.InvoiceLegalProcedureEntity;
-import es.upm.api.adapter.out.billing.mongo.invoice.InvoicedPaymentEntity;
+import es.upm.api.adapter.out.billing.mongo.invoice.LegalProcedureEntity;
 import es.upm.api.adapter.out.billing.mongo.invoice.InvoiceRepository;
 import es.upm.api.domain.model.*;
-import es.upm.api.domain.model.creation.InvoiceLegalProcedure;
+import es.upm.api.domain.model.creation.LegalProcedure;
 import es.upm.api.domain.model.criteria.InvoiceFindCriteria;
 import es.upm.api.domain.model.external.EngagementSnapshot;
 import es.upm.api.domain.model.external.UserSnapshot;
@@ -70,12 +68,11 @@ class InvoiceAdapterIT {
         assertEquals(this.invoice.getClosed(), captor.getValue().getClosed());
         assertEquals(this.invoice.getEngagement().getId().toString(), captor.getValue().getEngagementId());
         assertEquals(this.invoice.getLegalProcedures(),
-                captor.getValue().getLegalProcedures().stream().map(InvoiceLegalProcedureEntity::toDomain).toList());
+                captor.getValue().getLegalProcedures().stream().map(LegalProcedureEntity::toDomain).toList());
         assertEquals(this.invoice.getBaseAmount(), captor.getValue().getBaseAmount());
         assertEquals(this.invoice.getPriorPayments(),
-                captor.getValue().getPriorPayments().stream().map(InvoicedPaymentEntity::toDomain).toList());
-        assertEquals(this.invoice.getExpenses(),
-                captor.getValue().getExpenses().stream().map(InvoicedExpenseEntity::toDomain).toList());
+                captor.getValue().getPriorPayments().stream().map(paymentEntity -> new InvoicedPayment(paymentEntity.toDomain())).toList());
+        assertEquals(this.invoice.getExpenses(), captor.getValue().toDomain().getExpenses());
     }
 
     @Test
@@ -214,7 +211,7 @@ class InvoiceAdapterIT {
                 .vatAmount(new BigDecimal("18.90"))
                 .vatRate(BigDecimal.valueOf(21))
                 .engagement(EngagementSnapshot.builder().id(engagementId).build())
-                .legalProcedures(List.of(InvoiceLegalProcedure.builder()
+                .legalProcedures(List.of(LegalProcedure.builder()
                         .title("Procedimiento")
                         .budget(baseAmount)
                         .legalTasks(List.of("Tarea 1"))

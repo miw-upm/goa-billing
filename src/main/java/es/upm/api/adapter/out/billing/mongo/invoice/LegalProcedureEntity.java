@@ -1,6 +1,6 @@
 package es.upm.api.adapter.out.billing.mongo.invoice;
 
-import es.upm.api.domain.model.creation.InvoiceLegalProcedure;
+import es.upm.api.domain.model.creation.LegalProcedure;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -12,17 +12,17 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class InvoiceLegalProcedureEntity {
+public class LegalProcedureEntity {
     private String title;
     private BigDecimal budget;
     private List<String> legalTasks;
 
-    public InvoiceLegalProcedureEntity(InvoiceLegalProcedure legalProcedure) {
+    public LegalProcedureEntity(LegalProcedure legalProcedure) {
         BeanUtils.copyProperties(legalProcedure, this);
     }
 
-    public InvoiceLegalProcedure toDomain() {
-        InvoiceLegalProcedure legalProcedure = new InvoiceLegalProcedure();
+    public LegalProcedure toDomain() {
+        LegalProcedure legalProcedure = new LegalProcedure();
         BeanUtils.copyProperties(this, legalProcedure);
         return legalProcedure;
     }

@@ -26,7 +26,7 @@ public class InvoiceCreationFromEngagement {
 
     @NotEmpty
     @Valid
-    private List<InvoiceLegalProcedure> legalProcedures;
+    private List<LegalProcedure> legalProcedures;
 
     @NotEmpty
     @Valid
@@ -34,7 +34,7 @@ public class InvoiceCreationFromEngagement {
 
     public BigDecimal totalBudget() {
         return legalProcedures.stream()
-                .map(InvoiceLegalProcedure::getBudget)
+                .map(LegalProcedure::getBudget)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 

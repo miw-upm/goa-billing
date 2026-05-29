@@ -3,7 +3,7 @@ package es.upm.api.configurations;
 import es.upm.api.adapter.out.billing.mongo.expense.ExpenseEntity;
 import es.upm.api.adapter.out.billing.mongo.expense.SupplierInfoEntity;
 import es.upm.api.adapter.out.billing.mongo.invoice.BillingInfoEntity;
-import es.upm.api.adapter.out.billing.mongo.invoice.InvoiceLegalProcedureEntity;
+import es.upm.api.adapter.out.billing.mongo.invoice.LegalProcedureEntity;
 import es.upm.api.adapter.out.billing.mongo.expense.ExpenseRepository;
 import es.upm.api.adapter.out.billing.mongo.invoice.InvoiceEntity;
 import es.upm.api.adapter.out.billing.mongo.invoice.InvoiceRepository;
@@ -169,7 +169,7 @@ public class DatabaseSeederDev {
                         ))
                         .percentage(new BigDecimal("100"))
                         .legalProcedures(List.of(
-                                new InvoiceLegalProcedureEntity(
+                                new LegalProcedureEntity(
                                         "Procedimiento penal",
                                         new BigDecimal("450.00"),
                                         List.of("Revision", "Escrito")
@@ -200,7 +200,7 @@ public class DatabaseSeederDev {
                         ))
                         .percentage(new BigDecimal("100"))
                         .legalProcedures(List.of(
-                                new InvoiceLegalProcedureEntity(
+                                new LegalProcedureEntity(
                                         "Procedimiento civil",
                                         new BigDecimal("1200.00"),
                                         List.of("Demanda")
