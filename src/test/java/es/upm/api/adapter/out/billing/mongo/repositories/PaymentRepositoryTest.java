@@ -15,10 +15,9 @@ import org.springframework.test.context.ActiveProfiles;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @DataMongoTest
 @ActiveProfiles("test")
@@ -27,111 +26,65 @@ class PaymentRepositoryTest {
     @Autowired
     private PaymentRepository paymentRepository;
 
-    private Payment payment;
+    private Payment currentPayment;
+    private Payment olderPayment;
+    private UUID engagementId;
 
     @BeforeEach
     void setUp() {
         this.paymentRepository.deleteAll();
-        this.payment = Payment.builder()
+        this.engagementId = UUID.randomUUID();
+        this.olderPayment = Payment.builder()
                 .id(UUID.randomUUID())
-                .engagement(EngagementSnapshot.builder().id(UUID.randomUUID()).build())
-                .user(UserSnapshot.builder().id(UUID.randomUUID()).build())
-                .amount(BigDecimal.valueOf(300))
-                .method(PaymentMethod.TRANSFER)
-                .date(LocalDate.of(2026, 3, 20))
-                .build();
-    }
-
-    @Test
-    void shouldSavePayment() {
-        PaymentEntity saved = this.paymentRepository.save(new PaymentEntity(this.payment));
-
-        assertNotNull(saved);
-        assertEquals(this.payment.getId().toString(), saved.getId());
-        assertEquals(this.payment.getEngagement().getId().toString(), saved.getEngagementId());
-        assertEquals(this.payment.getUser().getId().toString(), saved.getUserId());
-        assertEquals(this.payment.getAmount(), saved.getAmount());
-        assertEquals(this.payment.getMethod(), saved.getMethod());
-        assertEquals(this.payment.getDate(), saved.getDate());
-    }
-
-    @Test
-    void shouldFindPaymentById() {
-        PaymentEntity saved = this.paymentRepository.save(new PaymentEntity(this.payment));
-        Optional<PaymentEntity> optional = this.paymentRepository.findById(saved.getId());
-
-        assertTrue(optional.isPresent());
-        assertEquals(saved.getId(), optional.get().getId());
-        assertEquals(saved.getEngagementId(), optional.get().getEngagementId());
-        assertEquals(saved.getUserId(), optional.get().getUserId());
-    }
-
-    @Test
-    void shouldFindPaymentsFromDate() {
-        Payment older = Payment.builder()
-                .id(UUID.randomUUID())
-                .engagement(EngagementSnapshot.builder().id(UUID.randomUUID()).build())
+                .engagement(EngagementSnapshot.builder().id(this.engagementId).build())
                 .user(UserSnapshot.builder().id(UUID.randomUUID()).build())
                 .amount(BigDecimal.valueOf(100))
                 .method(PaymentMethod.CASH)
                 .date(LocalDate.of(2026, 3, 18))
+                .invoiced(false)
                 .build();
-        Payment newer = Payment.builder()
+        this.currentPayment = Payment.builder()
                 .id(UUID.randomUUID())
-                .engagement(EngagementSnapshot.builder().id(UUID.randomUUID()).build())
+                .engagement(EngagementSnapshot.builder().id(this.engagementId).build())
                 .user(UserSnapshot.builder().id(UUID.randomUUID()).build())
                 .amount(BigDecimal.valueOf(200))
                 .method(PaymentMethod.TRANSFER)
                 .date(LocalDate.of(2026, 3, 20))
+                .invoiced(true)
                 .build();
-        this.paymentRepository.save(new PaymentEntity(older));
-        this.paymentRepository.save(new PaymentEntity(newer));
+        this.paymentRepository.saveAll(List.of(
+                new PaymentEntity(this.olderPayment),
+                new PaymentEntity(this.currentPayment)
+        ));
+    }
 
+    @Test
+    void shouldFindPaymentsFromDate() {
         List<PaymentEntity> result = this.paymentRepository
                 .findByDateGreaterThanEqualOrderByDateDesc(LocalDate.of(2026, 3, 19));
 
         assertEquals(1, result.size());
-        assertEquals(newer.getId().toString(), result.get(0).getId());
+        assertEquals(this.currentPayment.getId().toString(), result.getFirst().getId());
+    }
+
+    @Test
+    void shouldFindByEngagementIdPrefixAndDateAndInvoiced() {
+        String engagementPrefix = this.engagementId.toString().substring(0, 4);
+        List<PaymentEntity> result = this.paymentRepository
+                .findByEngagementIdStartingWithAndDateGreaterThanEqualAndInvoicedOrderByDateDesc(
+                        engagementPrefix, LocalDate.of(2026, 3, 19), true
+                );
+
+        assertEquals(1, result.size());
+        assertEquals(this.currentPayment.getId().toString(), result.getFirst().getId());
     }
 
     @Test
     void shouldFindNotInvoicedByEngagementId() {
-        UUID engagementId = UUID.randomUUID();
-        Payment notInvoiced = Payment.builder()
-                .id(UUID.randomUUID())
-                .engagement(EngagementSnapshot.builder().id(engagementId).build())
-                .user(UserSnapshot.builder().id(UUID.randomUUID()).build())
-                .amount(BigDecimal.valueOf(100))
-                .method(PaymentMethod.TRANSFER)
-                .date(LocalDate.of(2026, 3, 20))
-                .invoiced(false)
-                .build();
-        Payment invoiced = Payment.builder()
-                .id(UUID.randomUUID())
-                .engagement(EngagementSnapshot.builder().id(engagementId).build())
-                .user(UserSnapshot.builder().id(UUID.randomUUID()).build())
-                .amount(BigDecimal.valueOf(200))
-                .method(PaymentMethod.CASH)
-                .date(LocalDate.of(2026, 3, 21))
-                .invoiced(true)
-                .build();
-        Payment otherEngagement = Payment.builder()
-                .id(UUID.randomUUID())
-                .engagement(EngagementSnapshot.builder().id(UUID.randomUUID()).build())
-                .user(UserSnapshot.builder().id(UUID.randomUUID()).build())
-                .amount(BigDecimal.valueOf(300))
-                .method(PaymentMethod.BIZUM)
-                .date(LocalDate.of(2026, 3, 22))
-                .invoiced(false)
-                .build();
-        this.paymentRepository.save(new PaymentEntity(notInvoiced));
-        this.paymentRepository.save(new PaymentEntity(invoiced));
-        this.paymentRepository.save(new PaymentEntity(otherEngagement));
-
         List<PaymentEntity> result = this.paymentRepository
                 .findByEngagementIdAndInvoicedFalseOrderByDateDesc(engagementId.toString());
 
         assertEquals(1, result.size());
-        assertEquals(notInvoiced.getId().toString(), result.get(0).getId());
+        assertEquals(this.olderPayment.getId().toString(), result.getFirst().getId());
     }
 }

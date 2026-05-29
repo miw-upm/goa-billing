@@ -4,6 +4,7 @@ import es.upm.api.adapter.out.billing.mongo.expense.ExpenseAdapter;
 import es.upm.api.adapter.out.billing.mongo.expense.ExpenseEntity;
 import es.upm.api.adapter.out.billing.mongo.expense.ExpenseRepository;
 import es.upm.api.domain.model.Expense;
+import es.upm.api.domain.model.ExpenseType;
 import es.upm.api.domain.model.SupplierInfo;
 import es.upm.api.domain.model.TaxCategory;
 import es.upm.api.domain.model.criteria.ExpenseFindCriteria;
@@ -52,6 +53,7 @@ class ExpenseAdapterIT {
                 .vatRate(21)
                 .supplier(SupplierInfo.builder().name("Taxi Madrid").identity("A10000000").build())
                 .taxCategory(TaxCategory.OTROS)
+                .expenseType(ExpenseType.CURRENT)
                 .issueDate(date)
                 .withholdingTax(BigDecimal.ZERO)
                 .documentPath("doc/path")
@@ -75,6 +77,7 @@ class ExpenseAdapterIT {
         assertEquals(this.expense.getVatRate(), persistedExpenseEntity.getVatRate());
         assertEquals(this.expense.getSupplier(), persistedExpenseEntity.getSupplier().toDomain());
         assertEquals(this.expense.getTaxCategory(), persistedExpenseEntity.getTaxCategory());
+        assertEquals(this.expense.getExpenseType(), persistedExpenseEntity.getExpenseType());
         assertEquals(this.expense.getIssueDate(), persistedExpenseEntity.getIssueDate());
         assertEquals(this.expense.getDocumentPath(), persistedExpenseEntity.getDocumentPath());
     }
@@ -148,6 +151,7 @@ class ExpenseAdapterIT {
                 .vatRate(21)
                 .supplier(SupplierInfo.builder().name("Old supplier").identity("X100").build())
                 .taxCategory(TaxCategory.OTROS)
+                .expenseType(ExpenseType.CURRENT)
                 .issueDate(date.minusDays(1))
                 .withholdingTax(BigDecimal.ZERO)
                 .documentPath("doc/path")
@@ -172,6 +176,7 @@ class ExpenseAdapterIT {
                 .vatRate(21)
                 .supplier(SupplierInfo.builder().name("Power Co").identity("P200").build())
                 .taxCategory(TaxCategory.SUMINISTROS)
+                .expenseType(ExpenseType.CAPITAL)
                 .issueDate(date)
                 .withholdingTax(BigDecimal.ZERO)
                 .documentPath("doc/path")
@@ -226,6 +231,7 @@ class ExpenseAdapterIT {
                 .vatRate(21)
                 .supplier(supplierInfo)
                 .taxCategory(TaxCategory.OTROS)
+                .expenseType(ExpenseType.CURRENT)
                 .issueDate(this.date)
                 .withholdingTax(BigDecimal.ZERO)
                 .documentPath("doc/path")
@@ -237,6 +243,7 @@ class ExpenseAdapterIT {
                 .vatRate(21)
                 .supplier(supplierInfo)
                 .taxCategory(TaxCategory.OTROS)
+                .expenseType(ExpenseType.CURRENT)
                 .issueDate(this.date.plusDays(1))
                 .withholdingTax(BigDecimal.ZERO)
                 .documentPath("doc/path")

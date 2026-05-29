@@ -1,6 +1,7 @@
 package es.upm.api.domain.services;
 
 import es.upm.api.domain.model.Expense;
+import es.upm.api.domain.model.ExpenseType;
 import es.upm.api.domain.model.SupplierInfo;
 import es.upm.api.domain.model.TaxCategory;
 import es.upm.api.domain.model.criteria.ExpenseFindCriteria;
@@ -48,6 +49,7 @@ class ExpenseServiceIT {
                 .vatRate(21)
                 .supplier(SupplierInfo.builder().name("Taxi Madrid").identity("A10000000").build())
                 .taxCategory(TaxCategory.OTROS)
+                .expenseType(ExpenseType.CURRENT)
                 .issueDate(LocalDate.of(2026, 3, 20))
                 .withholdingTax(BigDecimal.ZERO)
                 .documentPath("doc/path")
@@ -103,6 +105,7 @@ class ExpenseServiceIT {
                 .vatRate(21)
                 .supplier(SupplierInfo.builder().name("Old").identity("OLD").build())
                 .taxCategory(TaxCategory.OTROS)
+                .expenseType(ExpenseType.CURRENT)
                 .issueDate(LocalDate.of(2026, 3, 20))
                 .documentPath("old/doc")
                 .build();
@@ -112,6 +115,7 @@ class ExpenseServiceIT {
                 .vatRate(21)
                 .supplier(SupplierInfo.builder().name("Updated supplier").identity("NEW").build())
                 .taxCategory(TaxCategory.SUMINISTROS)
+                .expenseType(ExpenseType.CAPITAL)
                 .build();
         RuntimeException exception = new RuntimeException("Engagement not found");
         when(this.expenseGateway.read(id)).thenReturn(existing);

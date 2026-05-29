@@ -51,6 +51,9 @@ public class Expense {
     @NotNull
     private TaxCategory taxCategory;
 
+    @NotNull
+    private ExpenseType expenseType;
+
     private String description;
 
     @PositiveOrZero

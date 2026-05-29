@@ -9,6 +9,7 @@ import es.upm.api.adapter.out.billing.mongo.invoice.InvoiceEntity;
 import es.upm.api.adapter.out.billing.mongo.invoice.InvoiceRepository;
 import es.upm.api.adapter.out.billing.mongo.payment.PaymentEntity;
 import es.upm.api.adapter.out.billing.mongo.payment.PaymentRepository;
+import es.upm.api.domain.model.ExpenseType;
 import es.upm.api.domain.model.PaymentMethod;
 import es.upm.api.domain.model.TaxCategory;
 import jakarta.annotation.PostConstruct;
@@ -82,6 +83,7 @@ public class DatabaseSeederDev {
                         .vatRate(21)
                         .supplier(new SupplierInfoEntity("Taxi Madrid", "A10000000"))
                         .taxCategory(TaxCategory.OTROS)
+                        .expenseType(ExpenseType.CURRENT)
                         .issueDate(LocalDate.of(2026, 3, 15))
                         .description("Taxi")
                         .withholdingTax(BigDecimal.ZERO)
@@ -95,6 +97,7 @@ public class DatabaseSeederDev {
                         .vatRate(21)
                         .supplier(new SupplierInfoEntity("Hotel Central", "B20000000"))
                         .taxCategory(TaxCategory.SERVICIOS_PROFESIONALES)
+                        .expenseType(ExpenseType.CURRENT)
                         .issueDate(LocalDate.of(2026, 3, 16))
                         .description("Hotel")
                         .withholdingTax(BigDecimal.ZERO)
@@ -108,6 +111,7 @@ public class DatabaseSeederDev {
                         .vatRate(21)
                         .supplier(new SupplierInfoEntity("Restaurante Norte", "C30000000"))
                         .taxCategory(TaxCategory.MANUTENCION)
+                        .expenseType(ExpenseType.CURRENT)
                         .issueDate(LocalDate.of(2026, 3, 17))
                         .description("Comida")
                         .withholdingTax(BigDecimal.ZERO)
@@ -121,6 +125,7 @@ public class DatabaseSeederDev {
                         .vatRate(21)
                         .supplier(new SupplierInfoEntity("Restaurante Sur", "D40000000"))
                         .taxCategory(TaxCategory.MANUTENCION)
+                        .expenseType(ExpenseType.CURRENT)
                         .issueDate(LocalDate.of(2026, 3, 18))
                         .description("Cena")
                         .withholdingTax(BigDecimal.ZERO)

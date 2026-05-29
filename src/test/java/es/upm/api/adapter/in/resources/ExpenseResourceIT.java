@@ -46,6 +46,7 @@ class ExpenseResourceIT {
                           "baseAmount": 0,
                           "vatAmount": 21,
                           "supplier": { "name": "Taxi", "identity": "A10000000" },
+                          "expenseType": "CURRENT",
                           "taxCategory": "OTROS"
                         }
                         """.formatted(java.util.UUID.randomUUID()),
@@ -57,6 +58,7 @@ class ExpenseResourceIT {
                           "baseAmount": 10,
                           "vatAmount": 21,
                           "supplier": { "name": "", "identity": "A10000000" },
+                          "expenseType": "CURRENT",
                           "taxCategory": "OTROS"
                         }
                         """.formatted(java.util.UUID.randomUUID()),
@@ -66,6 +68,7 @@ class ExpenseResourceIT {
                           "baseAmount": 10,
                           "vatAmount": 21,
                           "supplier": { "name": "Taxi", "identity": "A10000000" },
+                          "expenseType": "CURRENT",
                           "taxCategory": "OTROS"
                         }
                         """,
@@ -76,7 +79,8 @@ class ExpenseResourceIT {
                           "issueDate": "2026-03-20",
                           "baseAmount": 10,
                           "vatAmount": 21,
-                          "supplier": { "name": "Taxi", "identity": "A10000000" }
+                          "supplier": { "name": "Taxi", "identity": "A10000000" },
+                          "expenseType": "CURRENT"
                         }
                         """.formatted(java.util.UUID.randomUUID())
         );
@@ -104,6 +108,7 @@ class ExpenseResourceIT {
                   "baseAmount": 0,
                   "vatAmount": 21,
                   "supplier": { "name": "Taxi Updated", "identity": "A10000000" },
+                  "expenseType": "CURRENT",
                   "taxCategory": "OTROS"
                 }
                 """;
