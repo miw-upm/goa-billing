@@ -8,6 +8,7 @@ import es.upm.api.domain.ports.out.engagement.EngagementGateway;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
 import java.util.stream.Stream;
@@ -24,6 +25,9 @@ public class ExpenseService {
         if (expense.getEngagement() != null) {
             expense.setEngagement(this.engagementGateway.read(expense.getEngagement().getId()));
         }
+        String series = String.valueOf(LocalDate.now().getYear());
+        expense.setSeries(series);
+        expense.setNumber(this.expenseGateway.findNextNumber(series,expense.getExpenseType()));
         expense.setDocumentPath(null); //TODO
         this.expenseGateway.create(expense);
     }
@@ -40,6 +44,8 @@ public class ExpenseService {
         Expense currentExpense = this.expenseGateway.read(id);
         expense.setId(id);
         expense.setRecordedAt(LocalDateTime.now());
+        expense.setSeries(currentExpense.getSeries());
+        expense.setNumber(currentExpense.getNumber());
         expense.setDocumentPath(currentExpense.getDocumentPath());
         if (expense.getEngagement() != null) {
             expense.setEngagement(this.engagementGateway.read(expense.getEngagement().getId()));

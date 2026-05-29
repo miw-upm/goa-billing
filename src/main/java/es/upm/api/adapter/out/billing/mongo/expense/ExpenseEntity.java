@@ -26,6 +26,8 @@ public class ExpenseEntity {
     @Id
     private String id;
     private LocalDateTime recordedAt;
+    private String series;
+    private Integer number;
     private String engagementId;
     private BigDecimal baseAmount;
     private Integer vatRate;

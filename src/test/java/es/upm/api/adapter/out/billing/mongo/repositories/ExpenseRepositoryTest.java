@@ -37,6 +37,8 @@ class ExpenseRepositoryTest {
         UUID engagementId = UUID.randomUUID();
         this.firstExpense = Expense.builder()
                 .id(UUID.randomUUID())
+                .series("2026")
+                .number(1)
                 .engagement(EngagementSnapshot.builder().id(engagementId).build())
                 .baseAmount(BigDecimal.valueOf(30))
                 .vatRate(21)
@@ -49,6 +51,8 @@ class ExpenseRepositoryTest {
                 .build();
         this.secondExpense = Expense.builder()
                 .id(UUID.randomUUID())
+                .series("2026")
+                .number(2)
                 .engagement(EngagementSnapshot.builder().id(engagementId).build())
                 .baseAmount(BigDecimal.valueOf(35))
                 .vatRate(21)
@@ -61,6 +65,8 @@ class ExpenseRepositoryTest {
                 .build();
         this.thirdExpense = Expense.builder()
                 .id(UUID.randomUUID())
+                .series("2025")
+                .number(7)
                 .engagement(EngagementSnapshot.builder().id(UUID.randomUUID()).build())
                 .baseAmount(BigDecimal.valueOf(300))
                 .vatRate(21)
@@ -108,4 +114,5 @@ class ExpenseRepositoryTest {
         assertEquals(this.secondExpense.getId().toString(), result.getFirst().getId());
         assertEquals(this.firstExpense.getId().toString(), result.get(1).getId());
     }
+
 }

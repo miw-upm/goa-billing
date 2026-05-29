@@ -17,11 +17,13 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.Year;
 import java.util.UUID;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @SpringBootTest
@@ -128,6 +130,44 @@ class ExpenseServiceIT {
         verify(this.expenseGateway).read(id);
         verify(this.engagementGateway).read(this.engagementId);
         verify(this.expenseGateway, never()).update(any(), any());
+    }
+
+    @Test
+    void shouldKeepSeriesAndNumberOnUpdate() {
+        UUID id = UUID.randomUUID();
+        Expense existing = Expense.builder()
+                .id(id)
+                .series("2026")
+                .number(9)
+                .engagement(this.engagement)
+                .baseAmount(BigDecimal.TEN)
+                .vatRate(21)
+                .supplier(SupplierInfo.builder().name("Old").identity("OLD").build())
+                .taxCategory(TaxCategory.OTROS)
+                .expenseType(ExpenseType.CURRENT)
+                .issueDate(LocalDate.of(2026, 3, 20))
+                .documentPath("old/doc")
+                .build();
+        Expense updateData = Expense.builder()
+                .series("2024")
+                .number(1)
+                .engagement(this.engagement)
+                .baseAmount(BigDecimal.valueOf(90))
+                .vatRate(21)
+                .supplier(SupplierInfo.builder().name("Updated supplier").identity("NEW").build())
+                .taxCategory(TaxCategory.SUMINISTROS)
+                .expenseType(ExpenseType.CAPITAL)
+                .issueDate(LocalDate.of(2026, 3, 21))
+                .build();
+
+        when(this.expenseGateway.read(id)).thenReturn(existing);
+        when(this.engagementGateway.read(this.engagementId)).thenReturn(this.engagement);
+
+        this.expenseService.update(id, updateData);
+
+        verify(this.expenseGateway).update(eq(id), eq(updateData));
+        assertEquals("2026", updateData.getSeries());
+        assertEquals(9, updateData.getNumber());
     }
 
     @Test

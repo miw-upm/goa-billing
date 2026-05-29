@@ -29,6 +29,12 @@ public class Expense {
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private LocalDateTime recordedAt;
 
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    private String series;
+
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    private Integer number;
+
     private EngagementSnapshot engagement;
 
     @JsonFormat(pattern = "yyyy-MM-dd")

@@ -1,6 +1,7 @@
 package es.upm.api.adapter.out.billing.mongo.expense;
 
 import es.upm.api.domain.model.Expense;
+import es.upm.api.domain.model.ExpenseType;
 import es.upm.api.domain.model.SupplierInfo;
 import es.upm.api.domain.model.criteria.ExpenseFindCriteria;
 import es.upm.api.domain.ports.out.billing.ExpenseGateway;
@@ -18,6 +19,7 @@ import java.util.stream.Stream;
 
 @Repository
 public class ExpenseAdapter implements ExpenseGateway {
+    public static final int FIRST_SERIES_NUMBER = 1;
     private final ExpenseRepository expenseRepository;
 
     public ExpenseAdapter(ExpenseRepository expenseRepository) {
@@ -112,5 +114,13 @@ public class ExpenseAdapter implements ExpenseGateway {
                 .map(supplierInfoEntity -> supplierInfoEntity == null ? null : supplierInfoEntity.toDomain())
                 .filter(Objects::nonNull)
                 .distinct();
+    }
+
+    @Override
+    public Integer findNextNumber(String series, ExpenseType type) {
+        return this.expenseRepository.findFirstBySeriesAndExpenseTypeOrderByNumberDesc(series, type)
+                .map(ExpenseEntity::getNumber)
+                .map(n -> n + 1)
+                .orElse(FIRST_SERIES_NUMBER);
     }
 }
