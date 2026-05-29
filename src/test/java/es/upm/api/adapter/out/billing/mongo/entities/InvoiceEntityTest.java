@@ -84,7 +84,7 @@ class InvoiceEntityTest {
         assertEquals(this.invoice.getId().toString(), entity.getId());
         assertEquals(this.invoice.getConcept(), entity.getConcept());
         assertEquals(this.invoice.getClosed(), entity.getClosed());
-        assertEquals(this.invoice.getBillingInfo(), entity.getBillingInfo());
+        assertEquals(this.invoice.getBillingInfo(), entity.getBillingInfo().toDomain());
         assertEquals(this.invoice.getPercentage(), entity.getPercentage());
         assertEquals(this.invoice.getEmissionDate(), entity.getEmissionDate());
         assertEquals(this.invoice.getOperationDate(), entity.getOperationDate());
@@ -112,7 +112,7 @@ class InvoiceEntityTest {
         assertEquals(UUID.fromString(entity.getId()), mapped.getId());
         assertEquals(entity.getConcept(), mapped.getConcept());
         assertEquals(entity.getClosed(), mapped.getClosed());
-        assertEquals(entity.getBillingInfo(), mapped.getBillingInfo());
+        assertEquals(entity.getBillingInfo().toDomain(), mapped.getBillingInfo());
         assertEquals(entity.getPercentage(), mapped.getPercentage());
         assertEquals(entity.getEmissionDate(), mapped.getEmissionDate());
         assertEquals(entity.getOperationDate(), mapped.getOperationDate());

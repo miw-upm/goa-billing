@@ -56,7 +56,7 @@ class ExpenseRepositoryTest {
         assertEquals(this.expense.getEngagement().getId().toString(), savedExpenseEntity.getEngagementId());
         assertEquals(this.expense.getBaseAmount(), savedExpenseEntity.getBaseAmount());
         assertEquals(this.expense.getVatRate(), savedExpenseEntity.getVatRate());
-        assertEquals(this.expense.getSupplier(), savedExpenseEntity.getSupplier());
+        assertEquals(this.expense.getSupplier(), savedExpenseEntity.getSupplier().toDomain());
         assertEquals(this.expense.getTaxCategory(), savedExpenseEntity.getTaxCategory());
         assertEquals(this.expense.getIssueDate(), savedExpenseEntity.getIssueDate());
         assertEquals(this.expense.getDocumentPath(), savedExpenseEntity.getDocumentPath());
@@ -74,7 +74,7 @@ class ExpenseRepositoryTest {
         assertEquals(savedExpenseEntity.getEngagementId(), foundExpenseEntity.getEngagementId());
         assertEquals(savedExpenseEntity.getBaseAmount(), foundExpenseEntity.getBaseAmount());
         assertEquals(savedExpenseEntity.getVatRate(), foundExpenseEntity.getVatRate());
-        assertEquals(savedExpenseEntity.getSupplier(), foundExpenseEntity.getSupplier());
+        assertEquals(savedExpenseEntity.getSupplier().toDomain(), foundExpenseEntity.getSupplier().toDomain());
         assertEquals(savedExpenseEntity.getTaxCategory(), foundExpenseEntity.getTaxCategory());
         assertEquals(savedExpenseEntity.getIssueDate(), foundExpenseEntity.getIssueDate());
         assertEquals(savedExpenseEntity.getDocumentPath(), foundExpenseEntity.getDocumentPath());

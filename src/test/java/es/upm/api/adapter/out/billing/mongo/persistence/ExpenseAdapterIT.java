@@ -73,7 +73,7 @@ class ExpenseAdapterIT {
         assertEquals(this.expense.getEngagement().getId().toString(), persistedExpenseEntity.getEngagementId());
         assertEquals(this.expense.getBaseAmount(), persistedExpenseEntity.getBaseAmount());
         assertEquals(this.expense.getVatRate(), persistedExpenseEntity.getVatRate());
-        assertEquals(this.expense.getSupplier(), persistedExpenseEntity.getSupplier());
+        assertEquals(this.expense.getSupplier(), persistedExpenseEntity.getSupplier().toDomain());
         assertEquals(this.expense.getTaxCategory(), persistedExpenseEntity.getTaxCategory());
         assertEquals(this.expense.getIssueDate(), persistedExpenseEntity.getIssueDate());
         assertEquals(this.expense.getDocumentPath(), persistedExpenseEntity.getDocumentPath());

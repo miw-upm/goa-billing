@@ -33,7 +33,7 @@ public class InvoiceAdapter implements InvoiceGateway {
 
         invoiceEntity.setConcept(invoice.getConcept());
         invoiceEntity.setClosed(invoice.getClosed());
-        invoiceEntity.setBillingInfo(invoice.getBillingInfo());
+        invoiceEntity.setBillingInfo(invoice.getBillingInfo() == null ? null : new BillingInfoEntity(invoice.getBillingInfo()));
         invoiceEntity.setPercentage(invoice.getPercentage());
         invoiceEntity.setEmissionDate(invoice.getEmissionDate());
         invoiceEntity.setOperationDate(invoice.getOperationDate());

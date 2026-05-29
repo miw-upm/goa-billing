@@ -1,6 +1,7 @@
 package es.upm.api.adapter.out.billing.mongo.entities;
 
 import es.upm.api.adapter.out.billing.mongo.expense.ExpenseEntity;
+import es.upm.api.adapter.out.billing.mongo.expense.SupplierInfoEntity;
 import es.upm.api.domain.model.Expense;
 import es.upm.api.domain.model.SupplierInfo;
 import es.upm.api.domain.model.TaxCategory;
@@ -42,7 +43,7 @@ class ExpenseEntityTest {
         assertEquals(this.expense.getEngagement().getId().toString(), expenseEntity.getEngagementId());
         assertEquals(this.expense.getBaseAmount(), expenseEntity.getBaseAmount());
         assertEquals(this.expense.getVatRate(), expenseEntity.getVatRate());
-        assertEquals(this.expense.getSupplier(), expenseEntity.getSupplier());
+        assertEquals(this.expense.getSupplier(), expenseEntity.getSupplier().toDomain());
         assertEquals(this.expense.getTaxCategory(), expenseEntity.getTaxCategory());
         assertEquals(this.expense.getIssueDate(), expenseEntity.getIssueDate());
         assertEquals(this.expense.getDescription(), expenseEntity.getDescription());
@@ -57,7 +58,7 @@ class ExpenseEntityTest {
         expenseEntity.setEngagementId(this.expense.getEngagement().getId().toString());
         expenseEntity.setBaseAmount(this.expense.getBaseAmount());
         expenseEntity.setVatRate(this.expense.getVatRate());
-        expenseEntity.setSupplier(this.expense.getSupplier());
+        expenseEntity.setSupplier(new SupplierInfoEntity(this.expense.getSupplier()));
         expenseEntity.setTaxCategory(this.expense.getTaxCategory());
         expenseEntity.setIssueDate(this.expense.getIssueDate());
         expenseEntity.setDescription(this.expense.getDescription());
@@ -70,7 +71,7 @@ class ExpenseEntityTest {
         assertEquals(UUID.fromString(expenseEntity.getEngagementId()), mappedExpense.getEngagement().getId());
         assertEquals(expenseEntity.getBaseAmount(), mappedExpense.getBaseAmount());
         assertEquals(expenseEntity.getVatRate(), mappedExpense.getVatRate());
-        assertEquals(expenseEntity.getSupplier(), mappedExpense.getSupplier());
+        assertEquals(expenseEntity.getSupplier().toDomain(), mappedExpense.getSupplier());
         assertEquals(expenseEntity.getTaxCategory(), mappedExpense.getTaxCategory());
         assertEquals(expenseEntity.getIssueDate(), mappedExpense.getIssueDate());
         assertEquals(expenseEntity.getDescription(), mappedExpense.getDescription());

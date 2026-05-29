@@ -25,7 +25,7 @@ public class InvoiceEntity {
     private String id;
     private String concept;
     private Boolean closed;
-    private BillingInfo billingInfo;
+    private BillingInfoEntity billingInfo;
     private BigDecimal percentage;
     private LocalDate emissionDate;
     private LocalDate operationDate;
@@ -46,6 +46,7 @@ public class InvoiceEntity {
     public InvoiceEntity(Invoice invoice) {
         BeanUtils.copyProperties(invoice, this);
         this.id = invoice.getId() == null ? null : invoice.getId().toString();
+        this.billingInfo = invoice.getBillingInfo() == null ? null : new BillingInfoEntity(invoice.getBillingInfo());
         this.engagementId = invoice.getEngagement() == null || invoice.getEngagement().getId() == null
                 ? null : invoice.getEngagement().getId().toString();
         this.legalProcedures = invoice.getLegalProcedures() == null ? null
@@ -62,6 +63,7 @@ public class InvoiceEntity {
         Invoice invoice = new Invoice();
         BeanUtils.copyProperties(this, invoice);
         invoice.setId(this.id == null ? null : UUID.fromString(this.id));
+        invoice.setBillingInfo(this.billingInfo == null ? null : this.billingInfo.toDomain());
         invoice.setEngagement(this.engagementId == null ? null
                 : EngagementSnapshot.builder().id(UUID.fromString(this.engagementId)).build());
         invoice.setLegalProcedures(this.legalProcedures == null ? null

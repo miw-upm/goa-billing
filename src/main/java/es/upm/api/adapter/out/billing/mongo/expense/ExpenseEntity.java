@@ -1,7 +1,6 @@
 package es.upm.api.adapter.out.billing.mongo.expense;
 
 import es.upm.api.domain.model.Expense;
-import es.upm.api.domain.model.SupplierInfo;
 import es.upm.api.domain.model.TaxCategory;
 import es.upm.api.domain.model.external.EngagementSnapshot;
 import lombok.AllArgsConstructor;
@@ -29,7 +28,7 @@ public class ExpenseEntity {
     private String engagementId;
     private BigDecimal baseAmount;
     private Integer vatRate;
-    private SupplierInfo supplier;
+    private SupplierInfoEntity supplier;
     private TaxCategory taxCategory;
     private LocalDate issueDate;
     private String description;
@@ -41,6 +40,7 @@ public class ExpenseEntity {
         this.id = expense.getId() == null ? null : expense.getId().toString();
         this.engagementId = expense.getEngagement() == null || expense.getEngagement().getId() == null
                 ? null : expense.getEngagement().getId().toString();
+        this.supplier = expense.getSupplier() == null ? null : new SupplierInfoEntity(expense.getSupplier());
     }
 
     public Expense toDomain() {
@@ -49,6 +49,7 @@ public class ExpenseEntity {
         expense.setId(this.id == null ? null : UUID.fromString(this.id));
         expense.setEngagement(this.engagementId == null ? null
                 : EngagementSnapshot.builder().id(UUID.fromString(this.engagementId)).build());
+        expense.setSupplier(this.supplier == null ? null : this.supplier.toDomain());
         return expense;
     }
 }

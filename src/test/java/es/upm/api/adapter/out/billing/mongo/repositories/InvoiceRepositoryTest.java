@@ -85,7 +85,7 @@ class InvoiceRepositoryTest {
         assertNotNull(saved);
         assertEquals(this.invoice.getId().toString(), saved.getId());
         assertEquals(this.invoice.getEngagement().getId().toString(), saved.getEngagementId());
-        assertEquals(this.invoice.getBillingInfo(), saved.getBillingInfo());
+        assertEquals(this.invoice.getBillingInfo(), saved.getBillingInfo().toDomain());
         assertEquals(this.invoice.getPayments(), saved.getPayments().stream().map(InvoicedPaymentEntity::toDomain).toList());
         assertEquals(this.invoice.getPriorPayments(), saved.getPriorPayments().stream().map(InvoicedPaymentEntity::toDomain).toList());
         assertEquals(this.invoice.getExpenses(), saved.getExpenses().stream().map(InvoicedExpenseEntity::toDomain).toList());

@@ -1,15 +1,15 @@
 package es.upm.api.configurations;
 
 import es.upm.api.adapter.out.billing.mongo.expense.ExpenseEntity;
+import es.upm.api.adapter.out.billing.mongo.expense.SupplierInfoEntity;
+import es.upm.api.adapter.out.billing.mongo.invoice.BillingInfoEntity;
 import es.upm.api.adapter.out.billing.mongo.invoice.InvoiceLegalProcedureEntity;
 import es.upm.api.adapter.out.billing.mongo.expense.ExpenseRepository;
 import es.upm.api.adapter.out.billing.mongo.invoice.InvoiceEntity;
 import es.upm.api.adapter.out.billing.mongo.invoice.InvoiceRepository;
 import es.upm.api.adapter.out.billing.mongo.payment.PaymentEntity;
 import es.upm.api.adapter.out.billing.mongo.payment.PaymentRepository;
-import es.upm.api.domain.model.BillingInfo;
 import es.upm.api.domain.model.PaymentMethod;
-import es.upm.api.domain.model.SupplierInfo;
 import es.upm.api.domain.model.TaxCategory;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.log4j.Log4j2;
@@ -80,10 +80,7 @@ public class DatabaseSeederDev {
                         .engagementId(EL_0.toString())
                         .baseAmount(new BigDecimal("35.50"))
                         .vatRate(21)
-                        .supplier(SupplierInfo.builder()
-                                .name("Taxi Madrid")
-                                .identity("A10000000")
-                                .build())
+                        .supplier(new SupplierInfoEntity("Taxi Madrid", "A10000000"))
                         .taxCategory(TaxCategory.OTROS)
                         .issueDate(LocalDate.of(2026, 3, 15))
                         .description("Taxi")
@@ -96,10 +93,7 @@ public class DatabaseSeederDev {
                         .engagementId(EL_1.toString())
                         .baseAmount(new BigDecimal("120.00"))
                         .vatRate(21)
-                        .supplier(SupplierInfo.builder()
-                                .name("Hotel Central")
-                                .identity("B20000000")
-                                .build())
+                        .supplier(new SupplierInfoEntity("Hotel Central", "B20000000"))
                         .taxCategory(TaxCategory.SERVICIOS_PROFESIONALES)
                         .issueDate(LocalDate.of(2026, 3, 16))
                         .description("Hotel")
@@ -112,10 +106,7 @@ public class DatabaseSeederDev {
                         .engagementId(null)
                         .baseAmount(new BigDecimal("18.90"))
                         .vatRate(21)
-                        .supplier(SupplierInfo.builder()
-                                .name("Restaurante Norte")
-                                .identity("C30000000")
-                                .build())
+                        .supplier(new SupplierInfoEntity("Restaurante Norte", "C30000000"))
                         .taxCategory(TaxCategory.MANUTENCION)
                         .issueDate(LocalDate.of(2026, 3, 17))
                         .description("Comida")
@@ -128,10 +119,7 @@ public class DatabaseSeederDev {
                         .engagementId(null)
                         .baseAmount(new BigDecimal("64.80"))
                         .vatRate(21)
-                        .supplier(SupplierInfo.builder()
-                                .name("Restaurante Sur")
-                                .identity("D40000000")
-                                .build())
+                        .supplier(new SupplierInfoEntity("Restaurante Sur", "D40000000"))
                         .taxCategory(TaxCategory.MANUTENCION)
                         .issueDate(LocalDate.of(2026, 3, 18))
                         .description("Cena")
@@ -173,12 +161,12 @@ public class DatabaseSeederDev {
                         .id(ID_14)
                         .concept("Cierre de hoja de encargo")
                         .closed(true)
-                        .billingInfo(BillingInfo.builder()
-                                .userId(C_0)
-                                .fullName("User 0000")
-                                .identity("ID-00000000A")
-                                .fullAddress("Madrid, Spain")
-                                .build())
+                        .billingInfo(new BillingInfoEntity(
+                                C_0.toString(),
+                                "User 0000",
+                                "ID-00000000A",
+                                "Madrid, Spain"
+                        ))
                         .percentage(new BigDecimal("100"))
                         .legalProcedures(List.of(
                                 new InvoiceLegalProcedureEntity(
@@ -204,12 +192,12 @@ public class DatabaseSeederDev {
                         .id(ID_15)
                         .concept("Provision de fondos")
                         .closed(false)
-                        .billingInfo(BillingInfo.builder()
-                                .userId(C_1)
-                                .fullName("User 0001")
-                                .identity("ID-00000001B")
-                                .fullAddress("Madrid, Spain")
-                                .build())
+                        .billingInfo(new BillingInfoEntity(
+                                C_1.toString(),
+                                "User 0001",
+                                "ID-00000001B",
+                                "Madrid, Spain"
+                        ))
                         .percentage(new BigDecimal("100"))
                         .legalProcedures(List.of(
                                 new InvoiceLegalProcedureEntity(

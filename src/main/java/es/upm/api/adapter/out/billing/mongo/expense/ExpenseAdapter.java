@@ -109,6 +109,7 @@ public class ExpenseAdapter implements ExpenseGateway {
                         normalizedSupplier, normalizedSupplier
                 ).stream()
                 .map(ExpenseEntity::getSupplier)
+                .map(supplierInfoEntity -> supplierInfoEntity == null ? null : supplierInfoEntity.toDomain())
                 .filter(Objects::nonNull)
                 .distinct();
     }
