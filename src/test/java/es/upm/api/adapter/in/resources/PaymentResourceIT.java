@@ -130,7 +130,7 @@ class PaymentResourceIT {
 
     @Test
     @WithMockUser(roles = "admin")
-    void shouldFindPaymentsByEngagementReference() throws Exception {
+    void shouldFindPaymentsByEngagementId() throws Exception {
         UUID paymentId = UUID.randomUUID();
         UUID engagementId = UUID.randomUUID();
         UUID userId = UUID.randomUUID();
@@ -138,13 +138,13 @@ class PaymentResourceIT {
         when(this.paymentService.find(any(PaymentFindCriteria.class))).thenReturn(Stream.of(response));
 
         this.mockMvc.perform(get("/payments")
-                        .param("engagementReference", "2H60"))
+                        .param("engagementId", "2H60"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].id").value(paymentId.toString()));
 
         ArgumentCaptor<PaymentFindCriteria> criteriaCaptor = ArgumentCaptor.forClass(PaymentFindCriteria.class);
         verify(this.paymentService).find(criteriaCaptor.capture());
-        assertEquals("2H60", criteriaCaptor.getValue().getEngagementReference());
+        assertEquals("2H60", criteriaCaptor.getValue().getEngagementId());
     }
 
     private Payment buildPayment(UUID paymentId, UUID engagementId, UUID userId, String amount,

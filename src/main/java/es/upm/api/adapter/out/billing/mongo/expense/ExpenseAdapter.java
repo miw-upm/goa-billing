@@ -57,9 +57,9 @@ public class ExpenseAdapter implements ExpenseGateway {
     @Override
     public Stream<Expense> find(ExpenseFindCriteria criteria) {
         List<ExpenseEntity> result;
-        if (StringUtils.hasText(criteria.getEngagementReference())) {
-            result = this.expenseRepository.findByEngagementIdCode64StartingWithOrderByIssueDateDesc(
-                    this.normalizeEngagementReference(criteria.getEngagementReference())
+        if (StringUtils.hasText(criteria.getEngagementId())) {
+            result = this.expenseRepository.findByEngagementIdStartingWithOrderByIssueDateDesc(
+                    this.normalizeEngagementIdPrefix(criteria.getEngagementId())
             );
         } else if (criteria.getSupplier() == null) {
             result = this.expenseRepository.findAllByOrderByIssueDateDesc();
@@ -69,7 +69,7 @@ public class ExpenseAdapter implements ExpenseGateway {
             );
         }
         Stream<ExpenseEntity> stream = result.stream();
-        if (StringUtils.hasText(criteria.getEngagementReference()) && StringUtils.hasText(criteria.getSupplier())) {
+        if (StringUtils.hasText(criteria.getEngagementId()) && StringUtils.hasText(criteria.getSupplier())) {
             String supplier = criteria.getSupplier().toLowerCase(Locale.ROOT);
             stream = stream.filter(expenseEntity ->
                     expenseEntity.getSupplier() != null
@@ -91,8 +91,9 @@ public class ExpenseAdapter implements ExpenseGateway {
         return stream.map(ExpenseEntity::toDomain);
     }
 
-    private String normalizeEngagementReference(String engagementReference) {
-        return engagementReference.trim().replace("=", "");
+    private String normalizeEngagementIdPrefix(String engagementId) {
+        String normalized = engagementId.trim();
+        return normalized.length() <= 4 ? normalized : normalized.substring(0, 4);
     }
 
     @Override

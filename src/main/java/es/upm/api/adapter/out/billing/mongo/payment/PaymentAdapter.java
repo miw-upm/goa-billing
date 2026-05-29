@@ -29,8 +29,6 @@ public class PaymentAdapter implements PaymentGateway {
 
         paymentEntity.setEngagementId(payment.getEngagement() == null || payment.getEngagement().getId() == null
                 ? null : payment.getEngagement().getId().toString());
-        paymentEntity.setEngagementIdCode64(payment.getEngagement() == null || payment.getEngagement().getId() == null ? null
-                : PaymentEntity.encodeEngagementId(payment.getEngagement().getId().toString()));
         paymentEntity.setUserId(payment.getUser() == null || payment.getUser().getId() == null
                 ? null : payment.getUser().getId().toString());
         paymentEntity.setAmount(payment.getAmount());
@@ -58,21 +56,21 @@ public class PaymentAdapter implements PaymentGateway {
     @Override
     public Stream<Payment> find(PaymentFindCriteria criteria) {
         List<PaymentEntity> result;
-        if (StringUtils.hasText(criteria.getEngagementReference()) && criteria.getFromDate() != null && criteria.getInvoiced() != null) {
-            result = this.paymentRepository.findByEngagementIdCode64StartingWithAndDateGreaterThanEqualAndInvoicedOrderByDateDesc(
-                    this.normalizeEngagementReference(criteria.getEngagementReference()), criteria.getFromDate(), criteria.getInvoiced()
+        if (StringUtils.hasText(criteria.getEngagementId()) && criteria.getFromDate() != null && criteria.getInvoiced() != null) {
+            result = this.paymentRepository.findByEngagementIdStartingWithAndDateGreaterThanEqualAndInvoicedOrderByDateDesc(
+                    this.normalizeEngagementIdPrefix(criteria.getEngagementId()), criteria.getFromDate(), criteria.getInvoiced()
             );
-        } else if (StringUtils.hasText(criteria.getEngagementReference()) && criteria.getFromDate() != null) {
-            result = this.paymentRepository.findByEngagementIdCode64StartingWithAndDateGreaterThanEqualOrderByDateDesc(
-                    this.normalizeEngagementReference(criteria.getEngagementReference()), criteria.getFromDate()
+        } else if (StringUtils.hasText(criteria.getEngagementId()) && criteria.getFromDate() != null) {
+            result = this.paymentRepository.findByEngagementIdStartingWithAndDateGreaterThanEqualOrderByDateDesc(
+                    this.normalizeEngagementIdPrefix(criteria.getEngagementId()), criteria.getFromDate()
             );
-        } else if (StringUtils.hasText(criteria.getEngagementReference()) && criteria.getInvoiced() != null) {
-            result = this.paymentRepository.findByEngagementIdCode64StartingWithAndInvoicedOrderByDateDesc(
-                    this.normalizeEngagementReference(criteria.getEngagementReference()), criteria.getInvoiced()
+        } else if (StringUtils.hasText(criteria.getEngagementId()) && criteria.getInvoiced() != null) {
+            result = this.paymentRepository.findByEngagementIdStartingWithAndInvoicedOrderByDateDesc(
+                    this.normalizeEngagementIdPrefix(criteria.getEngagementId()), criteria.getInvoiced()
             );
-        } else if (StringUtils.hasText(criteria.getEngagementReference())) {
-            result = this.paymentRepository.findByEngagementIdCode64StartingWithOrderByDateDesc(
-                    this.normalizeEngagementReference(criteria.getEngagementReference())
+        } else if (StringUtils.hasText(criteria.getEngagementId())) {
+            result = this.paymentRepository.findByEngagementIdStartingWithOrderByDateDesc(
+                    this.normalizeEngagementIdPrefix(criteria.getEngagementId())
             );
         } else if (criteria.all()) {
             result = this.paymentRepository.findAllByOrderByDateDesc();
@@ -92,8 +90,9 @@ public class PaymentAdapter implements PaymentGateway {
                 .map(PaymentEntity::toDomain);
     }
 
-    private String normalizeEngagementReference(String engagementReference) {
-        return engagementReference.trim().replace("=", "");
+    private String normalizeEngagementIdPrefix(String engagementId) {
+        String normalized = engagementId.trim();
+        return normalized.length() <= 4 ? normalized : normalized.substring(0, 4);
     }
 
     @Override

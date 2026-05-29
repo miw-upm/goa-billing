@@ -266,16 +266,16 @@ class ExpenseAdapterIT {
     }
 
     @Test
-    void shouldFindByEngagementReferencePrefix() {
-        String encodedEngagementId = ExpenseEntity.encodeEngagementId(this.engagementUuid.toString());
-        this.criteria.setEngagementReference(encodedEngagementId.substring(0, 4));
-        when(this.expenseRepository.findByEngagementIdCode64StartingWithOrderByIssueDateDesc(encodedEngagementId.substring(0, 4)))
+    void shouldFindByEngagementIdPrefix() {
+        String engagementIdPrefix = this.engagementUuid.toString().substring(0, 4);
+        this.criteria.setEngagementId(engagementIdPrefix);
+        when(this.expenseRepository.findByEngagementIdStartingWithOrderByIssueDateDesc(engagementIdPrefix))
                 .thenReturn(List.of(new ExpenseEntity(this.expense)));
 
         List<Expense> expenses = this.expensePersistenceMongodb.find(this.criteria).toList();
 
         assertEquals(1, expenses.size());
         assertEquals(this.expense.getId(), expenses.getFirst().getId());
-        verify(this.expenseRepository).findByEngagementIdCode64StartingWithOrderByIssueDateDesc(encodedEngagementId.substring(0, 4));
+        verify(this.expenseRepository).findByEngagementIdStartingWithOrderByIssueDateDesc(engagementIdPrefix);
     }
 }

@@ -154,15 +154,15 @@ class ExpenseResourceIT {
 
     @Test
     @WithMockUser(roles = "admin")
-    void shouldFindExpensesByEngagementReference() throws Exception {
+    void shouldFindExpensesByEngagementId() throws Exception {
         when(this.expenseService.find(any(ExpenseFindCriteria.class))).thenReturn(Stream.empty());
 
         this.mockMvc.perform(get("/expenses")
-                        .param("engagementReference", "2H60"))
+                        .param("engagementId", "2H60"))
                 .andExpect(status().isOk());
 
         ArgumentCaptor<ExpenseFindCriteria> criteriaCaptor = ArgumentCaptor.forClass(ExpenseFindCriteria.class);
         verify(this.expenseService).find(criteriaCaptor.capture());
-        assertEquals("2H60", criteriaCaptor.getValue().getEngagementReference());
+        assertEquals("2H60", criteriaCaptor.getValue().getEngagementId());
     }
 }

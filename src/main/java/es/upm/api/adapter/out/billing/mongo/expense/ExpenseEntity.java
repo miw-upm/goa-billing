@@ -13,10 +13,8 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.math.BigDecimal;
-import java.nio.ByteBuffer;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.Base64;
 import java.util.UUID;
 
 @Builder
@@ -29,7 +27,6 @@ public class ExpenseEntity {
     private String id;
     private LocalDateTime recordedAt;
     private String engagementId;
-    private String engagementIdCode64;
     private BigDecimal baseAmount;
     private Integer vatRate;
     private SupplierInfo supplier;
@@ -44,7 +41,6 @@ public class ExpenseEntity {
         this.id = expense.getId() == null ? null : expense.getId().toString();
         this.engagementId = expense.getEngagement() == null || expense.getEngagement().getId() == null
                 ? null : expense.getEngagement().getId().toString();
-        this.engagementIdCode64 = this.engagementId == null ? null : ExpenseEntity.encodeEngagementId(this.engagementId);
     }
 
     public Expense toDomain() {
@@ -54,13 +50,5 @@ public class ExpenseEntity {
         expense.setEngagement(this.engagementId == null ? null
                 : EngagementSnapshot.builder().id(UUID.fromString(this.engagementId)).build());
         return expense;
-    }
-
-    public static String encodeEngagementId(String engagementId) {
-        UUID uuid = UUID.fromString(engagementId);
-        ByteBuffer byteBuffer = ByteBuffer.allocate(16);
-        byteBuffer.putLong(uuid.getMostSignificantBits());
-        byteBuffer.putLong(uuid.getLeastSignificantBits());
-        return Base64.getEncoder().withoutPadding().encodeToString(byteBuffer.array());
     }
 }

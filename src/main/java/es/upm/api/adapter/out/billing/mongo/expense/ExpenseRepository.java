@@ -18,7 +18,7 @@ public interface ExpenseRepository extends MongoRepository<ExpenseEntity, String
 
     List<ExpenseEntity> findByIssueDateGreaterThanEqualOrderByIssueDateDesc(LocalDate issueDate);
 
-    List<ExpenseEntity> findByEngagementIdCode64StartingWithOrderByIssueDateDesc(String engagementIdCode64Prefix);
+    List<ExpenseEntity> findByEngagementIdStartingWithOrderByIssueDateDesc(String engagementIdPrefix);
 
     List<ExpenseEntity> findByEngagementIdOrderByIssueDateDesc(String engagementId);
 }

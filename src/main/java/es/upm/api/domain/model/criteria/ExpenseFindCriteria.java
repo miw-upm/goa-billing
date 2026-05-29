@@ -13,7 +13,7 @@ public class ExpenseFindCriteria {
     private String category;
     private String supplier;
     private LocalDate fromDate;
-    private String engagementReference;
+    private String engagementId;
 
     public ExpenseFindCriteria(String category, String supplier, LocalDate fromDate) {
         this.category = category;
@@ -22,6 +22,6 @@ public class ExpenseFindCriteria {
     }
 
     public boolean isEmpty() {
-        return this.category == null && this.supplier == null && this.fromDate == null && this.engagementReference == null;
+        return this.category == null && this.supplier == null && this.fromDate == null && this.engagementId == null;
     }
 }

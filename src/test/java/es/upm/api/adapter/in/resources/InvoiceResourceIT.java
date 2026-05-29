@@ -177,21 +177,21 @@ class InvoiceResourceIT {
 
     @Test
     @WithMockUser(roles = "admin")
-    void shouldFindInvoicesByEngagementReference() throws Exception {
+    void shouldFindInvoicesByEngagementId() throws Exception {
         UUID invoiceId = UUID.randomUUID();
         UUID userId = UUID.randomUUID();
-        String encodedEngagementId = "2H60";
+        String engagementIdPrefix = "2H60";
         Invoice response = this.buildInvoice(invoiceId, userId, "100.00");
         when(this.invoiceService.find(any(InvoiceFindCriteria.class))).thenReturn(Stream.of(response));
 
         this.mockMvc.perform(get("/invoices")
-                        .param("engagementReference", encodedEngagementId))
+                        .param("engagementId", engagementIdPrefix))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].id").value(invoiceId.toString()));
 
         ArgumentCaptor<InvoiceFindCriteria> criteriaCaptor = ArgumentCaptor.forClass(InvoiceFindCriteria.class);
         verify(this.invoiceService).find(criteriaCaptor.capture());
-        assertEquals(encodedEngagementId, criteriaCaptor.getValue().getEngagementReference());
+        assertEquals(engagementIdPrefix, criteriaCaptor.getValue().getEngagementId());
     }
 
     @Test

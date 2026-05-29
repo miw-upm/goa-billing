@@ -1,7 +1,6 @@
 package es.upm.api.adapter.out.billing.mongo.invoice;
 
 import es.upm.api.domain.model.*;
-import es.upm.api.domain.model.creation.InvoiceLegalProcedure;
 import es.upm.api.domain.model.external.EngagementSnapshot;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -11,10 +10,8 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import java.nio.ByteBuffer;
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.Base64;
 import java.util.List;
 import java.util.UUID;
 
@@ -38,11 +35,10 @@ public class InvoiceEntity {
     private BigDecimal vatAmount;
     private BigDecimal vatRate;
     private String engagementId;
-    private String engagementIdCode64;
-    private List<InvoiceLegalProcedure> legalProcedures;
-    private List<InvoicedPayment> payments;
-    private List<InvoicedPayment> priorPayments;
-    private List<InvoicedExpense> expenses;
+    private List<InvoiceLegalProcedureEntity> legalProcedures;
+    private List<InvoicedPaymentEntity> payments;
+    private List<InvoicedPaymentEntity> priorPayments;
+    private List<InvoicedExpenseEntity> expenses;
     private List<BigDecimal> discounts;
     private String pdfPath;
     private Rectification rectification;
@@ -52,7 +48,14 @@ public class InvoiceEntity {
         this.id = invoice.getId() == null ? null : invoice.getId().toString();
         this.engagementId = invoice.getEngagement() == null || invoice.getEngagement().getId() == null
                 ? null : invoice.getEngagement().getId().toString();
-        this.engagementIdCode64 = this.engagementId == null ? null : InvoiceEntity.encodeEngagementId(this.engagementId);
+        this.legalProcedures = invoice.getLegalProcedures() == null ? null
+                : invoice.getLegalProcedures().stream().map(InvoiceLegalProcedureEntity::new).toList();
+        this.payments = invoice.getPayments() == null ? null
+                : invoice.getPayments().stream().map(InvoicedPaymentEntity::new).toList();
+        this.priorPayments = invoice.getPriorPayments() == null ? null
+                : invoice.getPriorPayments().stream().map(InvoicedPaymentEntity::new).toList();
+        this.expenses = invoice.getExpenses() == null ? null
+                : invoice.getExpenses().stream().map(InvoicedExpenseEntity::new).toList();
     }
 
     public Invoice toDomain() {
@@ -61,14 +64,14 @@ public class InvoiceEntity {
         invoice.setId(this.id == null ? null : UUID.fromString(this.id));
         invoice.setEngagement(this.engagementId == null ? null
                 : EngagementSnapshot.builder().id(UUID.fromString(this.engagementId)).build());
+        invoice.setLegalProcedures(this.legalProcedures == null ? null
+                : this.legalProcedures.stream().map(InvoiceLegalProcedureEntity::toDomain).toList());
+        invoice.setPayments(this.payments == null ? null
+                : this.payments.stream().map(InvoicedPaymentEntity::toDomain).toList());
+        invoice.setPriorPayments(this.priorPayments == null ? null
+                : this.priorPayments.stream().map(InvoicedPaymentEntity::toDomain).toList());
+        invoice.setExpenses(this.expenses == null ? null
+                : this.expenses.stream().map(InvoicedExpenseEntity::toDomain).toList());
         return invoice;
-    }
-
-    public static String encodeEngagementId(String engagementId) {
-        UUID uuid = UUID.fromString(engagementId);
-        ByteBuffer byteBuffer = ByteBuffer.allocate(16);
-        byteBuffer.putLong(uuid.getMostSignificantBits());
-        byteBuffer.putLong(uuid.getLeastSignificantBits());
-        return Base64.getEncoder().withoutPadding().encodeToString(byteBuffer.array());
     }
 }

@@ -1,6 +1,9 @@
 package es.upm.api.adapter.out.billing.mongo.entities;
 
 import es.upm.api.adapter.out.billing.mongo.invoice.InvoiceEntity;
+import es.upm.api.adapter.out.billing.mongo.invoice.InvoicedExpenseEntity;
+import es.upm.api.adapter.out.billing.mongo.invoice.InvoiceLegalProcedureEntity;
+import es.upm.api.adapter.out.billing.mongo.invoice.InvoicedPaymentEntity;
 import es.upm.api.domain.model.*;
 import es.upm.api.domain.model.creation.InvoiceLegalProcedure;
 import es.upm.api.domain.model.external.EngagementSnapshot;
@@ -91,10 +94,11 @@ class InvoiceEntityTest {
         assertEquals(this.invoice.getVatAmount(), entity.getVatAmount());
         assertEquals(this.invoice.getVatRate(), entity.getVatRate());
         assertEquals(this.invoice.getEngagement().getId().toString(), entity.getEngagementId());
-        assertEquals(this.invoice.getLegalProcedures(), entity.getLegalProcedures());
-        assertEquals(this.invoice.getPayments(), entity.getPayments());
-        assertEquals(this.invoice.getPriorPayments(), entity.getPriorPayments());
-        assertEquals(this.invoice.getExpenses(), entity.getExpenses());
+        assertEquals(this.invoice.getLegalProcedures(),
+                entity.getLegalProcedures().stream().map(InvoiceLegalProcedureEntity::toDomain).toList());
+        assertEquals(this.invoice.getPayments(), entity.getPayments().stream().map(InvoicedPaymentEntity::toDomain).toList());
+        assertEquals(this.invoice.getPriorPayments(), entity.getPriorPayments().stream().map(InvoicedPaymentEntity::toDomain).toList());
+        assertEquals(this.invoice.getExpenses(), entity.getExpenses().stream().map(InvoicedExpenseEntity::toDomain).toList());
         assertEquals(this.invoice.getDiscounts(), entity.getDiscounts());
         assertEquals(this.invoice.getPdfPath(), entity.getPdfPath());
     }
@@ -118,10 +122,10 @@ class InvoiceEntityTest {
         assertEquals(entity.getVatAmount(), mapped.getVatAmount());
         assertEquals(entity.getVatRate(), mapped.getVatRate());
         assertEquals(UUID.fromString(entity.getEngagementId()), mapped.getEngagement().getId());
-        assertEquals(entity.getLegalProcedures(), mapped.getLegalProcedures());
-        assertEquals(entity.getPayments(), mapped.getPayments());
-        assertEquals(entity.getPriorPayments(), mapped.getPriorPayments());
-        assertEquals(entity.getExpenses(), mapped.getExpenses());
+        assertEquals(this.invoice.getLegalProcedures(), mapped.getLegalProcedures());
+        assertEquals(this.invoice.getPayments(), mapped.getPayments());
+        assertEquals(this.invoice.getPriorPayments(), mapped.getPriorPayments());
+        assertEquals(this.invoice.getExpenses(), mapped.getExpenses());
         assertEquals(entity.getDiscounts(), mapped.getDiscounts());
         assertEquals(entity.getPdfPath(), mapped.getPdfPath());
     }

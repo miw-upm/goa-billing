@@ -166,15 +166,15 @@ class InvoiceServiceIT {
     }
 
     @Test
-    void shouldFindByEngagementReferenceUsingGatewayQuery() {
+    void shouldFindByEngagementIdUsingGatewayQuery() {
         UUID engagementId = UUID.randomUUID();
-        String encodedEngagementId = "ZW5jb2RlZA==";
+        String engagementIdPrefix = "2H60";
         Invoice matching = Invoice.builder()
                 .id(UUID.randomUUID())
                 .engagement(EngagementSnapshot.builder().id(engagementId).build())
                 .build();
         InvoiceFindCriteria criteria = new InvoiceFindCriteria();
-        criteria.setEngagementReference(encodedEngagementId);
+        criteria.setEngagementId(engagementIdPrefix);
 
         when(this.invoiceGateway.find(criteria)).thenReturn(Stream.of(matching));
         when(this.engagementGateway.read(engagementId))

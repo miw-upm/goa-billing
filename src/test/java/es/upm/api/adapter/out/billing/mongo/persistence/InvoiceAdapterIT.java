@@ -2,6 +2,9 @@ package es.upm.api.adapter.out.billing.mongo.persistence;
 
 import es.upm.api.adapter.out.billing.mongo.invoice.InvoiceAdapter;
 import es.upm.api.adapter.out.billing.mongo.invoice.InvoiceEntity;
+import es.upm.api.adapter.out.billing.mongo.invoice.InvoicedExpenseEntity;
+import es.upm.api.adapter.out.billing.mongo.invoice.InvoiceLegalProcedureEntity;
+import es.upm.api.adapter.out.billing.mongo.invoice.InvoicedPaymentEntity;
 import es.upm.api.adapter.out.billing.mongo.invoice.InvoiceRepository;
 import es.upm.api.domain.model.*;
 import es.upm.api.domain.model.creation.InvoiceLegalProcedure;
@@ -66,10 +69,13 @@ class InvoiceAdapterIT {
         assertEquals(this.invoice.getConcept(), captor.getValue().getConcept());
         assertEquals(this.invoice.getClosed(), captor.getValue().getClosed());
         assertEquals(this.invoice.getEngagement().getId().toString(), captor.getValue().getEngagementId());
-        assertEquals(this.invoice.getLegalProcedures(), captor.getValue().getLegalProcedures());
+        assertEquals(this.invoice.getLegalProcedures(),
+                captor.getValue().getLegalProcedures().stream().map(InvoiceLegalProcedureEntity::toDomain).toList());
         assertEquals(this.invoice.getBaseAmount(), captor.getValue().getBaseAmount());
-        assertEquals(this.invoice.getPriorPayments(), captor.getValue().getPriorPayments());
-        assertEquals(this.invoice.getExpenses(), captor.getValue().getExpenses());
+        assertEquals(this.invoice.getPriorPayments(),
+                captor.getValue().getPriorPayments().stream().map(InvoicedPaymentEntity::toDomain).toList());
+        assertEquals(this.invoice.getExpenses(),
+                captor.getValue().getExpenses().stream().map(InvoicedExpenseEntity::toDomain).toList());
     }
 
     @Test
@@ -154,37 +160,37 @@ class InvoiceAdapterIT {
     }
 
     @Test
-    void shouldFindInvoicesByEngagementReference() {
-        String encodedEngagementId = InvoiceEntity.encodeEngagementId(this.engagementId.toString());
+    void shouldFindInvoicesByEngagementIdPrefix() {
+        String engagementIdPrefix = this.engagementId.toString().substring(0, 4);
         InvoiceFindCriteria findCriteria = new InvoiceFindCriteria();
-        findCriteria.setEngagementReference(encodedEngagementId.substring(0, 4));
-        when(this.invoiceRepository.findByEngagementIdCode64StartingWithOrderByEmissionDateDesc(encodedEngagementId.substring(0, 4)))
+        findCriteria.setEngagementId(engagementIdPrefix);
+        when(this.invoiceRepository.findByEngagementIdStartingWithOrderByEmissionDateDesc(engagementIdPrefix))
                 .thenReturn(List.of(new InvoiceEntity(this.invoice)));
 
         List<Invoice> result = this.invoiceAdapter.find(findCriteria).toList();
 
         assertEquals(1, result.size());
         assertEquals(this.invoice.getId(), result.get(0).getId());
-        verify(this.invoiceRepository).findByEngagementIdCode64StartingWithOrderByEmissionDateDesc(encodedEngagementId.substring(0, 4));
+        verify(this.invoiceRepository).findByEngagementIdStartingWithOrderByEmissionDateDesc(engagementIdPrefix);
     }
 
     @Test
-    void shouldFindInvoicesByEngagementReferenceAndFromDate() {
+    void shouldFindInvoicesByEngagementIdPrefixAndFromDate() {
         LocalDate fromDate = LocalDate.of(2026, 3, 20);
-        String encodedEngagementId = InvoiceEntity.encodeEngagementId(this.engagementId.toString());
+        String engagementIdPrefix = this.engagementId.toString().substring(0, 4);
         InvoiceFindCriteria findCriteria = new InvoiceFindCriteria();
         findCriteria.setFromDate(fromDate);
-        findCriteria.setEngagementReference(encodedEngagementId.substring(0, 4));
-        when(this.invoiceRepository.findByEngagementIdCode64StartingWithAndEmissionDateGreaterThanEqualOrderByEmissionDateDesc(
-                encodedEngagementId.substring(0, 4), fromDate))
+        findCriteria.setEngagementId(engagementIdPrefix);
+        when(this.invoiceRepository.findByEngagementIdStartingWithAndEmissionDateGreaterThanEqualOrderByEmissionDateDesc(
+                engagementIdPrefix, fromDate))
                 .thenReturn(List.of(new InvoiceEntity(this.invoice)));
 
         List<Invoice> result = this.invoiceAdapter.find(findCriteria).toList();
 
         assertEquals(1, result.size());
         assertEquals(this.invoice.getId(), result.get(0).getId());
-        verify(this.invoiceRepository).findByEngagementIdCode64StartingWithAndEmissionDateGreaterThanEqualOrderByEmissionDateDesc(
-                encodedEngagementId.substring(0, 4), fromDate);
+        verify(this.invoiceRepository).findByEngagementIdStartingWithAndEmissionDateGreaterThanEqualOrderByEmissionDateDesc(
+                engagementIdPrefix, fromDate);
     }
 
     private Invoice buildInvoice(UUID invoiceId, UUID engagementId, UUID userId, UUID paymentId,

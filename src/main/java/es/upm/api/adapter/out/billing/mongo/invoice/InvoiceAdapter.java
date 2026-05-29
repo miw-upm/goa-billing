@@ -44,12 +44,14 @@ public class InvoiceAdapter implements InvoiceGateway {
         invoiceEntity.setVatRate(invoice.getVatRate());
         invoiceEntity.setEngagementId(invoice.getEngagement() == null || invoice.getEngagement().getId() == null
                 ? null : invoice.getEngagement().getId().toString());
-        invoiceEntity.setEngagementIdCode64(invoice.getEngagement() == null || invoice.getEngagement().getId() == null ? null
-                : InvoiceEntity.encodeEngagementId(invoice.getEngagement().getId().toString()));
-        invoiceEntity.setLegalProcedures(invoice.getLegalProcedures());
-        invoiceEntity.setPayments(invoice.getPayments());
-        invoiceEntity.setPriorPayments(invoice.getPriorPayments());
-        invoiceEntity.setExpenses(invoice.getExpenses());
+        invoiceEntity.setLegalProcedures(invoice.getLegalProcedures() == null ? null
+                : invoice.getLegalProcedures().stream().map(InvoiceLegalProcedureEntity::new).toList());
+        invoiceEntity.setPayments(invoice.getPayments() == null ? null
+                : invoice.getPayments().stream().map(InvoicedPaymentEntity::new).toList());
+        invoiceEntity.setPriorPayments(invoice.getPriorPayments() == null ? null
+                : invoice.getPriorPayments().stream().map(InvoicedPaymentEntity::new).toList());
+        invoiceEntity.setExpenses(invoice.getExpenses() == null ? null
+                : invoice.getExpenses().stream().map(InvoicedExpenseEntity::new).toList());
         invoiceEntity.setDiscounts(invoice.getDiscounts());
         invoiceEntity.setPdfPath(invoice.getPdfPath());
         invoiceEntity.setRectification(invoice.getRectification());
@@ -75,13 +77,13 @@ public class InvoiceAdapter implements InvoiceGateway {
     public Stream<Invoice> find(InvoiceFindCriteria criteria) {
         List<InvoiceEntity> result;
 
-        if (StringUtils.hasText(criteria.getEngagementReference())) {
-            String engagementReferencePrefix = this.normalizeEngagementReference(criteria.getEngagementReference());
+        if (StringUtils.hasText(criteria.getEngagementId())) {
+            String engagementIdPrefix = this.normalizeEngagementIdPrefix(criteria.getEngagementId());
             if (criteria.getFromDate() == null) {
-                result = this.invoiceRepository.findByEngagementIdCode64StartingWithOrderByEmissionDateDesc(engagementReferencePrefix);
+                result = this.invoiceRepository.findByEngagementIdStartingWithOrderByEmissionDateDesc(engagementIdPrefix);
             } else {
-                result = this.invoiceRepository.findByEngagementIdCode64StartingWithAndEmissionDateGreaterThanEqualOrderByEmissionDateDesc(
-                        engagementReferencePrefix, criteria.getFromDate());
+                result = this.invoiceRepository.findByEngagementIdStartingWithAndEmissionDateGreaterThanEqualOrderByEmissionDateDesc(
+                        engagementIdPrefix, criteria.getFromDate());
             }
         } else if (criteria.isEmpty() || criteria.getFromDate() == null) {
             result = this.invoiceRepository.findAllByOrderByEmissionDateDesc();
@@ -93,8 +95,9 @@ public class InvoiceAdapter implements InvoiceGateway {
                 .map(InvoiceEntity::toDomain);
     }
 
-    private String normalizeEngagementReference(String engagementReference) {
-        return engagementReference.trim().replace("=", "");
+    private String normalizeEngagementIdPrefix(String engagementId) {
+        String normalized = engagementId.trim();
+        return normalized.length() <= 4 ? normalized : normalized.substring(0, 4);
     }
 
     @Override

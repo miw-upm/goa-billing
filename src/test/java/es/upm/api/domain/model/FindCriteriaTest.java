@@ -30,7 +30,7 @@ class FindCriteriaTest {
         assertFalse(criteria.isEmpty());
 
         criteria = new ExpenseFindCriteria();
-        criteria.setEngagementReference("2H60");
+        criteria.setEngagementId("2H60");
         assertFalse(criteria.isEmpty());
     }
 
@@ -44,7 +44,7 @@ class FindCriteriaTest {
         assertFalse(criteria.all());
 
         criteria = new PaymentFindCriteria();
-        criteria.setEngagementReference("2H60");
+        criteria.setEngagementId("2H60");
         assertFalse(criteria.all());
     }
 
@@ -62,7 +62,7 @@ class FindCriteriaTest {
         assertFalse(criteria.isEmpty());
 
         criteria = new InvoiceFindCriteria();
-        criteria.setEngagementReference("ZW5nYWdlbWVudA==");
+        criteria.setEngagementId("2H60");
         assertFalse(criteria.isEmpty());
     }
 }

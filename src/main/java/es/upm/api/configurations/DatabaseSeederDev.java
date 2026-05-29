@@ -1,6 +1,7 @@
 package es.upm.api.configurations;
 
 import es.upm.api.adapter.out.billing.mongo.expense.ExpenseEntity;
+import es.upm.api.adapter.out.billing.mongo.invoice.InvoiceLegalProcedureEntity;
 import es.upm.api.adapter.out.billing.mongo.expense.ExpenseRepository;
 import es.upm.api.adapter.out.billing.mongo.invoice.InvoiceEntity;
 import es.upm.api.adapter.out.billing.mongo.invoice.InvoiceRepository;
@@ -10,7 +11,6 @@ import es.upm.api.domain.model.BillingInfo;
 import es.upm.api.domain.model.PaymentMethod;
 import es.upm.api.domain.model.SupplierInfo;
 import es.upm.api.domain.model.TaxCategory;
-import es.upm.api.domain.model.creation.InvoiceLegalProcedure;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.context.annotation.Profile;
@@ -78,7 +78,6 @@ public class DatabaseSeederDev {
                         .id(ID_10)
                         .recordedAt(LocalDateTime.of(2026, 3, 15, 9, 0))
                         .engagementId(EL_0.toString())
-                        .engagementIdCode64(ExpenseEntity.encodeEngagementId(EL_0.toString()))
                         .baseAmount(new BigDecimal("35.50"))
                         .vatRate(21)
                         .supplier(SupplierInfo.builder()
@@ -95,7 +94,6 @@ public class DatabaseSeederDev {
                         .id(ID_11)
                         .recordedAt(LocalDateTime.of(2026, 3, 16, 9, 0))
                         .engagementId(EL_1.toString())
-                        .engagementIdCode64(ExpenseEntity.encodeEngagementId(EL_1.toString()))
                         .baseAmount(new BigDecimal("120.00"))
                         .vatRate(21)
                         .supplier(SupplierInfo.builder()
@@ -112,7 +110,6 @@ public class DatabaseSeederDev {
                         .id(ID_12)
                         .recordedAt(LocalDateTime.of(2026, 3, 17, 9, 0))
                         .engagementId(null)
-                        .engagementIdCode64(null)
                         .baseAmount(new BigDecimal("18.90"))
                         .vatRate(21)
                         .supplier(SupplierInfo.builder()
@@ -129,7 +126,6 @@ public class DatabaseSeederDev {
                         .id(ID_13)
                         .recordedAt(LocalDateTime.of(2026, 3, 18, 9, 0))
                         .engagementId(null)
-                        .engagementIdCode64(null)
                         .baseAmount(new BigDecimal("64.80"))
                         .vatRate(21)
                         .supplier(SupplierInfo.builder()
@@ -147,7 +143,6 @@ public class DatabaseSeederDev {
                 PaymentEntity.builder()
                         .id(ID_0)
                         .engagementId(EL_0.toString())
-                        .engagementIdCode64(PaymentEntity.encodeEngagementId(EL_0.toString()))
                         .userId(C_0.toString())
                         .amount(new BigDecimal("500.00"))
                         .method(PaymentMethod.TRANSFER)
@@ -157,7 +152,6 @@ public class DatabaseSeederDev {
                 PaymentEntity.builder()
                         .id(ID_1)
                         .engagementId(EL_1.toString())
-                        .engagementIdCode64(PaymentEntity.encodeEngagementId(EL_1.toString()))
                         .userId(C_1.toString())
                         .amount(new BigDecimal("1200.00"))
                         .method(PaymentMethod.BIZUM)
@@ -167,7 +161,6 @@ public class DatabaseSeederDev {
                 PaymentEntity.builder()
                         .id(ID_2)
                         .engagementId(EL_1.toString())
-                        .engagementIdCode64(PaymentEntity.encodeEngagementId(EL_1.toString()))
                         .userId(C_0.toString())
                         .amount(new BigDecimal("200.00"))
                         .method(PaymentMethod.CASH)
@@ -188,11 +181,11 @@ public class DatabaseSeederDev {
                                 .build())
                         .percentage(new BigDecimal("100"))
                         .legalProcedures(List.of(
-                                InvoiceLegalProcedure.builder()
-                                        .title("Procedimiento penal")
-                                        .budget(new BigDecimal("450.00"))
-                                        .legalTasks(List.of("Revision", "Escrito"))
-                                        .build()
+                                new InvoiceLegalProcedureEntity(
+                                        "Procedimiento penal",
+                                        new BigDecimal("450.00"),
+                                        List.of("Revision", "Escrito")
+                                )
                         ))
                         .emissionDate(LocalDate.of(2026, 3, 20))
                         .operationDate(LocalDate.of(2026, 3, 20))
@@ -219,11 +212,11 @@ public class DatabaseSeederDev {
                                 .build())
                         .percentage(new BigDecimal("100"))
                         .legalProcedures(List.of(
-                                InvoiceLegalProcedure.builder()
-                                        .title("Procedimiento civil")
-                                        .budget(new BigDecimal("1200.00"))
-                                        .legalTasks(List.of("Demanda"))
-                                        .build()
+                                new InvoiceLegalProcedureEntity(
+                                        "Procedimiento civil",
+                                        new BigDecimal("1200.00"),
+                                        List.of("Demanda")
+                                )
                         ))
                         .baseAmount(new BigDecimal("1075.00"))
                         .vatRate(new BigDecimal("21"))

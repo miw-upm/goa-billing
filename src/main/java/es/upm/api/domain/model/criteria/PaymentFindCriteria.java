@@ -13,7 +13,7 @@ public class PaymentFindCriteria {
     private Boolean invoiced;
     private String client;
     private LocalDate fromDate;
-    private String engagementReference;
+    private String engagementId;
 
     public PaymentFindCriteria(Boolean invoiced, String client, LocalDate fromDate) {
         this.invoiced = invoiced;
@@ -22,6 +22,6 @@ public class PaymentFindCriteria {
     }
 
     public boolean all() {
-        return this.invoiced == null && this.client == null && this.fromDate == null && this.engagementReference == null;
+        return this.invoiced == null && this.client == null && this.fromDate == null && this.engagementId == null;
     }
 }
