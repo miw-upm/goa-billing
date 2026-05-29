@@ -47,9 +47,9 @@ class PaymentRepositoryTest {
         PaymentEntity saved = this.paymentRepository.save(new PaymentEntity(this.payment));
 
         assertNotNull(saved);
-        assertEquals(this.payment.getId(), saved.getId());
-        assertEquals(this.payment.getEngagement().getId(), saved.getEngagementId());
-        assertEquals(this.payment.getUser().getId(), saved.getUserId());
+        assertEquals(this.payment.getId().toString(), saved.getId());
+        assertEquals(this.payment.getEngagement().getId().toString(), saved.getEngagementId());
+        assertEquals(this.payment.getUser().getId().toString(), saved.getUserId());
         assertEquals(this.payment.getAmount(), saved.getAmount());
         assertEquals(this.payment.getMethod(), saved.getMethod());
         assertEquals(this.payment.getDate(), saved.getDate());
@@ -91,7 +91,7 @@ class PaymentRepositoryTest {
                 .findByDateGreaterThanEqualOrderByDateDesc(LocalDate.of(2026, 3, 19));
 
         assertEquals(1, result.size());
-        assertEquals(newer.getId(), result.get(0).getId());
+        assertEquals(newer.getId().toString(), result.get(0).getId());
     }
 
     @Test
@@ -129,9 +129,9 @@ class PaymentRepositoryTest {
         this.paymentRepository.save(new PaymentEntity(otherEngagement));
 
         List<PaymentEntity> result = this.paymentRepository
-                .findByEngagementIdAndInvoicedFalseOrderByDateDesc(engagementId);
+                .findByEngagementIdAndInvoicedFalseOrderByDateDesc(engagementId.toString());
 
         assertEquals(1, result.size());
-        assertEquals(notInvoiced.getId(), result.get(0).getId());
+        assertEquals(notInvoiced.getId().toString(), result.get(0).getId());
     }
 }

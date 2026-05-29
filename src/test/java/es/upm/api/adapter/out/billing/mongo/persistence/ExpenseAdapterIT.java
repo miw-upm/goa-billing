@@ -69,8 +69,8 @@ class ExpenseAdapterIT {
         verify(this.expenseRepository).save(expenseEntityCaptor.capture());
 
         ExpenseEntity persistedExpenseEntity = expenseEntityCaptor.getValue();
-        assertEquals(this.expense.getId(), persistedExpenseEntity.getId());
-        assertEquals(this.expense.getEngagement().getId(), persistedExpenseEntity.getEngagementId());
+        assertEquals(this.expense.getId().toString(), persistedExpenseEntity.getId());
+        assertEquals(this.expense.getEngagement().getId().toString(), persistedExpenseEntity.getEngagementId());
         assertEquals(this.expense.getBaseAmount(), persistedExpenseEntity.getBaseAmount());
         assertEquals(this.expense.getVatRate(), persistedExpenseEntity.getVatRate());
         assertEquals(this.expense.getSupplier(), persistedExpenseEntity.getSupplier());
@@ -93,49 +93,49 @@ class ExpenseAdapterIT {
 
     @Test
     void shouldReadExpenseById() {
-        when(this.expenseRepository.findById(this.expense.getId()))
+        when(this.expenseRepository.findById(this.expense.getId().toString()))
                 .thenReturn(Optional.of(new ExpenseEntity(this.expense)));
 
         Expense readExpense = this.expensePersistenceMongodb.read(this.expense.getId());
 
         assertEquals(this.expense, readExpense);
-        verify(this.expenseRepository).findById(this.expense.getId());
+        verify(this.expenseRepository).findById(this.expense.getId().toString());
     }
 
     @Test
     void shouldThrowNotFoundExceptionWhenExpenseDoesNotExist() {
-        when(this.expenseRepository.findById(this.expense.getId()))
+        when(this.expenseRepository.findById(this.expense.getId().toString()))
                 .thenReturn(Optional.empty());
 
         NotFoundException thrown = assertThrows(NotFoundException.class,
                 () -> this.expensePersistenceMongodb.read(this.expense.getId()));
 
         assertEquals("Not Found Exception. Expense id: " + this.expense.getId(), thrown.getMessage());
-        verify(this.expenseRepository).findById(this.expense.getId());
+        verify(this.expenseRepository).findById(this.expense.getId().toString());
     }
 
     @Test
     void shouldDeleteExpense() {
         UUID id = this.expense.getId();
         ExpenseEntity expenseEntity = new ExpenseEntity(this.expense);
-        when(this.expenseRepository.findById(id)).thenReturn(Optional.of(expenseEntity));
+        when(this.expenseRepository.findById(id.toString())).thenReturn(Optional.of(expenseEntity));
 
         this.expensePersistenceMongodb.delete(id);
 
-        verify(this.expenseRepository).findById(id);
+        verify(this.expenseRepository).findById(id.toString());
         verify(this.expenseRepository).delete(expenseEntity);
     }
 
     @Test
     void shouldThrowNotFoundWhenDeleteMissing() {
         UUID id = this.expense.getId();
-        when(this.expenseRepository.findById(id)).thenReturn(Optional.empty());
+        when(this.expenseRepository.findById(id.toString())).thenReturn(Optional.empty());
 
         NotFoundException thrown = assertThrows(NotFoundException.class,
                 () -> this.expensePersistenceMongodb.delete(id));
 
         assertEquals("Not Found Exception. Expense id: " + id, thrown.getMessage());
-        verify(this.expenseRepository).findById(id);
+        verify(this.expenseRepository).findById(id.toString());
     }
 
     @Test
@@ -255,19 +255,19 @@ class ExpenseAdapterIT {
 
     @Test
     void shouldFindByEngagementId() {
-        when(this.expenseRepository.findByEngagementIdOrderByIssueDateDesc(this.engagementUuid))
+        when(this.expenseRepository.findByEngagementIdOrderByIssueDateDesc(this.engagementUuid.toString()))
                 .thenReturn(List.of(new ExpenseEntity(this.expense)));
 
         List<Expense> expenses = this.expensePersistenceMongodb.findByEngagementId(this.engagementUuid).toList();
 
         assertEquals(1, expenses.size());
         assertEquals(this.expense.getId(), expenses.getFirst().getId());
-        verify(this.expenseRepository).findByEngagementIdOrderByIssueDateDesc(this.engagementUuid);
+        verify(this.expenseRepository).findByEngagementIdOrderByIssueDateDesc(this.engagementUuid.toString());
     }
 
     @Test
     void shouldFindByEngagementReferencePrefix() {
-        String encodedEngagementId = ExpenseEntity.encodeEngagementId(this.engagementUuid);
+        String encodedEngagementId = ExpenseEntity.encodeEngagementId(this.engagementUuid.toString());
         this.criteria.setEngagementReference(encodedEngagementId.substring(0, 4));
         when(this.expenseRepository.findByEngagementIdCode64StartingWithOrderByIssueDateDesc(encodedEngagementId.substring(0, 4)))
                 .thenReturn(List.of(new ExpenseEntity(this.expense)));

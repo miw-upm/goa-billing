@@ -4,9 +4,8 @@ import org.springframework.data.mongodb.repository.MongoRepository;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.UUID;
 
-public interface ExpenseRepository extends MongoRepository<ExpenseEntity, UUID> {
+public interface ExpenseRepository extends MongoRepository<ExpenseEntity, String> {
     List<ExpenseEntity> findAllByOrderByIssueDateDesc();
 
     List<ExpenseEntity> findBySupplierNameContainingIgnoreCaseOrSupplierIdentityContainingIgnoreCase(
@@ -21,5 +20,5 @@ public interface ExpenseRepository extends MongoRepository<ExpenseEntity, UUID> 
 
     List<ExpenseEntity> findByEngagementIdCode64StartingWithOrderByIssueDateDesc(String engagementIdCode64Prefix);
 
-    List<ExpenseEntity> findByEngagementIdOrderByIssueDateDesc(UUID engagementId);
+    List<ExpenseEntity> findByEngagementIdOrderByIssueDateDesc(String engagementId);
 }

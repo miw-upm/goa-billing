@@ -64,26 +64,26 @@ class PaymentAdapterIT {
 
         ArgumentCaptor<PaymentEntity> captor = ArgumentCaptor.forClass(PaymentEntity.class);
         verify(this.paymentRepository).save(captor.capture());
-        assertEquals(this.payment.getId(), captor.getValue().getId());
-        assertEquals(this.engagementId, captor.getValue().getEngagementId());
-        assertEquals(this.userId, captor.getValue().getUserId());
+        assertEquals(this.payment.getId().toString(), captor.getValue().getId());
+        assertEquals(this.engagementId.toString(), captor.getValue().getEngagementId());
+        assertEquals(this.userId.toString(), captor.getValue().getUserId());
     }
 
     @Test
     void shouldReadPaymentById() {
-        when(this.paymentRepository.findById(this.payment.getId()))
+        when(this.paymentRepository.findById(this.payment.getId().toString()))
                 .thenReturn(Optional.of(new PaymentEntity(this.payment)));
 
         Payment read = this.paymentAdapter.read(this.payment.getId());
 
         assertEquals(this.payment, read);
-        verify(this.paymentRepository).findById(this.payment.getId());
+        verify(this.paymentRepository).findById(this.payment.getId().toString());
     }
 
     @Test
     void shouldUpdatePayment() {
         UUID id = this.payment.getId();
-        when(this.paymentRepository.findById(id)).thenReturn(Optional.of(new PaymentEntity(this.payment)));
+        when(this.paymentRepository.findById(id.toString())).thenReturn(Optional.of(new PaymentEntity(this.payment)));
         when(this.paymentRepository.save(any(PaymentEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         Payment update = Payment.builder()
@@ -104,7 +104,7 @@ class PaymentAdapterIT {
     void shouldDeletePayment() {
         UUID id = this.payment.getId();
         PaymentEntity entity = new PaymentEntity(this.payment);
-        when(this.paymentRepository.findById(id)).thenReturn(Optional.of(entity));
+        when(this.paymentRepository.findById(id.toString())).thenReturn(Optional.of(entity));
 
         this.paymentAdapter.delete(id);
 
@@ -114,7 +114,7 @@ class PaymentAdapterIT {
     @Test
     void shouldThrowNotFoundWhenPaymentMissing() {
         UUID id = this.payment.getId();
-        when(this.paymentRepository.findById(id)).thenReturn(Optional.empty());
+        when(this.paymentRepository.findById(id.toString())).thenReturn(Optional.empty());
 
         assertThrows(NotFoundException.class, () -> this.paymentAdapter.read(id));
         assertThrows(NotFoundException.class, () -> this.paymentAdapter.delete(id));
@@ -123,14 +123,14 @@ class PaymentAdapterIT {
     @Test
     void shouldFindNotInvoicedByEngagementId() {
         PaymentEntity entity = new PaymentEntity(this.payment);
-        when(this.paymentRepository.findByEngagementIdAndInvoicedFalseOrderByDateDesc(this.engagementId))
+        when(this.paymentRepository.findByEngagementIdAndInvoicedFalseOrderByDateDesc(this.engagementId.toString()))
                 .thenReturn(List.of(entity));
 
         List<Payment> result = this.paymentAdapter.findNotInvoicedByEngagementId(this.engagementId).toList();
 
         assertEquals(1, result.size());
         assertEquals(this.payment.getId(), result.get(0).getId());
-        verify(this.paymentRepository).findByEngagementIdAndInvoicedFalseOrderByDateDesc(this.engagementId);
+        verify(this.paymentRepository).findByEngagementIdAndInvoicedFalseOrderByDateDesc(this.engagementId.toString());
     }
 
     @Test
@@ -145,19 +145,19 @@ class PaymentAdapterIT {
                 .invoiced(true)
                 .build();
         PaymentEntity entity = new PaymentEntity(invoicedPayment);
-        when(this.paymentRepository.findByEngagementIdAndInvoicedTrueOrderByDateDesc(this.engagementId))
+        when(this.paymentRepository.findByEngagementIdAndInvoicedTrueOrderByDateDesc(this.engagementId.toString()))
                 .thenReturn(List.of(entity));
 
         List<Payment> result = this.paymentAdapter.findInvoicedByEngagementId(this.engagementId).toList();
 
         assertEquals(1, result.size());
         assertEquals(this.payment.getId(), result.get(0).getId());
-        verify(this.paymentRepository).findByEngagementIdAndInvoicedTrueOrderByDateDesc(this.engagementId);
+        verify(this.paymentRepository).findByEngagementIdAndInvoicedTrueOrderByDateDesc(this.engagementId.toString());
     }
 
     @Test
     void shouldFindByEngagementReference() {
-        String encodedEngagementId = PaymentEntity.encodeEngagementId(this.engagementId);
+        String encodedEngagementId = PaymentEntity.encodeEngagementId(this.engagementId.toString());
         this.criteria.setEngagementReference(encodedEngagementId.substring(0, 4));
         when(this.paymentRepository.findByEngagementIdCode64StartingWithOrderByDateDesc(encodedEngagementId.substring(0, 4)))
                 .thenReturn(List.of(new PaymentEntity(this.payment)));
@@ -171,7 +171,7 @@ class PaymentAdapterIT {
 
     @Test
     void shouldFindByEngagementReferenceAndFromDateAndInvoiced() {
-        String encodedEngagementId = PaymentEntity.encodeEngagementId(this.engagementId);
+        String encodedEngagementId = PaymentEntity.encodeEngagementId(this.engagementId.toString());
         this.criteria.setEngagementReference(encodedEngagementId.substring(0, 4));
         this.criteria.setFromDate(this.date.minusDays(1));
         this.criteria.setInvoiced(Boolean.FALSE);

@@ -26,9 +26,9 @@ import java.util.UUID;
 @Document
 public class ExpenseEntity {
     @Id
-    private UUID id;
+    private String id;
     private LocalDateTime recordedAt;
-    private UUID engagementId;
+    private String engagementId;
     private String engagementIdCode64;
     private BigDecimal baseAmount;
     private Integer vatRate;
@@ -41,22 +41,26 @@ public class ExpenseEntity {
 
     public ExpenseEntity(Expense expense) {
         BeanUtils.copyProperties(expense, this);
-        this.engagementId = expense.getEngagement() == null ? null : expense.getEngagement().getId();
+        this.id = expense.getId() == null ? null : expense.getId().toString();
+        this.engagementId = expense.getEngagement() == null || expense.getEngagement().getId() == null
+                ? null : expense.getEngagement().getId().toString();
         this.engagementIdCode64 = this.engagementId == null ? null : ExpenseEntity.encodeEngagementId(this.engagementId);
     }
 
     public Expense toDomain() {
         Expense expense = new Expense();
         BeanUtils.copyProperties(this, expense);
+        expense.setId(this.id == null ? null : UUID.fromString(this.id));
         expense.setEngagement(this.engagementId == null ? null
-                : EngagementSnapshot.builder().id(this.engagementId).build());
+                : EngagementSnapshot.builder().id(UUID.fromString(this.engagementId)).build());
         return expense;
     }
 
-    public static String encodeEngagementId(UUID engagementId) {
+    public static String encodeEngagementId(String engagementId) {
+        UUID uuid = UUID.fromString(engagementId);
         ByteBuffer byteBuffer = ByteBuffer.allocate(16);
-        byteBuffer.putLong(engagementId.getMostSignificantBits());
-        byteBuffer.putLong(engagementId.getLeastSignificantBits());
+        byteBuffer.putLong(uuid.getMostSignificantBits());
+        byteBuffer.putLong(uuid.getLeastSignificantBits());
         return Base64.getEncoder().withoutPadding().encodeToString(byteBuffer.array());
     }
 }

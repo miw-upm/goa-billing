@@ -28,7 +28,7 @@ public class InvoiceAdapter implements InvoiceGateway {
 
     @Override
     public Invoice update(UUID id, Invoice invoice) {
-        InvoiceEntity invoiceEntity = this.invoiceRepository.findById(id)
+        InvoiceEntity invoiceEntity = this.invoiceRepository.findById(id.toString())
                 .orElseThrow(() -> new NotFoundException("Invoice id: " + id));
 
         invoiceEntity.setConcept(invoice.getConcept());
@@ -42,9 +42,10 @@ public class InvoiceAdapter implements InvoiceGateway {
         invoiceEntity.setBaseAmount(invoice.getBaseAmount());
         invoiceEntity.setVatAmount(invoice.getVatAmount());
         invoiceEntity.setVatRate(invoice.getVatRate());
-        invoiceEntity.setEngagementId(invoice.getEngagement() == null ? null : invoice.getEngagement().getId());
+        invoiceEntity.setEngagementId(invoice.getEngagement() == null || invoice.getEngagement().getId() == null
+                ? null : invoice.getEngagement().getId().toString());
         invoiceEntity.setEngagementIdCode64(invoice.getEngagement() == null || invoice.getEngagement().getId() == null ? null
-                : InvoiceEntity.encodeEngagementId(invoice.getEngagement().getId()));
+                : InvoiceEntity.encodeEngagementId(invoice.getEngagement().getId().toString()));
         invoiceEntity.setLegalProcedures(invoice.getLegalProcedures());
         invoiceEntity.setPayments(invoice.getPayments());
         invoiceEntity.setPriorPayments(invoice.getPriorPayments());
@@ -58,14 +59,14 @@ public class InvoiceAdapter implements InvoiceGateway {
 
     @Override
     public Invoice read(UUID id) {
-        return this.invoiceRepository.findById(id)
+        return this.invoiceRepository.findById(id.toString())
                 .map(InvoiceEntity::toDomain)
                 .orElseThrow(() -> new NotFoundException("Invoice id: " + id));
     }
 
     @Override
     public void delete(UUID id) {
-        InvoiceEntity invoiceEntity = this.invoiceRepository.findById(id)
+        InvoiceEntity invoiceEntity = this.invoiceRepository.findById(id.toString())
                 .orElseThrow(() -> new NotFoundException("Invoice id: " + id));
         this.invoiceRepository.delete(invoiceEntity);
     }
@@ -98,7 +99,7 @@ public class InvoiceAdapter implements InvoiceGateway {
 
     @Override
     public Optional<Invoice> findById(UUID id) {
-        return this.invoiceRepository.findById(id)
+        return this.invoiceRepository.findById(id.toString())
                 .map(InvoiceEntity::toDomain);
     }
 

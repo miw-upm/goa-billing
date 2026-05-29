@@ -27,28 +27,28 @@ import java.util.UUID;
 @Profile({"dev", "test"})
 public class DatabaseSeederDev {
 
-    public static final UUID ID_0 = UUID.fromString("aaaaaaaa-bbbb-cccc-dddd-eeeeffff0000");
-    public static final UUID ID_1 = UUID.fromString("aaaaaaaa-bbbb-cccc-dddd-eeeeffff0001");
-    public static final UUID ID_2 = UUID.fromString("aaaaaaaa-bbbb-cccc-dddd-eeeeffff0002");
-    public static final UUID ID_3 = UUID.fromString("aaaaaaaa-bbbb-cccc-dddd-eeeeffff0003");
-    public static final UUID ID_4 = UUID.fromString("aaaaaaaa-bbbb-cccc-dddd-eeeeffff0004");
-    public static final UUID ID_5 = UUID.fromString("aaaaaaaa-bbbb-cccc-dddd-eeeeffff0005");
-    public static final UUID ID_6 = UUID.fromString("aaaaaaaa-bbbb-cccc-dddd-eeeeffff0006");
-    public static final UUID ID_7 = UUID.fromString("aaaaaaaa-bbbb-cccc-dddd-eeeeffff0007");
-    public static final UUID ID_8 = UUID.fromString("aaaaaaaa-bbbb-cccc-dddd-eeeeffff0008");
-    public static final UUID ID_9 = UUID.fromString("aaaaaaaa-bbbb-cccc-dddd-eeeeffff0009");
-    public static final UUID ID_10 = UUID.fromString("aaaaaaaa-bbbb-cccc-dddd-eeeeffff000a");
-    public static final UUID ID_11 = UUID.fromString("aaaaaaaa-bbbb-cccc-dddd-eeeeffff000b");
-    public static final UUID ID_12 = UUID.fromString("aaaaaaaa-bbbb-cccc-dddd-eeeeffff000c");
-    public static final UUID ID_13 = UUID.fromString("aaaaaaaa-bbbb-cccc-dddd-eeeeffff000d");
-    public static final UUID ID_14 = UUID.fromString("aaaaaaaa-bbbb-cccc-dddd-eeeeffff000e");
-    public static final UUID ID_15 = UUID.fromString("aaaaaaaa-bbbb-cccc-dddd-eeeeffff000f");
-    public static final UUID ID_16 = UUID.fromString("aaaaaaaa-bbbb-cccc-dddd-eeeeffff0010");
-    public static final UUID ID_17 = UUID.fromString("aaaaaaaa-bbbb-cccc-dddd-eeeeffff0011");
-    public static final UUID EL_0 = ID_0;
-    public static final UUID EL_1 = ID_1;
-    public static final UUID C_0 = ID_0;
-    public static final UUID C_1 = ID_1;
+    public static final String ID_0 = "aaaaaaaa-bbbb-cccc-dddd-eeeeffff0000";
+    public static final String ID_1 = "aaaaaaaa-bbbb-cccc-dddd-eeeeffff0001";
+    public static final String ID_2 = "aaaaaaaa-bbbb-cccc-dddd-eeeeffff0002";
+    public static final String ID_3 = "aaaaaaaa-bbbb-cccc-dddd-eeeeffff0003";
+    public static final String ID_4 = "aaaaaaaa-bbbb-cccc-dddd-eeeeffff0004";
+    public static final String ID_5 = "aaaaaaaa-bbbb-cccc-dddd-eeeeffff0005";
+    public static final String ID_6 = "aaaaaaaa-bbbb-cccc-dddd-eeeeffff0006";
+    public static final String ID_7 = "aaaaaaaa-bbbb-cccc-dddd-eeeeffff0007";
+    public static final String ID_8 = "aaaaaaaa-bbbb-cccc-dddd-eeeeffff0008";
+    public static final String ID_9 = "aaaaaaaa-bbbb-cccc-dddd-eeeeffff0009";
+    public static final String ID_10 = "aaaaaaaa-bbbb-cccc-dddd-eeeeffff000a";
+    public static final String ID_11 = "aaaaaaaa-bbbb-cccc-dddd-eeeeffff000b";
+    public static final String ID_12 = "aaaaaaaa-bbbb-cccc-dddd-eeeeffff000c";
+    public static final String ID_13 = "aaaaaaaa-bbbb-cccc-dddd-eeeeffff000d";
+    public static final String ID_14 = "aaaaaaaa-bbbb-cccc-dddd-eeeeffff000e";
+    public static final String ID_15 = "aaaaaaaa-bbbb-cccc-dddd-eeeeffff000f";
+    public static final String ID_16 = "aaaaaaaa-bbbb-cccc-dddd-eeeeffff0010";
+    public static final String ID_17 = "aaaaaaaa-bbbb-cccc-dddd-eeeeffff0011";
+    public static final UUID EL_0 = UUID.fromString(ID_0);
+    public static final UUID EL_1 = UUID.fromString(ID_1);
+    public static final UUID C_0 = UUID.fromString(ID_0);
+    public static final UUID C_1 = UUID.fromString(ID_1);
     private final ExpenseRepository expenseRepository;
     private final InvoiceRepository invoiceRepository;
     private final PaymentRepository paymentRepository;
@@ -77,7 +77,8 @@ public class DatabaseSeederDev {
                 ExpenseEntity.builder()
                         .id(ID_10)
                         .recordedAt(LocalDateTime.of(2026, 3, 15, 9, 0))
-                        .engagementId(EL_0)
+                        .engagementId(EL_0.toString())
+                        .engagementIdCode64(ExpenseEntity.encodeEngagementId(EL_0.toString()))
                         .baseAmount(new BigDecimal("35.50"))
                         .vatRate(21)
                         .supplier(SupplierInfo.builder()
@@ -93,7 +94,8 @@ public class DatabaseSeederDev {
                 ExpenseEntity.builder()
                         .id(ID_11)
                         .recordedAt(LocalDateTime.of(2026, 3, 16, 9, 0))
-                        .engagementId(EL_1)
+                        .engagementId(EL_1.toString())
+                        .engagementIdCode64(ExpenseEntity.encodeEngagementId(EL_1.toString()))
                         .baseAmount(new BigDecimal("120.00"))
                         .vatRate(21)
                         .supplier(SupplierInfo.builder()
@@ -110,6 +112,7 @@ public class DatabaseSeederDev {
                         .id(ID_12)
                         .recordedAt(LocalDateTime.of(2026, 3, 17, 9, 0))
                         .engagementId(null)
+                        .engagementIdCode64(null)
                         .baseAmount(new BigDecimal("18.90"))
                         .vatRate(21)
                         .supplier(SupplierInfo.builder()
@@ -126,6 +129,7 @@ public class DatabaseSeederDev {
                         .id(ID_13)
                         .recordedAt(LocalDateTime.of(2026, 3, 18, 9, 0))
                         .engagementId(null)
+                        .engagementIdCode64(null)
                         .baseAmount(new BigDecimal("64.80"))
                         .vatRate(21)
                         .supplier(SupplierInfo.builder()
@@ -142,8 +146,9 @@ public class DatabaseSeederDev {
         this.paymentRepository.saveAll(List.of(
                 PaymentEntity.builder()
                         .id(ID_0)
-                        .engagementId(EL_0)
-                        .userId(C_0)
+                        .engagementId(EL_0.toString())
+                        .engagementIdCode64(PaymentEntity.encodeEngagementId(EL_0.toString()))
+                        .userId(C_0.toString())
                         .amount(new BigDecimal("500.00"))
                         .method(PaymentMethod.TRANSFER)
                         .date(LocalDate.of(2026, 3, 20))
@@ -151,8 +156,9 @@ public class DatabaseSeederDev {
                         .build(),
                 PaymentEntity.builder()
                         .id(ID_1)
-                        .engagementId(EL_1)
-                        .userId(C_1)
+                        .engagementId(EL_1.toString())
+                        .engagementIdCode64(PaymentEntity.encodeEngagementId(EL_1.toString()))
+                        .userId(C_1.toString())
                         .amount(new BigDecimal("1200.00"))
                         .method(PaymentMethod.BIZUM)
                         .date(LocalDate.of(2026, 3, 21))
@@ -160,8 +166,9 @@ public class DatabaseSeederDev {
                         .build(),
                 PaymentEntity.builder()
                         .id(ID_2)
-                        .engagementId(EL_1)
-                        .userId(C_0)
+                        .engagementId(EL_1.toString())
+                        .engagementIdCode64(PaymentEntity.encodeEngagementId(EL_1.toString()))
+                        .userId(C_0.toString())
                         .amount(new BigDecimal("200.00"))
                         .method(PaymentMethod.CASH)
                         .date(LocalDate.of(2026, 3, 22))

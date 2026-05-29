@@ -38,8 +38,8 @@ class ExpenseEntityTest {
     void shouldBuildExpenseEntityFromExpense() {
         ExpenseEntity expenseEntity = new ExpenseEntity(this.expense);
 
-        assertEquals(this.expense.getId(), expenseEntity.getId());
-        assertEquals(this.expense.getEngagement().getId(), expenseEntity.getEngagementId());
+        assertEquals(this.expense.getId().toString(), expenseEntity.getId());
+        assertEquals(this.expense.getEngagement().getId().toString(), expenseEntity.getEngagementId());
         assertEquals(this.expense.getBaseAmount(), expenseEntity.getBaseAmount());
         assertEquals(this.expense.getVatRate(), expenseEntity.getVatRate());
         assertEquals(this.expense.getSupplier(), expenseEntity.getSupplier());
@@ -53,8 +53,8 @@ class ExpenseEntityTest {
     @Test
     void shouldConvertExpenseEntityToDomain() {
         ExpenseEntity expenseEntity = new ExpenseEntity();
-        expenseEntity.setId(this.expense.getId());
-        expenseEntity.setEngagementId(this.expense.getEngagement().getId());
+        expenseEntity.setId(this.expense.getId().toString());
+        expenseEntity.setEngagementId(this.expense.getEngagement().getId().toString());
         expenseEntity.setBaseAmount(this.expense.getBaseAmount());
         expenseEntity.setVatRate(this.expense.getVatRate());
         expenseEntity.setSupplier(this.expense.getSupplier());
@@ -66,8 +66,8 @@ class ExpenseEntityTest {
 
         Expense mappedExpense = expenseEntity.toDomain();
 
-        assertEquals(expenseEntity.getId(), mappedExpense.getId());
-        assertEquals(expenseEntity.getEngagementId(), mappedExpense.getEngagement().getId());
+        assertEquals(UUID.fromString(expenseEntity.getId()), mappedExpense.getId());
+        assertEquals(UUID.fromString(expenseEntity.getEngagementId()), mappedExpense.getEngagement().getId());
         assertEquals(expenseEntity.getBaseAmount(), mappedExpense.getBaseAmount());
         assertEquals(expenseEntity.getVatRate(), mappedExpense.getVatRate());
         assertEquals(expenseEntity.getSupplier(), mappedExpense.getSupplier());

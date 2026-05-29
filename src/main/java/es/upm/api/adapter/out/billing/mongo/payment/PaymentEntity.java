@@ -25,10 +25,10 @@ import java.util.UUID;
 @Document
 public class PaymentEntity {
     @Id
-    private UUID id;
-    private UUID engagementId;
+    private String id;
+    private String engagementId;
     private String engagementIdCode64;
-    private UUID userId;
+    private String userId;
     private BigDecimal amount;
     private PaymentMethod method;
     private LocalDate date;
@@ -36,25 +36,30 @@ public class PaymentEntity {
 
     public PaymentEntity(Payment payment) {
         BeanUtils.copyProperties(payment, this);
-        this.engagementId = payment.getEngagement() == null ? null : payment.getEngagement().getId();
+        this.id = payment.getId() == null ? null : payment.getId().toString();
+        this.engagementId = payment.getEngagement() == null || payment.getEngagement().getId() == null
+                ? null : payment.getEngagement().getId().toString();
         this.engagementIdCode64 = this.engagementId == null ? null : PaymentEntity.encodeEngagementId(this.engagementId);
-        this.userId = payment.getUser() == null ? null : payment.getUser().getId();
+        this.userId = payment.getUser() == null || payment.getUser().getId() == null
+                ? null : payment.getUser().getId().toString();
     }
 
     public Payment toDomain() {
         Payment payment = new Payment();
         BeanUtils.copyProperties(this, payment);
+        payment.setId(this.id == null ? null : UUID.fromString(this.id));
         payment.setEngagement(this.engagementId == null ? null
-                : EngagementSnapshot.builder().id(this.engagementId).build());
+                : EngagementSnapshot.builder().id(UUID.fromString(this.engagementId)).build());
         payment.setUser(this.userId == null ? null
-                : UserSnapshot.builder().id(this.userId).build());
+                : UserSnapshot.builder().id(UUID.fromString(this.userId)).build());
         return payment;
     }
 
-    public static String encodeEngagementId(UUID engagementId) {
+    public static String encodeEngagementId(String engagementId) {
+        UUID uuid = UUID.fromString(engagementId);
         ByteBuffer byteBuffer = ByteBuffer.allocate(16);
-        byteBuffer.putLong(engagementId.getMostSignificantBits());
-        byteBuffer.putLong(engagementId.getLeastSignificantBits());
+        byteBuffer.putLong(uuid.getMostSignificantBits());
+        byteBuffer.putLong(uuid.getLeastSignificantBits());
         return Base64.getEncoder().withoutPadding().encodeToString(byteBuffer.array());
     }
 }

@@ -78,7 +78,7 @@ class InvoiceEntityTest {
     void shouldBuildInvoiceEntityFromInvoice() {
         InvoiceEntity entity = new InvoiceEntity(this.invoice);
 
-        assertEquals(this.invoice.getId(), entity.getId());
+        assertEquals(this.invoice.getId().toString(), entity.getId());
         assertEquals(this.invoice.getConcept(), entity.getConcept());
         assertEquals(this.invoice.getClosed(), entity.getClosed());
         assertEquals(this.invoice.getBillingInfo(), entity.getBillingInfo());
@@ -90,7 +90,7 @@ class InvoiceEntityTest {
         assertEquals(this.invoice.getBaseAmount(), entity.getBaseAmount());
         assertEquals(this.invoice.getVatAmount(), entity.getVatAmount());
         assertEquals(this.invoice.getVatRate(), entity.getVatRate());
-        assertEquals(this.invoice.getEngagement().getId(), entity.getEngagementId());
+        assertEquals(this.invoice.getEngagement().getId().toString(), entity.getEngagementId());
         assertEquals(this.invoice.getLegalProcedures(), entity.getLegalProcedures());
         assertEquals(this.invoice.getPayments(), entity.getPayments());
         assertEquals(this.invoice.getPriorPayments(), entity.getPriorPayments());
@@ -105,7 +105,7 @@ class InvoiceEntityTest {
 
         Invoice mapped = entity.toDomain();
 
-        assertEquals(entity.getId(), mapped.getId());
+        assertEquals(UUID.fromString(entity.getId()), mapped.getId());
         assertEquals(entity.getConcept(), mapped.getConcept());
         assertEquals(entity.getClosed(), mapped.getClosed());
         assertEquals(entity.getBillingInfo(), mapped.getBillingInfo());
@@ -117,7 +117,7 @@ class InvoiceEntityTest {
         assertEquals(entity.getBaseAmount(), mapped.getBaseAmount());
         assertEquals(entity.getVatAmount(), mapped.getVatAmount());
         assertEquals(entity.getVatRate(), mapped.getVatRate());
-        assertEquals(entity.getEngagementId(), mapped.getEngagement().getId());
+        assertEquals(UUID.fromString(entity.getEngagementId()), mapped.getEngagement().getId());
         assertEquals(entity.getLegalProcedures(), mapped.getLegalProcedures());
         assertEquals(entity.getPayments(), mapped.getPayments());
         assertEquals(entity.getPriorPayments(), mapped.getPriorPayments());

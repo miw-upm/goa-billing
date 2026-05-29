@@ -4,9 +4,8 @@ import org.springframework.data.mongodb.repository.MongoRepository;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.UUID;
 
-public interface PaymentRepository extends MongoRepository<PaymentEntity, UUID> {
+public interface PaymentRepository extends MongoRepository<PaymentEntity, String> {
     List<PaymentEntity> findAllByOrderByDateDesc();
 
     List<PaymentEntity> findByDateGreaterThanEqualOrderByDateDesc(LocalDate fromDate);
@@ -29,7 +28,7 @@ public interface PaymentRepository extends MongoRepository<PaymentEntity, UUID> 
             String engagementIdCode64Prefix, LocalDate fromDate, Boolean invoiced
     );
 
-    List<PaymentEntity> findByEngagementIdAndInvoicedFalseOrderByDateDesc(UUID engagementId);
+    List<PaymentEntity> findByEngagementIdAndInvoicedFalseOrderByDateDesc(String engagementId);
 
-    List<PaymentEntity> findByEngagementIdAndInvoicedTrueOrderByDateDesc(UUID engagementId);
+    List<PaymentEntity> findByEngagementIdAndInvoicedTrueOrderByDateDesc(String engagementId);
 }

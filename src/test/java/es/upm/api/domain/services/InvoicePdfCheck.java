@@ -14,6 +14,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.UUID;
 
 @SpringBootTest
 @ActiveProfiles("test")
@@ -34,7 +35,7 @@ class InvoicePdfCheck {
 
     @Test
     void testGenerateIssuedInvoicePdfCheck() throws Exception {
-        byte[] pdf = this.invoiceService.generatePdf(DatabaseSeederDev.ID_14);
+        byte[] pdf = this.invoiceService.generatePdf(UUID.fromString(DatabaseSeederDev.ID_14));
         Path output = Path.of("target", "invoice-issued-check.pdf");
         Files.write(output, pdf);
         LOG.info("PDF generado en: {}", output.toAbsolutePath());
@@ -42,7 +43,7 @@ class InvoicePdfCheck {
 
     @Test
     void testGenerateProformaInvoicePdfCheck() throws Exception {
-        byte[] pdf = this.invoiceService.generatePdf(DatabaseSeederDev.ID_15);
+        byte[] pdf = this.invoiceService.generatePdf(UUID.fromString(DatabaseSeederDev.ID_15));
         Path output = Path.of("target", "invoice-second-check.pdf");
         Files.write(output, pdf);
         LOG.info("PDF generado en: {}", output.toAbsolutePath());

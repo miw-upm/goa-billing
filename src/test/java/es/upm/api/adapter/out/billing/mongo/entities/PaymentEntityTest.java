@@ -34,9 +34,9 @@ class PaymentEntityTest {
     void shouldBuildPaymentEntityFromPayment() {
         PaymentEntity paymentEntity = new PaymentEntity(this.payment);
 
-        assertEquals(this.payment.getId(), paymentEntity.getId());
-        assertEquals(this.payment.getEngagement().getId(), paymentEntity.getEngagementId());
-        assertEquals(this.payment.getUser().getId(), paymentEntity.getUserId());
+        assertEquals(this.payment.getId().toString(), paymentEntity.getId());
+        assertEquals(this.payment.getEngagement().getId().toString(), paymentEntity.getEngagementId());
+        assertEquals(this.payment.getUser().getId().toString(), paymentEntity.getUserId());
         assertEquals(this.payment.getAmount(), paymentEntity.getAmount());
         assertEquals(this.payment.getMethod(), paymentEntity.getMethod());
         assertEquals(this.payment.getDate(), paymentEntity.getDate());
@@ -45,18 +45,18 @@ class PaymentEntityTest {
     @Test
     void shouldConvertPaymentEntityToDomain() {
         PaymentEntity paymentEntity = new PaymentEntity();
-        paymentEntity.setId(this.payment.getId());
-        paymentEntity.setEngagementId(this.payment.getEngagement().getId());
-        paymentEntity.setUserId(this.payment.getUser().getId());
+        paymentEntity.setId(this.payment.getId().toString());
+        paymentEntity.setEngagementId(this.payment.getEngagement().getId().toString());
+        paymentEntity.setUserId(this.payment.getUser().getId().toString());
         paymentEntity.setAmount(this.payment.getAmount());
         paymentEntity.setMethod(this.payment.getMethod());
         paymentEntity.setDate(this.payment.getDate());
 
         Payment mapped = paymentEntity.toDomain();
 
-        assertEquals(paymentEntity.getId(), mapped.getId());
-        assertEquals(paymentEntity.getEngagementId(), mapped.getEngagement().getId());
-        assertEquals(paymentEntity.getUserId(), mapped.getUser().getId());
+        assertEquals(UUID.fromString(paymentEntity.getId()), mapped.getId());
+        assertEquals(UUID.fromString(paymentEntity.getEngagementId()), mapped.getEngagement().getId());
+        assertEquals(UUID.fromString(paymentEntity.getUserId()), mapped.getUser().getId());
         assertEquals(paymentEntity.getAmount(), mapped.getAmount());
         assertEquals(paymentEntity.getMethod(), mapped.getMethod());
         assertEquals(paymentEntity.getDate(), mapped.getDate());

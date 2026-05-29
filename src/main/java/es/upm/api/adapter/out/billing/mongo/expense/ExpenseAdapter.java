@@ -31,7 +31,7 @@ public class ExpenseAdapter implements ExpenseGateway {
 
     @Override
     public Expense update(UUID id, Expense expense) {
-        this.expenseRepository.findById(id)
+        this.expenseRepository.findById(id.toString())
                 .orElseThrow(() -> new NotFoundException("Expense id: " + id));
         if (!Objects.equals(id, expense.getId())) {
             throw new BadRequestException("Expense id mismatch: path id " + id + " and body id " + expense.getId());
@@ -42,14 +42,14 @@ public class ExpenseAdapter implements ExpenseGateway {
 
     @Override
     public Expense read(UUID id) {
-        return this.expenseRepository.findById(id)
+        return this.expenseRepository.findById(id.toString())
                 .map(ExpenseEntity::toDomain)
                 .orElseThrow(() -> new NotFoundException("Expense id: " + id));
     }
 
     @Override
     public void delete(UUID id) {
-        ExpenseEntity expenseEntity = this.expenseRepository.findById(id)
+        ExpenseEntity expenseEntity = this.expenseRepository.findById(id.toString())
                 .orElseThrow(() -> new NotFoundException("Expense id: " + id));
         this.expenseRepository.delete(expenseEntity);
     }
@@ -97,7 +97,7 @@ public class ExpenseAdapter implements ExpenseGateway {
 
     @Override
     public Stream<Expense> findByEngagementId(UUID engagementId) {
-        return this.expenseRepository.findByEngagementIdOrderByIssueDateDesc(engagementId).stream()
+        return this.expenseRepository.findByEngagementIdOrderByIssueDateDesc(engagementId.toString()).stream()
                 .map(ExpenseEntity::toDomain);
     }
 

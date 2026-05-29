@@ -24,13 +24,15 @@ public class PaymentAdapter implements PaymentGateway {
 
     @Override
     public Payment update(UUID id, Payment payment) {
-        PaymentEntity paymentEntity = this.paymentRepository.findById(id)
+        PaymentEntity paymentEntity = this.paymentRepository.findById(id.toString())
                 .orElseThrow(() -> new NotFoundException("Payment id: " + id));
 
-        paymentEntity.setEngagementId(payment.getEngagement().getId());
+        paymentEntity.setEngagementId(payment.getEngagement() == null || payment.getEngagement().getId() == null
+                ? null : payment.getEngagement().getId().toString());
         paymentEntity.setEngagementIdCode64(payment.getEngagement() == null || payment.getEngagement().getId() == null ? null
-                : PaymentEntity.encodeEngagementId(payment.getEngagement().getId()));
-        paymentEntity.setUserId(payment.getUser().getId());
+                : PaymentEntity.encodeEngagementId(payment.getEngagement().getId().toString()));
+        paymentEntity.setUserId(payment.getUser() == null || payment.getUser().getId() == null
+                ? null : payment.getUser().getId().toString());
         paymentEntity.setAmount(payment.getAmount());
         paymentEntity.setMethod(payment.getMethod());
         paymentEntity.setDate(payment.getDate());
@@ -41,14 +43,14 @@ public class PaymentAdapter implements PaymentGateway {
 
     @Override
     public Payment read(UUID id) {
-        return this.paymentRepository.findById(id)
+        return this.paymentRepository.findById(id.toString())
                 .map(PaymentEntity::toDomain)
                 .orElseThrow(() -> new NotFoundException("Payment id: " + id));
     }
 
     @Override
     public void delete(UUID id) {
-        PaymentEntity paymentEntity = this.paymentRepository.findById(id)
+        PaymentEntity paymentEntity = this.paymentRepository.findById(id.toString())
                 .orElseThrow(() -> new NotFoundException("Payment id: " + id));
         this.paymentRepository.delete(paymentEntity);
     }
@@ -96,13 +98,13 @@ public class PaymentAdapter implements PaymentGateway {
 
     @Override
     public Stream<Payment> findNotInvoicedByEngagementId(UUID engagementId) {
-        return this.paymentRepository.findByEngagementIdAndInvoicedFalseOrderByDateDesc(engagementId).stream()
+        return this.paymentRepository.findByEngagementIdAndInvoicedFalseOrderByDateDesc(engagementId.toString()).stream()
                 .map(PaymentEntity::toDomain);
     }
 
     @Override
     public Stream<Payment> findInvoicedByEngagementId(UUID engagementId) {
-        return this.paymentRepository.findByEngagementIdAndInvoicedTrueOrderByDateDesc(engagementId).stream()
+        return this.paymentRepository.findByEngagementIdAndInvoicedTrueOrderByDateDesc(engagementId.toString()).stream()
                 .map(PaymentEntity::toDomain);
     }
 }

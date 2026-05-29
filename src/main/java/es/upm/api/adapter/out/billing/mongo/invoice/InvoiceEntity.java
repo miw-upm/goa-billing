@@ -25,7 +25,7 @@ import java.util.UUID;
 @Document
 public class InvoiceEntity {
     @Id
-    private UUID id;
+    private String id;
     private String concept;
     private Boolean closed;
     private BillingInfo billingInfo;
@@ -37,7 +37,7 @@ public class InvoiceEntity {
     private BigDecimal baseAmount;
     private BigDecimal vatAmount;
     private BigDecimal vatRate;
-    private UUID engagementId;
+    private String engagementId;
     private String engagementIdCode64;
     private List<InvoiceLegalProcedure> legalProcedures;
     private List<InvoicedPayment> payments;
@@ -49,22 +49,26 @@ public class InvoiceEntity {
 
     public InvoiceEntity(Invoice invoice) {
         BeanUtils.copyProperties(invoice, this);
-        this.engagementId = invoice.getEngagement() == null ? null : invoice.getEngagement().getId();
+        this.id = invoice.getId() == null ? null : invoice.getId().toString();
+        this.engagementId = invoice.getEngagement() == null || invoice.getEngagement().getId() == null
+                ? null : invoice.getEngagement().getId().toString();
         this.engagementIdCode64 = this.engagementId == null ? null : InvoiceEntity.encodeEngagementId(this.engagementId);
     }
 
     public Invoice toDomain() {
         Invoice invoice = new Invoice();
         BeanUtils.copyProperties(this, invoice);
+        invoice.setId(this.id == null ? null : UUID.fromString(this.id));
         invoice.setEngagement(this.engagementId == null ? null
-                : EngagementSnapshot.builder().id(this.engagementId).build());
+                : EngagementSnapshot.builder().id(UUID.fromString(this.engagementId)).build());
         return invoice;
     }
 
-    public static String encodeEngagementId(UUID engagementId) {
+    public static String encodeEngagementId(String engagementId) {
+        UUID uuid = UUID.fromString(engagementId);
         ByteBuffer byteBuffer = ByteBuffer.allocate(16);
-        byteBuffer.putLong(engagementId.getMostSignificantBits());
-        byteBuffer.putLong(engagementId.getLeastSignificantBits());
+        byteBuffer.putLong(uuid.getMostSignificantBits());
+        byteBuffer.putLong(uuid.getLeastSignificantBits());
         return Base64.getEncoder().withoutPadding().encodeToString(byteBuffer.array());
     }
 }

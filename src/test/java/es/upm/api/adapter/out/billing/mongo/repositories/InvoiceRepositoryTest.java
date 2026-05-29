@@ -81,8 +81,8 @@ class InvoiceRepositoryTest {
         InvoiceEntity saved = this.invoiceRepository.save(new InvoiceEntity(this.invoice));
 
         assertNotNull(saved);
-        assertEquals(this.invoice.getId(), saved.getId());
-        assertEquals(this.invoice.getEngagement().getId(), saved.getEngagementId());
+        assertEquals(this.invoice.getId().toString(), saved.getId());
+        assertEquals(this.invoice.getEngagement().getId().toString(), saved.getEngagementId());
         assertEquals(this.invoice.getBillingInfo(), saved.getBillingInfo());
         assertEquals(this.invoice.getPayments(), saved.getPayments());
         assertEquals(this.invoice.getPriorPayments(), saved.getPriorPayments());

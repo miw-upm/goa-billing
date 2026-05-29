@@ -62,10 +62,10 @@ class InvoiceAdapterIT {
 
         ArgumentCaptor<InvoiceEntity> captor = ArgumentCaptor.forClass(InvoiceEntity.class);
         verify(this.invoiceRepository).save(captor.capture());
-        assertEquals(this.invoice.getId(), captor.getValue().getId());
+        assertEquals(this.invoice.getId().toString(), captor.getValue().getId());
         assertEquals(this.invoice.getConcept(), captor.getValue().getConcept());
         assertEquals(this.invoice.getClosed(), captor.getValue().getClosed());
-        assertEquals(this.invoice.getEngagement().getId(), captor.getValue().getEngagementId());
+        assertEquals(this.invoice.getEngagement().getId().toString(), captor.getValue().getEngagementId());
         assertEquals(this.invoice.getLegalProcedures(), captor.getValue().getLegalProcedures());
         assertEquals(this.invoice.getBaseAmount(), captor.getValue().getBaseAmount());
         assertEquals(this.invoice.getPriorPayments(), captor.getValue().getPriorPayments());
@@ -74,19 +74,19 @@ class InvoiceAdapterIT {
 
     @Test
     void shouldReadInvoiceById() {
-        when(this.invoiceRepository.findById(this.invoice.getId()))
+        when(this.invoiceRepository.findById(this.invoice.getId().toString()))
                 .thenReturn(Optional.of(new InvoiceEntity(this.invoice)));
 
         Invoice read = this.invoiceAdapter.read(this.invoice.getId());
 
         assertEquals(this.invoice, read);
-        verify(this.invoiceRepository).findById(this.invoice.getId());
+        verify(this.invoiceRepository).findById(this.invoice.getId().toString());
     }
 
     @Test
     void shouldUpdateInvoice() {
         UUID id = this.invoice.getId();
-        when(this.invoiceRepository.findById(id)).thenReturn(Optional.of(new InvoiceEntity(this.invoice)));
+        when(this.invoiceRepository.findById(id.toString())).thenReturn(Optional.of(new InvoiceEntity(this.invoice)));
         when(this.invoiceRepository.save(any(InvoiceEntity.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -111,7 +111,7 @@ class InvoiceAdapterIT {
     void shouldDeleteInvoice() {
         UUID id = this.invoice.getId();
         InvoiceEntity entity = new InvoiceEntity(this.invoice);
-        when(this.invoiceRepository.findById(id)).thenReturn(Optional.of(entity));
+        when(this.invoiceRepository.findById(id.toString())).thenReturn(Optional.of(entity));
 
         this.invoiceAdapter.delete(id);
 
@@ -121,7 +121,7 @@ class InvoiceAdapterIT {
     @Test
     void shouldThrowNotFoundWhenInvoiceMissing() {
         UUID id = this.invoice.getId();
-        when(this.invoiceRepository.findById(id)).thenReturn(Optional.empty());
+        when(this.invoiceRepository.findById(id.toString())).thenReturn(Optional.empty());
 
         assertThrows(NotFoundException.class, () -> this.invoiceAdapter.read(id));
         assertThrows(NotFoundException.class, () -> this.invoiceAdapter.update(id, this.invoice));
@@ -155,7 +155,7 @@ class InvoiceAdapterIT {
 
     @Test
     void shouldFindInvoicesByEngagementReference() {
-        String encodedEngagementId = InvoiceEntity.encodeEngagementId(this.engagementId);
+        String encodedEngagementId = InvoiceEntity.encodeEngagementId(this.engagementId.toString());
         InvoiceFindCriteria findCriteria = new InvoiceFindCriteria();
         findCriteria.setEngagementReference(encodedEngagementId.substring(0, 4));
         when(this.invoiceRepository.findByEngagementIdCode64StartingWithOrderByEmissionDateDesc(encodedEngagementId.substring(0, 4)))
@@ -171,7 +171,7 @@ class InvoiceAdapterIT {
     @Test
     void shouldFindInvoicesByEngagementReferenceAndFromDate() {
         LocalDate fromDate = LocalDate.of(2026, 3, 20);
-        String encodedEngagementId = InvoiceEntity.encodeEngagementId(this.engagementId);
+        String encodedEngagementId = InvoiceEntity.encodeEngagementId(this.engagementId.toString());
         InvoiceFindCriteria findCriteria = new InvoiceFindCriteria();
         findCriteria.setFromDate(fromDate);
         findCriteria.setEngagementReference(encodedEngagementId.substring(0, 4));

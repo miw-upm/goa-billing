@@ -52,8 +52,8 @@ class ExpenseRepositoryTest {
 
         assertNotNull(savedExpenseEntity);
         assertNotNull(savedExpenseEntity.getId());
-        assertEquals(this.expense.getId(), savedExpenseEntity.getId());
-        assertEquals(this.expense.getEngagement().getId(), savedExpenseEntity.getEngagementId());
+        assertEquals(this.expense.getId().toString(), savedExpenseEntity.getId());
+        assertEquals(this.expense.getEngagement().getId().toString(), savedExpenseEntity.getEngagementId());
         assertEquals(this.expense.getBaseAmount(), savedExpenseEntity.getBaseAmount());
         assertEquals(this.expense.getVatRate(), savedExpenseEntity.getVatRate());
         assertEquals(this.expense.getSupplier(), savedExpenseEntity.getSupplier());
