@@ -1,7 +1,6 @@
 package es.upm.api.adapter.out.billing.mongo.expense;
 
 import es.upm.api.domain.model.Expense;
-import es.upm.api.domain.model.ExpenseType;
 import es.upm.api.domain.model.SupplierInfo;
 import es.upm.api.domain.model.criteria.ExpenseFindCriteria;
 import es.upm.api.domain.ports.out.billing.ExpenseGateway;
@@ -20,6 +19,7 @@ import java.util.stream.Stream;
 @Repository
 public class ExpenseAdapter implements ExpenseGateway {
     public static final int FIRST_SERIES_NUMBER = 1;
+    public static final int CURRENT_DEPRECIATION_RATE = 100;
     private final ExpenseRepository expenseRepository;
 
     public ExpenseAdapter(ExpenseRepository expenseRepository) {
@@ -110,8 +110,16 @@ public class ExpenseAdapter implements ExpenseGateway {
     }
 
     @Override
-    public Integer findNextNumber(String series, ExpenseType type) {
-        return this.expenseRepository.findFirstBySeriesAndExpenseTypeOrderByNumberDesc(series, type)
+    public Integer findNextNumber(String series, Integer depreciationRate) {
+        if (Objects.equals(depreciationRate, CURRENT_DEPRECIATION_RATE)) {
+            return this.expenseRepository.findFirstBySeriesAndDepreciationRateOrderByNumberDesc(series, depreciationRate)
+                    .map(ExpenseEntity::getNumber)
+                    .map(n -> n + 1)
+                    .orElse(FIRST_SERIES_NUMBER);
+        }
+        return this.expenseRepository.findFirstBySeriesAndDepreciationRateNotOrderByNumberDesc(
+                        series, CURRENT_DEPRECIATION_RATE
+                )
                 .map(ExpenseEntity::getNumber)
                 .map(n -> n + 1)
                 .orElse(FIRST_SERIES_NUMBER);

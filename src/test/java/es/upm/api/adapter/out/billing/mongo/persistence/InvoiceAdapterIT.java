@@ -236,7 +236,7 @@ class InvoiceAdapterIT {
                         .description("gasto")
                         .baseAmount(BigDecimal.valueOf(30))
                         .vatRate(21)
-                        .expenseType(ExpenseType.CURRENT)
+                        .depreciationRate(100)
                         .build()))
                 .discounts(List.of(BigDecimal.TEN))
                 .pdfPath("/tmp/invoice.pdf")

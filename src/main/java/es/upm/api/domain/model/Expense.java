@@ -23,6 +23,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Expense {
+    public static final int CURRENT = 100;
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private UUID id;
 
@@ -58,7 +59,7 @@ public class Expense {
     private TaxCategory taxCategory;
 
     @NotNull
-    private ExpenseType expenseType;
+    private Integer depreciationRate;
 
     private String description;
 
@@ -67,5 +68,9 @@ public class Expense {
 
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private String documentPath;
+
+    public boolean isCapital(){
+        return depreciationRate != CURRENT;
+    }
 
 }

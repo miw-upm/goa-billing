@@ -71,7 +71,7 @@ class InvoiceRepositoryTest {
                         .description("gasto")
                         .baseAmount(BigDecimal.valueOf(15))
                         .vatRate(10)
-                        .expenseType(ExpenseType.CURRENT)
+                        .depreciationRate(100)
                         .build()))
                 .discounts(List.of(BigDecimal.TEN))
                 .pdfPath("/tmp/invoice.pdf")

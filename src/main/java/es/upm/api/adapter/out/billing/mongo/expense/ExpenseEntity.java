@@ -1,9 +1,9 @@
 package es.upm.api.adapter.out.billing.mongo.expense;
 
 import es.upm.api.domain.model.Expense;
-import es.upm.api.domain.model.ExpenseType;
 import es.upm.api.domain.model.TaxCategory;
 import es.upm.api.domain.model.external.EngagementSnapshot;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -36,7 +36,8 @@ public class ExpenseEntity {
     private Integer vatRate;
     private SupplierInfoEntity supplier;
     private TaxCategory taxCategory;
-    private ExpenseType expenseType;
+    @NotNull
+    private Integer depreciationRate;
     private LocalDate issueDate;
     private String description;
     private BigDecimal withholdingTax;

@@ -3,7 +3,6 @@ package es.upm.api.adapter.out.billing.mongo.repositories;
 import es.upm.api.adapter.out.billing.mongo.expense.ExpenseEntity;
 import es.upm.api.adapter.out.billing.mongo.expense.ExpenseRepository;
 import es.upm.api.domain.model.Expense;
-import es.upm.api.domain.model.ExpenseType;
 import es.upm.api.domain.model.SupplierInfo;
 import es.upm.api.domain.model.TaxCategory;
 import es.upm.api.domain.model.external.EngagementSnapshot;
@@ -44,7 +43,7 @@ class ExpenseRepositoryTest {
                 .vatRate(21)
                 .supplier(SupplierInfo.builder().name("Taxi Madrid").identity("A10000000").build())
                 .taxCategory(TaxCategory.OTROS)
-                .expenseType(ExpenseType.CURRENT)
+                .depreciationRate(100)
                 .issueDate(LocalDate.of(2026, 3, 20))
                 .withholdingTax(BigDecimal.ZERO)
                 .documentPath("docs/taxi-1.pdf")
@@ -58,7 +57,7 @@ class ExpenseRepositoryTest {
                 .vatRate(21)
                 .supplier(SupplierInfo.builder().name("Taxi Centro").identity("A10000001").build())
                 .taxCategory(TaxCategory.OTROS)
-                .expenseType(ExpenseType.CURRENT)
+                .depreciationRate(100)
                 .issueDate(LocalDate.of(2026, 3, 22))
                 .withholdingTax(BigDecimal.ZERO)
                 .documentPath("docs/taxi-2.pdf")
@@ -72,7 +71,7 @@ class ExpenseRepositoryTest {
                 .vatRate(21)
                 .supplier(SupplierInfo.builder().name("Court services").identity("E50000000").build())
                 .taxCategory(TaxCategory.SERVICIOS_PROFESIONALES)
-                .expenseType(ExpenseType.CAPITAL)
+                .depreciationRate(10)
                 .issueDate(LocalDate.of(2026, 3, 18))
                 .withholdingTax(BigDecimal.ZERO)
                 .documentPath("docs/court.pdf")

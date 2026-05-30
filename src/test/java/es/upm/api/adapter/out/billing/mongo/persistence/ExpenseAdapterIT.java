@@ -4,7 +4,6 @@ import es.upm.api.adapter.out.billing.mongo.expense.ExpenseAdapter;
 import es.upm.api.adapter.out.billing.mongo.expense.ExpenseEntity;
 import es.upm.api.adapter.out.billing.mongo.expense.ExpenseRepository;
 import es.upm.api.domain.model.Expense;
-import es.upm.api.domain.model.ExpenseType;
 import es.upm.api.domain.model.SupplierInfo;
 import es.upm.api.domain.model.TaxCategory;
 import es.upm.api.domain.model.criteria.ExpenseFindCriteria;
@@ -53,7 +52,7 @@ class ExpenseAdapterIT {
                 .vatRate(21)
                 .supplier(SupplierInfo.builder().name("Taxi Madrid").identity("A10000000").build())
                 .taxCategory(TaxCategory.OTROS)
-                .expenseType(ExpenseType.CURRENT)
+                .depreciationRate(100)
                 .issueDate(date)
                 .withholdingTax(BigDecimal.ZERO)
                 .documentPath("doc/path")
@@ -77,7 +76,7 @@ class ExpenseAdapterIT {
         assertEquals(this.expense.getVatRate(), persistedExpenseEntity.getVatRate());
         assertEquals(this.expense.getSupplier(), persistedExpenseEntity.getSupplier().toDomain());
         assertEquals(this.expense.getTaxCategory(), persistedExpenseEntity.getTaxCategory());
-        assertEquals(this.expense.getExpenseType(), persistedExpenseEntity.getExpenseType());
+        assertEquals(this.expense.getDepreciationRate(), persistedExpenseEntity.getDepreciationRate());
         assertEquals(this.expense.getIssueDate(), persistedExpenseEntity.getIssueDate());
         assertEquals(this.expense.getDocumentPath(), persistedExpenseEntity.getDocumentPath());
     }
@@ -127,7 +126,7 @@ class ExpenseAdapterIT {
                 .vatRate(21)
                 .supplier(SupplierInfo.builder().name("Old supplier").identity("X100").build())
                 .taxCategory(TaxCategory.OTROS)
-                .expenseType(ExpenseType.CURRENT)
+                .depreciationRate(100)
                 .issueDate(date.minusDays(1))
                 .withholdingTax(BigDecimal.ZERO)
                 .documentPath("doc/path")
@@ -152,7 +151,7 @@ class ExpenseAdapterIT {
                 .vatRate(21)
                 .supplier(SupplierInfo.builder().name("Power Co").identity("P200").build())
                 .taxCategory(TaxCategory.SUMINISTROS)
-                .expenseType(ExpenseType.CAPITAL)
+                .depreciationRate(10)
                 .issueDate(date)
                 .withholdingTax(BigDecimal.ZERO)
                 .documentPath("doc/path")
@@ -207,7 +206,7 @@ class ExpenseAdapterIT {
                 .vatRate(21)
                 .supplier(supplierInfo)
                 .taxCategory(TaxCategory.OTROS)
-                .expenseType(ExpenseType.CURRENT)
+                .depreciationRate(100)
                 .issueDate(this.date)
                 .withholdingTax(BigDecimal.ZERO)
                 .documentPath("doc/path")
@@ -219,7 +218,7 @@ class ExpenseAdapterIT {
                 .vatRate(21)
                 .supplier(supplierInfo)
                 .taxCategory(TaxCategory.OTROS)
-                .expenseType(ExpenseType.CURRENT)
+                .depreciationRate(100)
                 .issueDate(this.date.plusDays(1))
                 .withholdingTax(BigDecimal.ZERO)
                 .documentPath("doc/path")
@@ -260,5 +259,37 @@ class ExpenseAdapterIT {
         assertEquals(1, expenses.size());
         assertEquals(this.expense.getId(), expenses.getFirst().getId());
         verify(this.expenseRepository).findByEngagementIdStartingWithOrderByIssueDateDesc(engagementIdPrefix);
+    }
+
+    @Test
+    void shouldFindNextNumberForCurrentDepreciationRate() {
+        ExpenseEntity lastCurrent = ExpenseEntity.builder()
+                .series("2026")
+                .number(7)
+                .depreciationRate(100)
+                .build();
+        when(this.expenseRepository.findFirstBySeriesAndDepreciationRateOrderByNumberDesc("2026", 100))
+                .thenReturn(Optional.of(lastCurrent));
+
+        Integer next = this.expensePersistenceMongodb.findNextNumber("2026", 100);
+
+        assertEquals(8, next);
+        verify(this.expenseRepository).findFirstBySeriesAndDepreciationRateOrderByNumberDesc("2026", 100);
+    }
+
+    @Test
+    void shouldFindNextNumberForCapitalDepreciationRatesAsSingleBucket() {
+        ExpenseEntity lastCapital = ExpenseEntity.builder()
+                .series("2026")
+                .number(12)
+                .depreciationRate(10)
+                .build();
+        when(this.expenseRepository.findFirstBySeriesAndDepreciationRateNotOrderByNumberDesc("2026", 100))
+                .thenReturn(Optional.of(lastCapital));
+
+        Integer next = this.expensePersistenceMongodb.findNextNumber("2026", 20);
+
+        assertEquals(13, next);
+        verify(this.expenseRepository).findFirstBySeriesAndDepreciationRateNotOrderByNumberDesc("2026", 100);
     }
 }

@@ -125,6 +125,9 @@ public class InvoiceService {
         if (invoice.getEmissionDate() != null) {
             throw new IllegalStateException("Already invoice issued: " + id);
         }
+        if (invoice.getNumber()==null){
+
+        }
         String series = String.valueOf(LocalDate.now().getYear());
         invoice.setSeries(series);
         invoice.setNumber(invoiceGateway.findNextNumber(series));

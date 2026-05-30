@@ -136,7 +136,7 @@ public class InvoicePdfService {
             BigDecimal base = invoice.paymentsBaseAmount();
             BigDecimal vat = invoice.paymentsAmount().subtract(base);
             pdf.table(
-                    new String[]{"Cliente", "Fecha", "Base Imponible", "IVA", "Importe", "Tipo de Ingreso"},
+                    new String[]{"Cliente", "Fecha", "Base Imponible", "IVA", "Total", "Tipo de Ingreso"},
                     paymentRows,
                     new String[]{"TOTAL", "", EUR.format(base), EUR.format(vat), EUR.format(invoice.paymentsAmount()), ""},
                     new String[]{"TOTAL " + invoice.getPercentage() + "%", "", this.applyPercentage(invoice.getPercentage(), base),
@@ -191,7 +191,7 @@ public class InvoicePdfService {
             BigDecimal base = invoice.baseFromTotal(invoice.priorPaymentsAmount());
             BigDecimal vat = invoice.priorPaymentsAmount().subtract(base);
             pdf.table(
-                    new String[]{"Cliente", "Fecha", "Base Imponible", "IVA", "Importe", "Tipo de Ingreso"},
+                    new String[]{"Cliente", "Fecha", "Base Imponible", "IVA", "Total", "Tipo de Ingreso"},
                     paymentRows,
                     new String[]{"TOTAL", "", EUR.format(base), EUR.format(vat), EUR.format(invoice.priorPaymentsAmount()), ""},
                     new String[]{"TOTAL " + invoice.getPercentage() + "%", "", this.applyPercentage(invoice.getPercentage(), base),

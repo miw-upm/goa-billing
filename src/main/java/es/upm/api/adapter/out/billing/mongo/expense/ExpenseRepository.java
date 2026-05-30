@@ -1,6 +1,5 @@
 package es.upm.api.adapter.out.billing.mongo.expense;
 
-import es.upm.api.domain.model.ExpenseType;
 import org.springframework.data.mongodb.repository.MongoRepository;
 
 import java.time.LocalDate;
@@ -24,5 +23,7 @@ public interface ExpenseRepository extends MongoRepository<ExpenseEntity, String
 
     List<ExpenseEntity> findByEngagementIdOrderByIssueDateDesc(String engagementId);
 
-    Optional<ExpenseEntity> findFirstBySeriesAndExpenseTypeOrderByNumberDesc(String series, ExpenseType expenseType);
+    Optional<ExpenseEntity> findFirstBySeriesAndDepreciationRateOrderByNumberDesc(String series, Integer depreciationRate);
+
+    Optional<ExpenseEntity> findFirstBySeriesAndDepreciationRateNotOrderByNumberDesc(String series, Integer depreciationRate);
 }

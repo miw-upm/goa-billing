@@ -1,7 +1,6 @@
 package es.upm.api.domain.ports.out.billing;
 
 import es.upm.api.domain.model.Expense;
-import es.upm.api.domain.model.ExpenseType;
 import es.upm.api.domain.model.SupplierInfo;
 import es.upm.api.domain.model.criteria.ExpenseFindCriteria;
 import org.springframework.stereotype.Repository;
@@ -23,5 +22,5 @@ public interface ExpenseGateway {
 
     Stream<SupplierInfo> findSuppliers(String supplier);
 
-    Integer findNextNumber(String series, ExpenseType expenseType);
+    Integer findNextNumber(String series, Integer depreciationRate);
 }

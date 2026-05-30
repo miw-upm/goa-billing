@@ -46,7 +46,7 @@ class ExpenseResourceIT {
                           "baseAmount": 0,
                           "vatAmount": 21,
                           "supplier": { "name": "Taxi", "identity": "A10000000" },
-                          "expenseType": "CURRENT",
+                          "depreciationRate": 100,
                           "taxCategory": "OTROS"
                         }
                         """.formatted(java.util.UUID.randomUUID()),
@@ -58,7 +58,7 @@ class ExpenseResourceIT {
                           "baseAmount": 10,
                           "vatAmount": 21,
                           "supplier": { "name": "", "identity": "A10000000" },
-                          "expenseType": "CURRENT",
+                          "depreciationRate": 100,
                           "taxCategory": "OTROS"
                         }
                         """.formatted(java.util.UUID.randomUUID()),
@@ -68,7 +68,7 @@ class ExpenseResourceIT {
                           "baseAmount": 10,
                           "vatAmount": 21,
                           "supplier": { "name": "Taxi", "identity": "A10000000" },
-                          "expenseType": "CURRENT",
+                          "depreciationRate": 100,
                           "taxCategory": "OTROS"
                         }
                         """,
@@ -80,7 +80,7 @@ class ExpenseResourceIT {
                           "baseAmount": 10,
                           "vatAmount": 21,
                           "supplier": { "name": "Taxi", "identity": "A10000000" },
-                          "expenseType": "CURRENT"
+                          "depreciationRate": 100
                         }
                         """.formatted(java.util.UUID.randomUUID())
         );
@@ -108,7 +108,7 @@ class ExpenseResourceIT {
                   "baseAmount": 0,
                   "vatAmount": 21,
                   "supplier": { "name": "Taxi Updated", "identity": "A10000000" },
-                  "expenseType": "CURRENT",
+                  "depreciationRate": 100,
                   "taxCategory": "OTROS"
                 }
                 """;
