@@ -3,7 +3,6 @@ package es.upm.api.adapter.out.billing.mongo.invoice;
 import es.upm.api.adapter.out.billing.mongo.expense.ExpenseEntity;
 import es.upm.api.adapter.out.billing.mongo.payment.PaymentEntity;
 import es.upm.api.domain.model.Invoice;
-import es.upm.api.domain.model.Rectification;
 import es.upm.api.domain.model.external.EngagementSnapshot;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -53,7 +52,7 @@ public class InvoiceEntity {
     private List<ExpenseEntity> expenses;
     private List<BigDecimal> discounts;
     private String pdfPath;
-    private Rectification rectification;
+    private OriginalInvoiceEntity originalInvoice;
 
     public InvoiceEntity(Invoice invoice) {
         BeanUtils.copyProperties(invoice, this);
@@ -69,6 +68,8 @@ public class InvoiceEntity {
                 : invoice.getPriorPayments().stream().map(PaymentEntity::new).toList();
         this.expenses = invoice.getExpenses() == null ? null
                 : invoice.getExpenses().stream().map(ExpenseEntity::new).toList();
+        this.originalInvoice = invoice.getOriginalInvoice() == null ? null
+                : new OriginalInvoiceEntity(invoice.getOriginalInvoice());
     }
 
     public Invoice toDomain() {
@@ -86,6 +87,7 @@ public class InvoiceEntity {
                 : this.priorPayments.stream().map(PaymentEntity::toDomain).toList());
         invoice.setExpenses(this.expenses == null ? null
                 : this.expenses.stream().map(ExpenseEntity::toDomain).toList());
+        invoice.setOriginalInvoice(this.originalInvoice == null ? null : this.originalInvoice.toDomain());
         return invoice;
     }
 }

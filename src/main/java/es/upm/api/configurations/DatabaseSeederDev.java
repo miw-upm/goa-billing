@@ -198,7 +198,7 @@ public class DatabaseSeederDev {
                         .payments(null)
                         .discounts(List.of(new BigDecimal("50.00")))
                         .pdfPath(null)
-                        .rectification(null)
+                        .originalInvoice(null)
                         .build(),
                 InvoiceEntity.builder()
                         .id(ID_15)
@@ -225,7 +225,7 @@ public class DatabaseSeederDev {
                         .payments(null)
                         .discounts(List.of(new BigDecimal("125.00")))
                         .pdfPath(null)
-                        .rectification(null)
+                        .originalInvoice(null)
                         .build()
         ));
         log.warn("------- Initial Load from JAVA ---------------------------------------------------------------");

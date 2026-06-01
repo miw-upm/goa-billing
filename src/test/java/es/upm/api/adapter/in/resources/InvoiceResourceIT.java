@@ -149,6 +149,37 @@ class InvoiceResourceIT {
 
     @Test
     @WithMockUser(roles = "admin")
+    void shouldReturnBadRequestWhenOriginalInvoiceIsInvalidOnUpdate() throws Exception {
+        UUID invoiceId = UUID.randomUUID();
+        UUID userId = UUID.randomUUID();
+        String requestBody = """
+                {
+                  "billingInfo": {
+                    "userId": "%s",
+                    "fullName": "John Doe",
+                    "identity": "12345678A",
+                    "fullAddress": "Madrid"
+                  },
+                  "baseAmount": 120,
+                  "originalInvoice": {
+                    "series": "2025",
+                    "number": 22,
+                    "emissionDate": "2026-03-20",
+                    "reason": ""
+                  }
+                }
+                """.formatted(userId);
+
+        this.mockMvc.perform(put("/invoices/{id}", invoiceId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestBody))
+                .andExpect(status().isBadRequest());
+
+        verify(this.invoiceService, never()).update(eq(invoiceId), any());
+    }
+
+    @Test
+    @WithMockUser(roles = "admin")
     void shouldDeleteInvoice() throws Exception {
         UUID invoiceId = UUID.randomUUID();
 

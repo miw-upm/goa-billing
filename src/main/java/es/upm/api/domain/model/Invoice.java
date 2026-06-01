@@ -3,6 +3,7 @@ package es.upm.api.domain.model;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import es.upm.api.domain.model.creation.LegalProcedure;
 import es.upm.api.domain.model.external.EngagementSnapshot;
+import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -44,11 +45,18 @@ public class Invoice {
     private List<Expense> expenses;
     private List<BigDecimal> discounts;
 
+    @Valid
+    private OriginalInvoice originalInvoice;
+
     private String pdfPath;
-    private Rectification rectification;
+
 
     public boolean isIssued() {
         return this.emissionDate != null;
+    }
+
+    public boolean isRectification() {
+        return this.originalInvoice != null;
     }
 
     // === Factores ===
@@ -133,17 +141,6 @@ public class Invoice {
                     .multiply(percentageFactor());
         }
         return baseAmount.multiply(percentageFactor());
-    }
-
-    public BigDecimal totalVatAmount() {
-        return totalBaseAmount().multiply(vatFactor());
-    }
-
-    public BigDecimal totalAmount() {
-        return baseAmount
-                .add(vatAmount)
-                .add(expensesBaseAmount())
-                .add(expensesVatAmount());
     }
 
     public BigDecimal totalBudget() {

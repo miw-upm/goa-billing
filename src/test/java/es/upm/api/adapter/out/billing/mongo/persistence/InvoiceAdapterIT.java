@@ -73,6 +73,8 @@ class InvoiceAdapterIT {
         assertEquals(this.invoice.getPriorPayments(),
                 captor.getValue().getPriorPayments().stream().map(paymentEntity -> paymentEntity.toDomain()).toList());
         assertEquals(this.invoice.getExpenses(), captor.getValue().toDomain().getExpenses());
+        assertEquals(this.invoice.getOriginalInvoice().getSeries(), captor.getValue().getOriginalInvoice().getSeries());
+        assertEquals(this.invoice.getOriginalInvoice().getReason(), captor.getValue().getOriginalInvoice().getReason());
     }
 
     @Test
@@ -238,6 +240,12 @@ class InvoiceAdapterIT {
                         .vatRate(21)
                         .depreciationRate(100)
                         .build()))
+                .originalInvoice(OriginalInvoice.builder()
+                        .series("2025")
+                        .number(29)
+                        .emissionDate(emissionDate.minusDays(10))
+                        .reason("Error en datos fiscales")
+                        .build())
                 .discounts(List.of(BigDecimal.TEN))
                 .pdfPath("/tmp/invoice.pdf")
                 .build();

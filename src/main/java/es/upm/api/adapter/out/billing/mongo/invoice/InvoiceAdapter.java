@@ -56,7 +56,8 @@ public class InvoiceAdapter implements InvoiceGateway {
                 : invoice.getExpenses().stream().map(ExpenseEntity::new).toList());
         invoiceEntity.setDiscounts(invoice.getDiscounts());
         invoiceEntity.setPdfPath(invoice.getPdfPath());
-        invoiceEntity.setRectification(invoice.getRectification());
+        invoiceEntity.setOriginalInvoice(invoice.getOriginalInvoice() == null ? null
+                : new OriginalInvoiceEntity(invoice.getOriginalInvoice()));
 
         return this.invoiceRepository.save(invoiceEntity).toDomain();
     }
