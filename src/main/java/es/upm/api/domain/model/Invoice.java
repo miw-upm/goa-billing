@@ -132,17 +132,6 @@ public class Invoice {
         return sum(discounts, Function.identity());
     }
 
-    // === Totales de la factura (aplicando %) ===
-    public BigDecimal totalBaseAmount() {
-        if (Boolean.TRUE.equals(closed)) {
-            return baseAmount
-                    .subtract(discountsAmount())
-                    .subtract(priorPaymentsBaseAmount())
-                    .multiply(percentageFactor());
-        }
-        return baseAmount.multiply(percentageFactor());
-    }
-
     public BigDecimal totalBudget() {
         if (legalProcedures != null) {
             return sum(legalProcedures, LegalProcedure::getBudget);

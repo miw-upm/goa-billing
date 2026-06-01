@@ -17,4 +17,6 @@ public interface InvoiceRepository extends MongoRepository<InvoiceEntity, String
             String engagementIdPrefix, LocalDate emissionDate);
 
     Optional<InvoiceEntity> findFirstBySeriesOrderByNumberDesc(String series);
+
+    Optional<InvoiceEntity> findBySeriesAndNumber(String series, Integer number);
 }

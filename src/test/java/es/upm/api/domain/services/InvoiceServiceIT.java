@@ -2,6 +2,7 @@ package es.upm.api.domain.services;
 
 import es.upm.api.domain.model.BillingInfo;
 import es.upm.api.domain.model.Invoice;
+import es.upm.api.domain.model.creation.InvoiceCreationRectification;
 import es.upm.api.domain.model.criteria.InvoiceFindCriteria;
 import es.upm.api.domain.model.external.EngagementSnapshot;
 import es.upm.api.domain.model.external.UserSnapshot;
@@ -185,6 +186,38 @@ class InvoiceServiceIT {
         assertEquals(1, invoices.size());
         assertEquals(matching.getId(), invoices.get(0).getId());
         verify(this.invoiceGateway).find(criteria);
+    }
+
+    @Test
+    void shouldCreateRectificationFromOriginalInvoice() {
+        Invoice original = Invoice.builder()
+                .id(UUID.randomUUID())
+                .concept("Servicios")
+                .billingInfo(BillingInfo.builder().userId(this.userId).build())
+                .percentage(new BigDecimal("100"))
+                .emissionDate(LocalDate.of(2026, 3, 20))
+                .operationDate(LocalDate.of(2026, 3, 19))
+                .baseAmount(new BigDecimal("100.00"))
+                .vatAmount(new BigDecimal("21.00"))
+                .vatRate(new BigDecimal("21"))
+                .build();
+        InvoiceCreationRectification creation = InvoiceCreationRectification.builder()
+                .series("2026")
+                .number(30)
+                .reason("Error en datos fiscales")
+                .build();
+        when(this.invoiceGateway.read("2026", 30)).thenReturn(original);
+        when(this.invoiceGateway.create(any(Invoice.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        Invoice rectification = this.invoiceService.createRectification(creation);
+
+        assertEquals("2026", rectification.getOriginalInvoice().getSeries());
+        assertEquals(30, rectification.getOriginalInvoice().getNumber());
+        assertEquals("Error en datos fiscales", rectification.getOriginalInvoice().getReason());
+        assertEquals(original.getConcept(), rectification.getConcept());
+        verify(this.invoiceGateway).read("2026", 30);
+        verify(this.invoiceGateway).create(any(Invoice.class));
     }
 
 }

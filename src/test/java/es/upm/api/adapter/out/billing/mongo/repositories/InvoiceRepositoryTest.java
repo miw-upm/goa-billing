@@ -14,6 +14,7 @@ import org.springframework.test.context.ActiveProfiles;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -144,5 +145,13 @@ class InvoiceRepositoryTest {
 
         assertTrue(optional.isPresent());
         assertEquals(2, optional.get().getNumber());
+    }
+
+    @Test
+    void shouldFindBySeriesAndNumber() {
+        Optional<InvoiceEntity> optional = this.invoiceRepository.findBySeriesAndNumber("A", 1);
+
+        assertTrue(optional.isPresent());
+        assertEquals(this.firstInvoice.getId().toString(), optional.get().getId());
     }
 }

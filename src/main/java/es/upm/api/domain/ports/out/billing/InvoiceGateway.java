@@ -10,11 +10,13 @@ import java.util.stream.Stream;
 
 @Repository
 public interface InvoiceGateway {
-    void create(Invoice invoice);
+    Invoice create(Invoice invoice);
 
     Invoice update(UUID id, Invoice invoice);
 
     Invoice read(UUID id);
+
+    Invoice read(String series, Integer number);
 
     void delete(UUID id);
 

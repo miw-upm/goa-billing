@@ -2,6 +2,7 @@ package es.upm.api.adapter.in.resources;
 
 import es.upm.api.domain.model.BillingInfo;
 import es.upm.api.domain.model.Invoice;
+import es.upm.api.domain.model.OriginalInvoice;
 import es.upm.api.domain.model.creation.InvoiceCreationFromEngagement;
 import es.upm.api.domain.model.criteria.InvoiceFindCriteria;
 import es.upm.api.domain.services.InvoiceService;
@@ -271,6 +272,36 @@ class InvoiceResourceIT {
         assertEquals(1, creation.getBillingPercentages().size());
         assertEquals(userId, creation.getBillingPercentages().get(0).getUserId());
         assertEquals(new BigDecimal("100.00"), creation.getBillingPercentages().get(0).getPercentage());
+    }
+
+    @Test
+    @WithMockUser(roles = "admin")
+    void shouldCreateRectificationInvoice() throws Exception {
+        String requestBody = """
+                {
+                  "series": "2026",
+                  "number": 30,
+                  "reason": "Error en datos fiscales"
+                }
+                """;
+        UUID userId = UUID.randomUUID();
+        Invoice response = this.buildInvoice(UUID.randomUUID(), userId, "100.00");
+        response.setOriginalInvoice(OriginalInvoice.builder()
+                .series("2026")
+                .number(30)
+                .emissionDate(LocalDate.of(2026, 3, 20))
+                .reason("Error en datos fiscales")
+                .build());
+        when(this.invoiceService.createRectification(any())).thenReturn(response);
+
+        this.mockMvc.perform(post("/invoices/rectification")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestBody))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.originalInvoice.series").value("2026"))
+                .andExpect(jsonPath("$.originalInvoice.number").value(30));
+
+        verify(this.invoiceService).createRectification(any());
     }
 
     @Test

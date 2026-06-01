@@ -27,8 +27,15 @@ public class InvoicePdfService {
     private final UserFinder userFinder;
 
     public byte[] generatePdf(Invoice invoice, boolean original) {
-        String title = invoice.isIssued() ? "FACTURA  " : "FACTURA PROFORMA";
+        String title = "FACTURA";
+        if (! invoice.isIssued() ) {
+            title = title + "  PROFORMA";
+        }
+        if (invoice.isRectification()) {
+            title = title + "  RECTIFICATIVA";
+        }
         title = original ? title + "   ORIGINAL" : title + "  COPIA (" + LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) + ")";
+
         String invoiceNumber = invoice.isIssued()
                 ? invoice.getSeries() + "-" + invoice.getNumber()
                 : "—";
@@ -41,6 +48,14 @@ public class InvoicePdfService {
                 .title(title)
                 .space()
                 .paragraphBold("Nº " + invoiceNumber + "   ·   " + issueDate);
+
+        if (invoice.isRectification()) {
+            pdf.section("DETALLES FACTURA ORIGINAL RECTIFICADA")
+                    .paragraph("Serie: " + invoice.getOriginalInvoice().getSeries())
+                    .paragraph("Numero: " + invoice.getOriginalInvoice().getNumber())
+                    .paragraph("Fecha de emisión: " + invoice.getOriginalInvoice().getEmissionDate())
+                    .paragraph("Razón del cambio: "+invoice.getOriginalInvoice().getReason());
+        }
 
         pdf.section("FACTURAR A, CON PARTICIPACIÓN DEL : " + invoice.getPercentage() + " %")
                 .paragraphBold(invoice.getBillingInfo().getFullName())
@@ -99,105 +114,108 @@ public class InvoicePdfService {
 
         pdf.signatureLine("Doña Nuria Ocaña Pérez");
 
-        pdf.pageBreak().section("Información detallada");
+        if (!invoice.isRectification()) {
+            pdf.pageBreak().section("Información detallada");
 
-        if (invoice.getDiscounts() != null && !invoice.getDiscounts().isEmpty()) {
-            pdf.paragraphBold("Descuentos aplicados");
-            List<String[]> discountRows = invoice.getDiscounts().stream()
-                    .map(discount -> new String[]{
-                            "",
-                            "− " + EUR.format(discount),
-                            ""
-                    }).toList();
-            pdf.table(
-                    new String[]{"Base original", "Descuentos", "Base final"},
-                    discountRows,
-                    new String[]{
-                            EUR.format(invoice.totalBudget()),
-                            EUR.format(invoice.discountsAmount()),
-                            EUR.format(invoice.totalBudget().subtract(invoice.discountsAmount()))},
-                    new String[]{"TOTAL " + invoice.getPercentage() + "%", "",
-                            this.applyPercentage(invoice.getPercentage(), invoice.totalBudget().subtract(invoice.discountsAmount()))
-                    }
-            );
-        }
+            if (invoice.getDiscounts() != null && !invoice.getDiscounts().isEmpty()) {
+                pdf.paragraphBold("Descuentos aplicados");
+                List<String[]> discountRows = invoice.getDiscounts().stream()
+                        .map(discount -> new String[]{
+                                "",
+                                "− " + EUR.format(discount),
+                                ""
+                        }).toList();
+                pdf.table(
+                        new String[]{"Base original", "Descuentos", "Base final"},
+                        discountRows,
+                        new String[]{
+                                EUR.format(invoice.totalBudget()),
+                                EUR.format(invoice.discountsAmount()),
+                                EUR.format(invoice.totalBudget().subtract(invoice.discountsAmount()))},
+                        new String[]{"TOTAL " + invoice.getPercentage() + "%", "",
+                                this.applyPercentage(invoice.getPercentage(), invoice.totalBudget().subtract(invoice.discountsAmount()))
+                        }
+                );
+            }
 
-        if (invoice.getPayments() != null && !invoice.getPayments().isEmpty()) {
-            pdf.paragraphBold("Ingresos Asociados a la Hoja de Encargo y facturados en la presente");
-            List<String[]> paymentRows = invoice.getPayments().stream()
-                    .map(payment -> new String[]{
-                            this.userFinder.readById(payment.getUser().getId()).toFullName(),
-                            payment.getDate().format(DATE_FORMAT),
-                            EUR.format(invoice.baseFromTotal(payment.getAmount())),
-                            EUR.format(payment.getAmount().subtract(invoice.baseFromTotal(payment.getAmount()))),
-                            EUR.format(payment.getAmount()),
-                            payment.getMethod().name()
-                    }).toList();
-            BigDecimal base = invoice.paymentsBaseAmount();
-            BigDecimal vat = invoice.paymentsAmount().subtract(base);
-            pdf.table(
-                    new String[]{"Cliente", "Fecha", "Base Imponible", "IVA", "Total", "Tipo de Ingreso"},
-                    paymentRows,
-                    new String[]{"TOTAL", "", EUR.format(base), EUR.format(vat), EUR.format(invoice.paymentsAmount()), ""},
-                    new String[]{"TOTAL " + invoice.getPercentage() + "%", "", this.applyPercentage(invoice.getPercentage(), base),
-                            this.applyPercentage(invoice.getPercentage(), vat),
-                            this.applyPercentage(invoice.getPercentage(), invoice.paymentsAmount()), ""
-                    }
-            );
-        }
+            if (invoice.getPayments() != null && !invoice.getPayments().isEmpty()) {
+                pdf.paragraphBold("Ingresos Asociados a la Hoja de Encargo y facturados en la presente");
+                List<String[]> paymentRows = invoice.getPayments().stream()
+                        .map(payment -> new String[]{
+                                this.userFinder.readById(payment.getUser().getId()).toFullName(),
+                                payment.getDate().format(DATE_FORMAT),
+                                EUR.format(invoice.baseFromTotal(payment.getAmount())),
+                                EUR.format(payment.getAmount().subtract(invoice.baseFromTotal(payment.getAmount()))),
+                                EUR.format(payment.getAmount()),
+                                payment.getMethod().name()
+                        }).toList();
+                BigDecimal base = invoice.paymentsBaseAmount();
+                BigDecimal vat = invoice.paymentsAmount().subtract(base);
+                pdf.table(
+                        new String[]{"Cliente", "Fecha", "Base Imponible", "IVA", "Total", "Tipo de Ingreso"},
+                        paymentRows,
+                        new String[]{"TOTAL", "", EUR.format(base), EUR.format(vat), EUR.format(invoice.paymentsAmount()), ""},
+                        new String[]{"TOTAL " + invoice.getPercentage() + "%", "", this.applyPercentage(invoice.getPercentage(), base),
+                                this.applyPercentage(invoice.getPercentage(), vat),
+                                this.applyPercentage(invoice.getPercentage(), invoice.paymentsAmount()), ""
+                        }
+                );
+            }
 
-        if (invoice.getExpenses() != null && !invoice.getExpenses().isEmpty()) {
-            pdf.paragraphBold("Gastos asociados a la Hoja de Encargo");
-            List<String[]> expenseRows = invoice.getExpenses().stream()
-                    .map(expense -> {
-                        BigDecimal base = expense.getBaseAmount().setScale(6, RoundingMode.HALF_UP);
-                        BigDecimal vat = base
-                                .multiply(BigDecimal.valueOf(expense.getVatRate()))
-                                .divide(new BigDecimal("100"), 6, RoundingMode.HALF_UP);
-                        return new String[]{
-                                expense.getIssueDate().format(DATE_FORMAT),
-                                expense.getDescription(),
-                                EUR.format(base),
-                                EUR.format(vat),
-                                EUR.format(base.add(vat))
-                        };
-                    }).toList();
+            if (invoice.getExpenses() != null && !invoice.getExpenses().isEmpty()) {
+                pdf.paragraphBold("Gastos asociados a la Hoja de Encargo");
+                List<String[]> expenseRows = invoice.getExpenses().stream()
+                        .map(expense -> {
+                            BigDecimal base = expense.getBaseAmount().setScale(6, RoundingMode.HALF_UP);
+                            BigDecimal vat = base
+                                    .multiply(BigDecimal.valueOf(expense.getVatRate()))
+                                    .divide(new BigDecimal("100"), 6, RoundingMode.HALF_UP);
+                            return new String[]{
+                                    expense.getIssueDate().format(DATE_FORMAT),
+                                    expense.getDescription(),
+                                    EUR.format(base),
+                                    EUR.format(vat),
+                                    EUR.format(base.add(vat))
+                            };
+                        }).toList();
 
-            pdf.table(
-                    new String[]{"Fecha", "Descripción", "Base imponible", "IVA", "TOTAL"},
-                    expenseRows,
-                    new String[]{"TOTAL", "", EUR.format(invoice.expensesBaseAmount()),
-                            EUR.format(invoice.expensesVatAmount()),
-                            EUR.format(invoice.expensesBaseAmount().add(invoice.expensesVatAmount()))},
-                    new String[]{"TOTAL " + invoice.getPercentage() + "%", "",
-                            this.applyPercentage(invoice.getPercentage(), invoice.expensesBaseAmount()),
-                            this.applyPercentage(invoice.getPercentage(), invoice.expensesVatAmount()),
-                            this.applyPercentage(invoice.getPercentage(), invoice.expensesBaseAmount().add(invoice.expensesVatAmount()))
-                    }
-            );
-        }
+                pdf.table(
+                        new String[]{"Fecha", "Descripción", "Base imponible", "IVA", "TOTAL"},
+                        expenseRows,
+                        new String[]{"TOTAL", "", EUR.format(invoice.expensesBaseAmount()),
+                                EUR.format(invoice.expensesVatAmount()),
+                                EUR.format(invoice.expensesBaseAmount().add(invoice.expensesVatAmount()))},
+                        new String[]{"TOTAL " + invoice.getPercentage() + "%", "",
+                                this.applyPercentage(invoice.getPercentage(), invoice.expensesBaseAmount()),
+                                this.applyPercentage(invoice.getPercentage(), invoice.expensesVatAmount()),
+                                this.applyPercentage(invoice.getPercentage(), invoice.expensesBaseAmount().add(invoice.expensesVatAmount()))
+                        }
+                );
+            }
 
-        if (invoice.getPriorPayments() != null && !invoice.getPriorPayments().isEmpty()) {
-            pdf.paragraphBold("Anteriores ingresos, Ya Facturados, de la Hoja de Encargo");
-            List<String[]> paymentRows = invoice.getPriorPayments().stream()
-                    .map(payment -> new String[]{
-                            this.userFinder.readById(payment.getUser().getId()).toFullName(),
-                            payment.getDate().format(DATE_FORMAT),
-                            EUR.format(invoice.baseFromTotal(payment.getAmount())),
-                            EUR.format(payment.getAmount().subtract(invoice.baseFromTotal(payment.getAmount()))),
-                            EUR.format(payment.getAmount()),
-                            payment.getMethod().name()
-                    }).toList();
-            BigDecimal base = invoice.baseFromTotal(invoice.priorPaymentsAmount());
-            BigDecimal vat = invoice.priorPaymentsAmount().subtract(base);
-            pdf.table(
-                    new String[]{"Cliente", "Fecha", "Base Imponible", "IVA", "Total", "Tipo de Ingreso"},
-                    paymentRows,
-                    new String[]{"TOTAL", "", EUR.format(base), EUR.format(vat), EUR.format(invoice.priorPaymentsAmount()), ""},
-                    new String[]{"TOTAL " + invoice.getPercentage() + "%", "", this.applyPercentage(invoice.getPercentage(), base),
-                            this.applyPercentage(invoice.getPercentage(), vat),
-                            this.applyPercentage(invoice.getPercentage(), invoice.priorPaymentsAmount()), ""}
-            );
+            if (invoice.getPriorPayments() != null && !invoice.getPriorPayments().isEmpty()) {
+                pdf.paragraphBold("Anteriores ingresos, Ya Facturados, de la Hoja de Encargo");
+                List<String[]> paymentRows = invoice.getPriorPayments().stream()
+                        .map(payment -> new String[]{
+                                this.userFinder.readById(payment.getUser().getId()).toFullName(),
+                                payment.getDate().format(DATE_FORMAT),
+                                EUR.format(invoice.baseFromTotal(payment.getAmount())),
+                                EUR.format(payment.getAmount().subtract(invoice.baseFromTotal(payment.getAmount()))),
+                                EUR.format(payment.getAmount()),
+                                payment.getMethod().name()
+                        }).toList();
+                BigDecimal base = invoice.baseFromTotal(invoice.priorPaymentsAmount());
+                BigDecimal vat = invoice.priorPaymentsAmount().subtract(base);
+                pdf.table(
+                        new String[]{"Cliente", "Fecha", "Base Imponible", "IVA", "Total", "Tipo de Ingreso"},
+                        paymentRows,
+                        new String[]{"TOTAL", "", EUR.format(base), EUR.format(vat), EUR.format(invoice.priorPaymentsAmount()), ""},
+                        new String[]{"TOTAL " + invoice.getPercentage() + "%", "", this.applyPercentage(invoice.getPercentage(), base),
+                                this.applyPercentage(invoice.getPercentage(), vat),
+                                this.applyPercentage(invoice.getPercentage(), invoice.priorPaymentsAmount()), ""}
+                );
+            }
+
         }
 
         return pdf.build();

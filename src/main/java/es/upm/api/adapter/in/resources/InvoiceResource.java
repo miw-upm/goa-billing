@@ -4,6 +4,7 @@ import es.upm.api.adapter.in.resources.dtos.InvoiceCreationDto;
 import es.upm.api.domain.model.BillingInfo;
 import es.upm.api.domain.model.Invoice;
 import es.upm.api.domain.model.creation.InvoiceCreationFromEngagement;
+import es.upm.api.domain.model.creation.InvoiceCreationRectification;
 import es.upm.api.domain.model.criteria.InvoiceFindCriteria;
 import es.upm.api.domain.services.InvoiceService;
 import es.upm.miw.security.Security;
@@ -21,7 +22,7 @@ import java.util.stream.Stream;
 @RequiredArgsConstructor
 public class InvoiceResource {
     public static final String INVOICES = "/invoices";
-    public static final String FROM_PAYMENTS = "/from-payments";
+    public static final String RECTIFICATION = "/rectification";
     public static final String FROM_ENGAGEMENT = "/from-engagement";
 
 
@@ -43,6 +44,11 @@ public class InvoiceResource {
     @PostMapping(FROM_ENGAGEMENT)
     public void createFromEngagement(@RequestBody @Valid InvoiceCreationFromEngagement creation) {
         this.invoiceService.createFromEngagement(creation);
+    }
+
+    @PostMapping(RECTIFICATION)
+    public Invoice createRectification(@RequestBody @Valid InvoiceCreationRectification creation) {
+        return this.invoiceService.createRectification(creation);
     }
 
     @GetMapping("/{id}")

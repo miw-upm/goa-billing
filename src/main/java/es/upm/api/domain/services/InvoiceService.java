@@ -1,10 +1,8 @@
 package es.upm.api.domain.services;
 
-import es.upm.api.domain.model.BillingInfo;
-import es.upm.api.domain.model.Expense;
-import es.upm.api.domain.model.Invoice;
-import es.upm.api.domain.model.Payment;
+import es.upm.api.domain.model.*;
 import es.upm.api.domain.model.creation.InvoiceCreationFromEngagement;
+import es.upm.api.domain.model.creation.InvoiceCreationRectification;
 import es.upm.api.domain.model.criteria.InvoiceFindCriteria;
 import es.upm.api.domain.model.external.EngagementSnapshot;
 import es.upm.api.domain.model.external.UserSnapshot;
@@ -16,6 +14,7 @@ import es.upm.api.domain.ports.out.engagement.EngagementGateway;
 import es.upm.api.domain.ports.out.user.UserFinder;
 import es.upm.miw.exception.BadRequestException;
 import es.upm.miw.exception.InvalidTransitionException;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -125,7 +124,7 @@ public class InvoiceService {
         if (invoice.getEmissionDate() != null) {
             throw new IllegalStateException("Already invoice issued: " + id);
         }
-        if (invoice.getNumber()==null){
+        if (invoice.getNumber() == null) {
 
         }
         String series = String.valueOf(LocalDate.now().getYear());
@@ -158,6 +157,32 @@ public class InvoiceService {
         );
 
         //TODO guardar en S3 AWS
+    }
+
+    public Invoice createRectification(@Valid InvoiceCreationRectification creation) {
+        Invoice originalInvoice = this.invoiceGateway.read(creation.getSeries(), creation.getNumber());
+        if (originalInvoice.getEmissionDate() == null) {
+            throw new BadRequestException("Cannot rectify a draft invoice: " + creation.getSeries() + "-" + creation.getNumber());
+        }
+        Invoice invoice = Invoice.builder()
+                .id(UUID.randomUUID())
+                .originalInvoice(OriginalInvoice.builder()
+                        .series(creation.getSeries())
+                        .number(creation.getNumber())
+                        .emissionDate(originalInvoice.getEmissionDate())
+                        .reason(creation.getReason())
+                        .build())
+                .concept(originalInvoice.getConcept())
+                .billingInfo(originalInvoice.getBillingInfo())
+                .percentage(originalInvoice.getPercentage())
+                .operationDate(originalInvoice.getOperationDate())
+                .baseAmount(originalInvoice.getBaseAmount())
+                .vatAmount(originalInvoice.getVatAmount())
+                .vatRate(originalInvoice.getVatRate())
+                .expenses(originalInvoice.getExpenses())
+                .build();
+
+        return this.invoiceGateway.create(invoice);
     }
 
     public Invoice read(UUID id) {
@@ -233,6 +258,8 @@ public class InvoiceService {
 
     public byte[] generatePdf(UUID id) {
         Invoice invoice = this.read(id);
-        return this.invoicePdfService.generatePdf(invoice,false);
+        return this.invoicePdfService.generatePdf(invoice, false);
     }
+
+
 }

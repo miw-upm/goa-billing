@@ -24,8 +24,8 @@ public class InvoiceAdapter implements InvoiceGateway {
     }
 
     @Override
-    public void create(Invoice invoice) {
-        this.invoiceRepository.save(new InvoiceEntity(invoice));
+    public Invoice create(Invoice invoice) {
+        return this.invoiceRepository.save(new InvoiceEntity(invoice)).toDomain();
     }
 
     @Override
@@ -67,6 +67,13 @@ public class InvoiceAdapter implements InvoiceGateway {
         return this.invoiceRepository.findById(id.toString())
                 .map(InvoiceEntity::toDomain)
                 .orElseThrow(() -> new NotFoundException("Invoice id: " + id));
+    }
+
+    @Override
+    public Invoice read(String series, Integer number) {
+        return this.invoiceRepository.findBySeriesAndNumber(series, number)
+                .map(InvoiceEntity::toDomain)
+                .orElseThrow(() -> new NotFoundException("Invoice series: " + series + ", number: " + number));
     }
 
     @Override

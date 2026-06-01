@@ -89,6 +89,17 @@ class InvoiceAdapterIT {
     }
 
     @Test
+    void shouldReadInvoiceBySeriesAndNumber() {
+        when(this.invoiceRepository.findBySeriesAndNumber("A", 1))
+                .thenReturn(Optional.of(new InvoiceEntity(this.invoice)));
+
+        Invoice read = this.invoiceAdapter.read("A", 1);
+
+        assertEquals(this.invoice.getId(), read.getId());
+        verify(this.invoiceRepository).findBySeriesAndNumber("A", 1);
+    }
+
+    @Test
     void shouldUpdateInvoice() {
         UUID id = this.invoice.getId();
         when(this.invoiceRepository.findById(id.toString())).thenReturn(Optional.of(new InvoiceEntity(this.invoice)));
