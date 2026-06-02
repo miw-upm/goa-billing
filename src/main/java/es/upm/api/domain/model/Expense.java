@@ -69,7 +69,7 @@ public class Expense {
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private String documentPath;
 
-    public boolean isCapital(){
+    public boolean isCapital() {
         return depreciationRate != CURRENT;
     }
 

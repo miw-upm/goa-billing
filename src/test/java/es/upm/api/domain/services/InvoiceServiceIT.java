@@ -2,7 +2,6 @@ package es.upm.api.domain.services;
 
 import es.upm.api.domain.model.BillingInfo;
 import es.upm.api.domain.model.Invoice;
-import es.upm.api.domain.model.creation.InvoiceCreationRectification;
 import es.upm.api.domain.model.criteria.InvoiceFindCriteria;
 import es.upm.api.domain.model.external.EngagementSnapshot;
 import es.upm.api.domain.model.external.UserSnapshot;

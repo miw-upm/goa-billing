@@ -2,8 +2,8 @@ package es.upm.api.adapter.out.billing.mongo.persistence;
 
 import es.upm.api.adapter.out.billing.mongo.invoice.InvoiceAdapter;
 import es.upm.api.adapter.out.billing.mongo.invoice.InvoiceEntity;
-import es.upm.api.adapter.out.billing.mongo.invoice.LegalProcedureEntity;
 import es.upm.api.adapter.out.billing.mongo.invoice.InvoiceRepository;
+import es.upm.api.adapter.out.billing.mongo.invoice.LegalProcedureEntity;
 import es.upm.api.domain.model.*;
 import es.upm.api.domain.model.creation.LegalProcedure;
 import es.upm.api.domain.model.criteria.InvoiceFindCriteria;

@@ -38,6 +38,7 @@ public class InvoiceResource {
                 .baseAmount(creation.getBaseAmount())
                 .baseExpense(creation.getBaseExpense())
                 .vatExpense(creation.getVatExpense())
+                .operationDate(creation.getOperationDate())
                 .build();
         invoice.applyDefaults();
         this.invoiceService.create(invoice);

@@ -23,6 +23,7 @@ import org.springframework.util.StringUtils;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -138,6 +139,16 @@ public class InvoiceService {
         invoice.setSeries(series);
         invoice.setNumber(invoiceGateway.findNextNumber(series));
         invoice.setEmissionDate(LocalDate.now());
+        if (Objects.isNull(invoice.getOperationDate())) {
+            invoice.setOperationDate(
+                    invoice.getPayments() != null && !invoice.getPayments().isEmpty()
+                            ? invoice.getPayments().stream()
+                            .map(Payment::getDate)
+                            .max(Comparator.naturalOrder())
+                            .orElse(invoice.getEmissionDate())
+                            : invoice.getEmissionDate()
+            );
+        }
         this.invoiceGateway.update(id, invoice);
         if (invoice.getPayments() != null) {
             invoice.getPayments().forEach(invoicePayment -> {
@@ -201,7 +212,7 @@ public class InvoiceService {
         return invoice;
     }
 
-    public Invoice update(UUID id, Invoice invoice) { //TODO no tengo claro que se puede actualizar
+    public Invoice update(UUID id, Invoice invoice) {
         Invoice currentInvoice = this.invoiceGateway.read(id);
         if (invoice.getEmissionDate() != null) {
             throw new InvalidTransitionException("Issued invoices cannot be updated, id: " + id);
@@ -268,6 +279,5 @@ public class InvoiceService {
         Invoice invoice = this.read(id);
         return this.invoicePdfService.generatePdf(invoice, false);
     }
-
 
 }

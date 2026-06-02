@@ -10,7 +10,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
-import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Stream;
@@ -24,7 +23,6 @@ public class PaymentService {
 
     public void create(Payment payment) {
         payment.setId(UUID.randomUUID());
-        payment.setDate(LocalDate.now());
         payment.setInvoiced(false);
         this.hydrateEngagement(payment);
         payment.setUser(this.userFinder.readById(payment.getUser().getId()));

@@ -53,6 +53,22 @@ class PaymentServiceIT {
 
 
     @Test
+    void shouldCreatePaymentWithRequestDate() {
+        when(this.engagementGateway.read(this.engagementId)).thenReturn(this.payment.getEngagement());
+        when(this.userFinder.readById(this.userId)).thenReturn(this.payment.getUser());
+
+        this.paymentService.create(this.payment);
+
+        verify(this.paymentGateway).create(argThat(created ->
+                created.getId() != null
+                        && LocalDate.of(2026, 3, 20).equals(created.getDate())
+                        && Boolean.FALSE.equals(created.getInvoiced())
+        ));
+        verify(this.engagementGateway).read(this.engagementId);
+        verify(this.userFinder).readById(this.userId);
+    }
+
+    @Test
     void shouldReadPayment() {
         UUID id = UUID.randomUUID();
         this.payment.setId(id);

@@ -27,7 +27,7 @@ public class ExpenseService {
             expense.setEngagement(this.engagementGateway.read(expense.getEngagement().getId()));
         }
         String series = String.valueOf(LocalDate.now().getYear());
-        if (Objects.isNull(expense.getNumber())){
+        if (Objects.isNull(expense.getNumber())) {
             expense.setSeries(series);
             expense.setNumber(this.expenseGateway.findNextNumber(series, expense.getDepreciationRate()));
         }

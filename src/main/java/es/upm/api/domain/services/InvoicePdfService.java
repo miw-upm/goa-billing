@@ -1,7 +1,6 @@
 package es.upm.api.domain.services;
 
 import es.upm.api.domain.model.Invoice;
-import es.upm.api.domain.model.external.UserSnapshot;
 import es.upm.api.domain.ports.out.user.UserFinder;
 import es.upm.miw.pdf.PdfBuilder;
 import lombok.RequiredArgsConstructor;
@@ -28,7 +27,7 @@ public class InvoicePdfService {
 
     public byte[] generatePdf(Invoice invoice, boolean original) {
         String title = "FACTURA";
-        if (! invoice.isIssued() ) {
+        if (!invoice.isIssued()) {
             title = title + "  PROFORMA";
         }
         if (invoice.isRectification()) {
@@ -54,7 +53,7 @@ public class InvoicePdfService {
                     .paragraph("Serie: " + invoice.getOriginalInvoice().getSeries())
                     .paragraph("Numero: " + invoice.getOriginalInvoice().getNumber())
                     .paragraph("Fecha de emisión: " + invoice.getOriginalInvoice().getEmissionDate())
-                    .paragraph("Razón del cambio: "+invoice.getOriginalInvoice().getReason());
+                    .paragraph("Razón del cambio: " + invoice.getOriginalInvoice().getReason());
         }
 
         pdf.section("FACTURAR A, CON PARTICIPACIÓN DEL : " + invoice.getPercentage() + " %")
