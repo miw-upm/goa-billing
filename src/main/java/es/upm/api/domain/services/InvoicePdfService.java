@@ -4,6 +4,7 @@ import es.upm.api.domain.model.Invoice;
 import es.upm.api.domain.ports.out.user.UserFinder;
 import es.upm.miw.pdf.PdfBuilder;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -24,6 +25,9 @@ public class InvoicePdfService {
     private static final NumberFormat EUR = NumberFormat.getCurrencyInstance(Locale.forLanguageTag("es-ES"));
 
     private final UserFinder userFinder;
+
+    @Value("${app.iban}")
+    private String iban;
 
     public byte[] generatePdf(Invoice invoice, boolean original) {
         String title = "FACTURA";
@@ -106,7 +110,7 @@ public class InvoicePdfService {
         }
         if (debt.compareTo(MIN_VALUE_FOR_TRANSFER) > 0) {
             pdf.paragraphHighlight("PENDIENTE DE INGRESAR: " + EUR.format(debt));
-            pdf.paragraphHighlight("Ruego que ingrese en la cuenta bancaria: ES00 1111 2222 3333 4444 5555");
+            pdf.paragraphHighlight("Ruego que ingrese en la cuenta bancaria: " + this.iban);
         }
 
         pdf.signatureLine("Doña Nuria Ocaña Pérez");

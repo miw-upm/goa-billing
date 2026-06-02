@@ -9,19 +9,15 @@ spring:
           jwk-set-uri: ${BASE_URL}/api/goa-user/oauth2/jwks
 
 app:
+  hosting: AWS
   administration:
     name: Administración
     email: administracion@ocanabogados.es
-  hosting: AWS
+  iban: ${IBAN}
   oauth2:
     token-uri: ${BASE_URL}/api/goa-user/oauth2/token
     api-client-id: ${API_CLIENT_ID}
     api-client-secret: ${API_CLIENT_SECRET}
-  crypto:
-    salt: ${APP_CRYPTO_SALT}
-    password: ${APP_CRYPTO_PASSWORD}
-#    previous-salt: ${APP_CRYPTO_PREVIOUS_SALT}
-#    previous-password: ${APP_CRYPTO_PREVIOUS_PASSWORD}
 
 eureka:
   client:

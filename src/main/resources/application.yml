@@ -30,15 +30,11 @@ app:
   administration:
     name: Administración
     email: j.bernal@upm.es
+  iban: ${IBAN:ES00 1111 2222 3333 4444 5555}
   oauth2:
     token-uri: ${BASE_URL:http://localhost:8080}/api/goa-user/oauth2/token
     api-client-id: ${API_CLIENT_ID:api-client-id}
     api-client-secret: ${API_CLIENT_SECRET:api-client-secret}
-  crypto:
-    salt: ${APP_CRYPTO_SALT:0123456789abcdef0123456789abcde1}
-    password: ${APP_CRYPTO_PASSWORD:dev-crypto-password-please-change-in-production-v1}
-#    previous-salt: ${APP_CRYPTO_PREVIOUS_SALT:0123456789abcdef0123456789abcdef}
-#    previous-password: ${APP_CRYPTO_PREVIOUS_PASSWORD:dev-crypto-password-please-change-in-production}
 
 management:
   endpoints:
