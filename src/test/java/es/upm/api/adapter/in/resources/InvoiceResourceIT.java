@@ -65,7 +65,6 @@ class InvoiceResourceIT {
         assertEquals(userId, invoiceCaptor.getValue().getBillingInfo().getUserId());
         assertEquals("Servicios", invoiceCaptor.getValue().getConcept());
         assertEquals(new BigDecimal("100.00"), invoiceCaptor.getValue().getBaseAmount());
-        assertEquals(1, invoiceCaptor.getValue().getDiscounts().size());
     }
 
     @Test

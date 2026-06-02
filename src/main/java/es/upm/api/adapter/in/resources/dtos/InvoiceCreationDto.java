@@ -24,7 +24,6 @@ public class InvoiceCreationDto {
     @NotNull
     @Positive
     private BigDecimal baseAmount;
-    private List<BigDecimal> discounts;
     private BigDecimal baseExpense;
     private BigDecimal vatExpense;
 }
