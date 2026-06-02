@@ -24,6 +24,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Stream;
 
@@ -47,7 +48,6 @@ public class InvoiceService {
 
     public void create(Invoice invoice) {
         invoice.setId(UUID.randomUUID());
-        invoice.setPercentage(new BigDecimal("100"));
         invoice.setBillingInfo(new BillingInfo(this.userFinder.readById(invoice.getBillingInfo().getUserId())));
         invoice.applyVatRate(DEFAULT_VAT_RATE);
         this.invoiceGateway.create(invoice);
@@ -108,10 +108,17 @@ public class InvoiceService {
                                 .subtract(invoice.priorPaymentsBaseAmount())
                                 .multiply(invoice.percentageFactor());
                         invoice.applyBaseAmount(base);
+                        invoice.setBaseExpense(invoice.expensesBaseAmount().multiply(invoice.percentageFactor()));
+                        invoice.setVatExpense(invoice.expensesVatAmount().multiply(invoice.percentageFactor()));
                     } else {
                         BigDecimal total = invoice.paymentsAmount()
                                 .multiply(invoice.percentageFactor());
+                        if (total.compareTo(BigDecimal.ZERO) == 0) {
+                            throw new InvalidTransitionException("An invoice with a zero amount is not valid.");
+                        }
                         invoice.applyTotalAmount(total);
+                        invoice.setBaseExpense(BigDecimal.ZERO);
+                        invoice.setVatExpense(BigDecimal.ZERO);
                     }
                     invoice.setBillingInfo(new BillingInfo(this.userFinder.readById(userPercentage.getUserId())));
                     invoice.setPercentage(userPercentage.getPercentage());
@@ -172,14 +179,15 @@ public class InvoiceService {
                         .emissionDate(originalInvoice.getEmissionDate())
                         .reason(creation.getReason())
                         .build())
-                .concept(originalInvoice.getConcept())
+                .concept(originalInvoice.buildConceptString())
                 .billingInfo(originalInvoice.getBillingInfo())
                 .percentage(originalInvoice.getPercentage())
                 .operationDate(originalInvoice.getOperationDate())
                 .baseAmount(originalInvoice.getBaseAmount())
                 .vatAmount(originalInvoice.getVatAmount())
                 .vatRate(originalInvoice.getVatRate())
-                .expenses(originalInvoice.getExpenses())
+                .baseExpense(originalInvoice.getBaseExpense())
+                .vatExpense(originalInvoice.getVatExpense())
                 .build();
 
         return this.invoiceGateway.create(invoice);

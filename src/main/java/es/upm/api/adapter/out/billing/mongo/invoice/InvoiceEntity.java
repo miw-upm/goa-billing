@@ -42,6 +42,8 @@ public class InvoiceEntity {
     @Field(targetType = FieldType.DECIMAL128)
     private BigDecimal vatAmount;
     private BigDecimal vatRate;
+    private BigDecimal baseExpense;
+    private BigDecimal vatExpense;
     private String engagementId;
     private List<LegalProcedureEntity> legalProcedures;
     @DBRef

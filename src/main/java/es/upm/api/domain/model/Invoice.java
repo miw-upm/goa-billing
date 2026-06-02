@@ -11,8 +11,10 @@ import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.text.NumberFormat;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Function;
@@ -38,6 +40,8 @@ public class Invoice {
     private BigDecimal baseAmount;
     private BigDecimal vatAmount;
     private BigDecimal vatRate;
+    private BigDecimal baseExpense;
+    private BigDecimal vatExpense;
     private EngagementSnapshot engagement;
     private List<LegalProcedure> legalProcedures;
     private List<Payment> payments;
@@ -57,6 +61,12 @@ public class Invoice {
 
     public boolean isRectification() {
         return this.originalInvoice != null;
+    }
+
+    public void applyDefaults() {
+        this.percentage = HUNDRED;
+        this.baseExpense = BigDecimal.ZERO;
+        this.vatExpense = BigDecimal.ZERO;
     }
 
     // === Factores ===
@@ -162,7 +172,25 @@ public class Invoice {
         );
     }
 
-    public BigDecimal applyPercentage(BigDecimal value) {
-        return value.multiply(percentage).divide(HUNDRED, SCALE, RoundingMode.HALF_UP);
+    public String buildConceptString() {
+        StringBuilder sb = new StringBuilder();
+        if (Boolean.TRUE.equals(closed)) {
+            sb.append("Factura por cierre de Hoja de Encargos.\n");
+        } else if (Boolean.FALSE.equals(closed)) {
+            sb.append("Factura por ingreso de Provisión de Fondos.\n");
+        }
+        if (legalProcedures != null) {
+            legalProcedures.forEach(p -> {
+                sb.append(p.getTitle()).append("  -  ")
+                        .append(NumberFormat.getCurrencyInstance(Locale.forLanguageTag("es-ES")).format(p.getBudget()))
+                        .append("\n");
+                p.getLegalTasks().forEach(task -> sb.append("  • ").append(task).append("\n"));
+            });
+        }
+        if (concept != null) {
+            sb.append(concept).append("\n");
+        }
+        return sb.toString();
     }
+
 }

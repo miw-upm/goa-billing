@@ -82,9 +82,7 @@ public class InvoicePdfService {
 
         pdf.section("IMPORTE DE LA PRESENTE FACTURA");
         BigDecimal totalAmount = invoice.getBaseAmount().add(invoice.getVatAmount());
-        BigDecimal baseExpense = invoice.applyPercentage(invoice.expensesBaseAmount());
-        BigDecimal vatExpense = invoice.applyPercentage(invoice.expensesVatAmount());
-        BigDecimal totalExpense = baseExpense.add(vatExpense);
+        BigDecimal totalExpense = invoice.getBaseExpense().add(invoice.getVatExpense());
         pdf.table(
                 new String[]{"Concepto", "Base Imponible", "IVA", "Total"},
                 List.of(
@@ -92,14 +90,14 @@ public class InvoicePdfService {
                                 + "   (" + invoice.getVatRate().toPlainString() + "%)",
                                 EUR.format(totalAmount)
                         },
-                        new String[]{"Gastos", EUR.format(baseExpense),
-                                EUR.format(vatExpense),
+                        new String[]{"Gastos", EUR.format(invoice.getBaseExpense()),
+                                EUR.format(invoice.getVatExpense()),
                                 EUR.format(totalExpense)
                         }
                 ),
                 new String[]{"TOTAL",
-                        EUR.format(invoice.getBaseAmount().add(baseExpense)),
-                        EUR.format(invoice.getVatAmount().add(vatExpense)),
+                        EUR.format(invoice.getBaseAmount().add(invoice.getBaseExpense())),
+                        EUR.format(invoice.getVatAmount().add(invoice.getVatExpense())),
                         EUR.format(totalAmount.add(totalExpense))
                 }
         );
