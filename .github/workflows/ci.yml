@@ -27,6 +27,12 @@ jobs:
           java-version: 21
           cache: maven
 
+      - name: ⚙️ Configure Maven settings for GitHub Packages
+        uses: s4u/maven-settings-action@v3.0.0
+        with:
+          servers: |
+            [{"id": "github", "username": "${{ github.actor }}", "password": "${{ secrets.GITHUB_TOKEN }}"}]
+
       - name: 🛡️ Initialize CodeQL
         uses: github/codeql-action/init@v4
         with:
@@ -48,7 +54,7 @@ jobs:
       - name: 🔍 CodeQL Analysis
         uses: github/codeql-action/analyze@v4
 
-      # Organización de la cuenta de Sonar: miw-upm-github
+      # Organización!!!: miw-upm-github
       - name: 🏷️ Prepare container image metadata, Sonar Organization & artifact from pom
         run: |
           echo "ORGANIZATION=miw-upm-github" >> $GITHUB_ENV
@@ -61,4 +67,3 @@ jobs:
           -Dsonar.organization=${{ env.ORGANIZATION }}
           -Dsonar.host.url=https://sonarcloud.io 
           -Dsonar.token=${{ secrets.SONAR_TOKEN }}
-

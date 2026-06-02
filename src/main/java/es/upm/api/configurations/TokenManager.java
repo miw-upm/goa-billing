@@ -27,9 +27,9 @@ public class TokenManager {  //TODO utilizar el estandar y casi resuelve esta ge
     private String token;
     private Instant expiry;
 
-    public TokenManager(@Value("${spring.security.oauth2.api-client-id}") String apiClientId,
-                        @Value("${spring.security.oauth2.api-client-secret}") String apiClientSecret,
-                        @Value("${spring.security.oauth2.token-uri}") String tokenUri
+    public TokenManager(@Value("${app.oauth2.api-client-id}") String apiClientId,
+                        @Value("${app.oauth2.api-client-secret}") String apiClientSecret,
+                        @Value("${app.oauth2.token-uri}") String tokenUri
     ) {
         this.apiClientId = apiClientId;
         this.apiClientSecret = apiClientSecret;

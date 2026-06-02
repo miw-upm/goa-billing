@@ -1,9 +1,13 @@
 package es.upm.api.domain.model;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import jakarta.validation.constraints.NotBlank;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import es.upm.api.domain.model.external.EngagementSnapshot;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.PastOrPresent;
 import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.PositiveOrZero;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -11,6 +15,7 @@ import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Builder
@@ -18,19 +23,54 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Expense {
+    public static final int CURRENT = 100;
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private UUID id;
 
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    private LocalDateTime recordedAt;
+
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    private String series;
+
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    private Integer number;
+
+    private EngagementSnapshot engagement;
+
+    @JsonFormat(pattern = "yyyy-MM-dd")
     @NotNull
-    private UUID engagementId;
+    @PastOrPresent
+    private LocalDate issueDate;
 
     @NotNull
     @Positive
-    private BigDecimal amount;
+    private BigDecimal baseAmount;
 
     @NotNull
-    @JsonFormat(pattern = "yyyy-MM-dd")
-    private LocalDate date;
+    @Positive
+    private Integer vatRate;
 
-    @NotBlank
+    @Valid
+    @NotNull
+    private SupplierInfo supplier;
+
+    @NotNull
+    private TaxCategory taxCategory;
+
+    @NotNull
+    private Integer depreciationRate;
+
     private String description;
+
+    @PositiveOrZero
+    private BigDecimal withholdingTax = BigDecimal.ZERO;
+
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    private String documentPath;
+
+    public boolean isCapital() {
+        return depreciationRate != CURRENT;
+    }
+
 }

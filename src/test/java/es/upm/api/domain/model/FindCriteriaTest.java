@@ -1,9 +1,11 @@
 package es.upm.api.domain.model;
 
+import es.upm.api.domain.model.criteria.ExpenseFindCriteria;
+import es.upm.api.domain.model.criteria.InvoiceFindCriteria;
+import es.upm.api.domain.model.criteria.PaymentFindCriteria;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
-import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -16,18 +18,34 @@ class FindCriteriaTest {
 
         assertTrue(criteria.isEmpty());
 
-        criteria.setDate(LocalDate.now());
+        criteria.setFromDate(LocalDate.now());
+        assertFalse(criteria.isEmpty());
+
+        criteria = new ExpenseFindCriteria();
+        criteria.setCategory("OTROS");
+        assertFalse(criteria.isEmpty());
+
+        criteria = new ExpenseFindCriteria();
+        criteria.setSupplier("Taxi");
+        assertFalse(criteria.isEmpty());
+
+        criteria = new ExpenseFindCriteria();
+        criteria.setEngagementId("2H60");
         assertFalse(criteria.isEmpty());
     }
 
     @Test
-    void shouldDetectEmptyIncomeFindCriteria() {
-        IncomeFindCriteria criteria = new IncomeFindCriteria();
+    void shouldDetectEmptyPaymentFindCriteria() {
+        PaymentFindCriteria criteria = new PaymentFindCriteria();
 
-        assertTrue(criteria.isEmpty());
+        assertTrue(criteria.all());
 
-        criteria.setEngagementId(UUID.randomUUID());
-        assertFalse(criteria.isEmpty());
+        criteria.setClient("client");
+        assertFalse(criteria.all());
+
+        criteria = new PaymentFindCriteria();
+        criteria.setEngagementId("2H60");
+        assertFalse(criteria.all());
     }
 
     @Test
@@ -36,8 +54,15 @@ class FindCriteriaTest {
 
         assertTrue(criteria.isEmpty());
 
-        criteria.setEngagementId(UUID.randomUUID());
-        criteria.setDate(LocalDate.now());
+        criteria.setClient("john");
+        assertFalse(criteria.isEmpty());
+
+        criteria = new InvoiceFindCriteria();
+        criteria.setFromDate(LocalDate.now());
+        assertFalse(criteria.isEmpty());
+
+        criteria = new InvoiceFindCriteria();
+        criteria.setEngagementId("2H60");
         assertFalse(criteria.isEmpty());
     }
 }

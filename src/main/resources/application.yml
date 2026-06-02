@@ -1,10 +1,17 @@
+server:
+  port: 8083
+
+info:
+  app:
+    artifact: "@project.artifactId@"
+    version: "@project.version@"
+    build: "@maven.build.timestamp@"
+
 spring:
   application:
     name: goa-billing
   profiles:
-    # Profile ----------------------------------------
-    active: dev
-  # ------------------------------------------------
+    default: dev
   output:
     ansi:
       enabled: ALWAYS
@@ -14,19 +21,21 @@ spring:
     default-property-inclusion: NON_NULL
   security:
     oauth2:
-      jwk-uri: http://localhost:8080/api/goa-user/oauth2/jwks
-      token-uri: http://localhost:8080/api/goa-user/oauth2/token
-      api-client-id: api-client-id
-      api-client-secret: api-client-secret
+      resourceserver:
+        jwt:
+          jwk-set-uri: ${BASE_URL:http://localhost:8080}/api/goa-user/oauth2/jwks
 
-server:
-  port: 8083
+app:
+  hosting: localhost
+  administration:
+    name: Administración
+    email: j.bernal@upm.es
+  iban: ${IBAN:ES00 1111 2222 3333 4444 5555}
+  oauth2:
+    token-uri: ${BASE_URL:http://localhost:8080}/api/goa-user/oauth2/token
+    api-client-id: ${API_CLIENT_ID:api-client-id}
+    api-client-secret: ${API_CLIENT_SECRET:api-client-secret}
 
-info:
-  app:
-    artifact: "@project.artifactId@"
-    version: "@project.version@"
-    build: "@maven.build.timestamp@"
 management:
   endpoints:
     web:

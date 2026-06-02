@@ -1,29 +1,36 @@
 services:
   goa-billing:
-    build: .
-    image: goa-billing:latest
-    restart: always
-#    ports: ["0:8083"] # Expose the container port on a random host port
-#    ports: ["8083"] # Don't expose the container port
-    ports:
-      - "8083:8083"
+    build:
+      context: .
+      secrets: [ github_token ]
+    ports: ["8083:8083"]
     environment:
+      JAVA_OPTS: "-Xms64m -Xmx384m"
       SPRING_DATA_MONGODB_URI: mongodb://mongo:mongo@mongo:27017/goabillingdb?authSource=admin
       EUREKA_CLIENT_SERVICE-URL_DEFAULTZONE: http://host.docker.internal:8761/eureka/
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://host.docker.internal:8080/api/goa-user/oauth2/jwks
+      APP_OAUTH2_TOKEN_URI: http://host.docker.internal:8080/api/goa-user/oauth2/token
+# A ELIMINAR ANTIGUAS
       SPRING_SECURITY_OAUTH2_JWK-URI: http://host.docker.internal:8080/api/goa-user/oauth2/jwks
       SPRING_SECURITY_OAUTH2_TOKEN-URI: http://host.docker.internal:8080/api/goa-user/oauth2/token
-    networks:
-      - goa
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
+    networks: [ goa ]
+    extra_hosts: [ "host.docker.internal:host-gateway" ]
 
 
 networks:
   goa:
     external: true
 
+secrets:
+  github_token:
+    environment: GITHUB_TOKEN
+
+# Windows PowerShell
+#> $env:GITHUB_TOKEN="xxxx"   echo $env:GITHUB_TOKEN
+# Para saber si el token esta habilitado
+#> curl.exe -H "Authorization: Bearer $env:GITHUB_TOKEN" https://api.github.com/user
+
 #> docker compose up --build -d
 #> docker compose up --build -d --scale goa-billing=2
 
-# Para ver los logs de arranque
-#> docker logs -f goa-user
+#> docker logs -f goa-billing

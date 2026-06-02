@@ -4,11 +4,20 @@ spring:
       uri: ${MONGODB_URI}
   security:
     oauth2:
-      jwk-uri: https://gestion.ocanabogados.es/api/goa-user/oauth2/jwks
-      token-uri: https://gestion.ocanabogados.es/api/goa-user/oauth2/token
-      api-client-id: ${API_CLIENT_ID}
-      api-client-secret: ${API_CLIENT_SECRET}
+      resourceserver:
+        jwt:
+          jwk-set-uri: ${BASE_URL}/api/goa-user/oauth2/jwks
 
+app:
+  hosting: AWS
+  administration:
+    name: Administración
+    email: administracion@ocanabogados.es
+  iban: ${IBAN}
+  oauth2:
+    token-uri: ${BASE_URL}/api/goa-user/oauth2/token
+    api-client-id: ${API_CLIENT_ID}
+    api-client-secret: ${API_CLIENT_SECRET}
 
 eureka:
   client:

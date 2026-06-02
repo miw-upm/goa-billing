@@ -1,5 +1,8 @@
 package es.upm.api.domain.exceptions;
 
+import es.upm.miw.exception.BadGatewayException;
+import es.upm.miw.exception.ConflictException;
+import es.upm.miw.exception.ForbiddenException;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
