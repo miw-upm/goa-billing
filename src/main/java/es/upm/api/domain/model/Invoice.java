@@ -13,10 +13,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.text.NumberFormat;
 import java.time.LocalDate;
-import java.util.List;
-import java.util.Locale;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.function.Function;
 
 @Builder
@@ -64,9 +61,15 @@ public class Invoice {
     }
 
     public void applyDefaults() {
-        this.percentage = HUNDRED;
-        this.baseExpense = BigDecimal.ZERO;
-        this.vatExpense = BigDecimal.ZERO;
+        if (Objects.isNull(this.percentage)) {
+            this.percentage = HUNDRED;
+        }
+        if (Objects.isNull(this.baseExpense)) {
+            this.baseExpense = BigDecimal.ZERO;
+        }
+        if (Objects.isNull(this.vatExpense)) {
+            this.vatExpense = BigDecimal.ZERO;
+        }
     }
 
     // === Factores ===

@@ -63,7 +63,6 @@ public class InvoiceResource {
         return this.invoiceService.update(id, request);
     }
 
-    @PreAuthorize(Security.ADMIN)
     @DeleteMapping("/{id}")
     public void delete(@PathVariable UUID id) {
         this.invoiceService.delete(id);
