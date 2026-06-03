@@ -189,7 +189,7 @@ public class DatabaseSeederDev {
                         ))
                         .emissionDate(LocalDate.of(2026, 3, 20))
                         .operationDate(LocalDate.of(2026, 3, 20))
-                        .series("2026")
+                        .series("2025")
                         .number(30)
                         .baseAmount(new BigDecimal("450.00"))
                         .vatRate(new BigDecimal("21"))
