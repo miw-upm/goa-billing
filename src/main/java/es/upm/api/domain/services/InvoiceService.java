@@ -32,8 +32,9 @@ import java.util.stream.Stream;
 @Service
 @RequiredArgsConstructor
 public class InvoiceService {
-    private static final int SCALE = 6;
+    private static final int FIRST_SERIES_NUMBER = 60;
     private static final BigDecimal DEFAULT_VAT_RATE = new BigDecimal("21");
+    private static final int SCALE = 6;
     private final InvoiceGateway invoiceGateway;
     private final PaymentGateway paymentGateway;
     private final ExpenseGateway expenseGateway;
@@ -137,7 +138,10 @@ public class InvoiceService {
             series = series + "-R";
         }
         invoice.setSeries(series);
-        invoice.setNumber(invoiceGateway.findNextNumber(series));
+        int nextNumber = invoiceGateway.findLastNumber(series)
+                .map(n -> n + 1)
+                .orElse(FIRST_SERIES_NUMBER);
+        invoice.setNumber(nextNumber);
         invoice.setEmissionDate(LocalDate.now());
         if (Objects.isNull(invoice.getOperationDate())) {
             invoice.setOperationDate(
