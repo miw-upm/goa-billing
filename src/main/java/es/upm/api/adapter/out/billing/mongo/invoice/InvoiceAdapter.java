@@ -16,7 +16,6 @@ import java.util.stream.Stream;
 
 @Repository
 public class InvoiceAdapter implements InvoiceGateway {
-    public static final int FIRST_SERIES_NUMBER = 46;
     private final InvoiceRepository invoiceRepository;
 
     public InvoiceAdapter(InvoiceRepository invoiceRepository) {
@@ -117,10 +116,8 @@ public class InvoiceAdapter implements InvoiceGateway {
     }
 
     @Override
-    public Integer findNextNumber(String series) {
+    public Optional<Integer> findLastNumber(String series) {
         return invoiceRepository.findFirstBySeriesOrderByNumberDesc(series)
-                .map(InvoiceEntity::getNumber)
-                .map(n -> n + 1)
-                .orElse(FIRST_SERIES_NUMBER);
+                .map(InvoiceEntity::getNumber);
     }
 }
