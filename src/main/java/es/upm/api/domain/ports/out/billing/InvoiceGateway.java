@@ -24,5 +24,5 @@ public interface InvoiceGateway {
 
     Optional<Invoice> findById(UUID id);
 
-    Integer findNextNumber(String series);
+    Optional<Integer> findLastNumber(String series);
 }
