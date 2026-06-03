@@ -41,6 +41,6 @@ public class Payment {
     @NotNull
     private PaymentMethod method;
 
-    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    // @JsonProperty(access = JsonProperty.Access.READ_ONLY) para compatibilidad con casos antiguos
     private Boolean invoiced;
 }
