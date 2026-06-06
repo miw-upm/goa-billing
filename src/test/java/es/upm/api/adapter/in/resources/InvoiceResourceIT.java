@@ -305,6 +305,52 @@ class InvoiceResourceIT {
 
     @Test
     @WithMockUser(roles = "admin")
+    void shouldCreateManualRectificationInvoice() throws Exception {
+        UUID userId = UUID.randomUUID();
+        String requestBody = """
+                {
+                  "originalInvoice": {
+                    "series": "2026",
+                    "number": 30,
+                    "emissionDate": "2026-03-20",
+                    "reason": "Error en importes"
+                  },
+                  "concept": "Rectificacion manual",
+                  "userId": "%s",
+                  "operationDate": "2026-03-21",
+                  "baseAmount": 100.00,
+                  "vatAmount": 21.00,
+                  "vatRate": 21.00,
+                  "baseExpense": 0.00,
+                  "vatExpense": 0.00
+                }
+                """.formatted(userId);
+        Invoice response = this.buildInvoice(UUID.randomUUID(), userId, "100.00");
+        response.setOriginalInvoice(OriginalInvoice.builder()
+                .series("2026")
+                .number(30)
+                .emissionDate(LocalDate.of(2026, 3, 20))
+                .reason("Error en importes")
+                .build());
+        when(this.invoiceService.createManualRectification(any())).thenReturn(response);
+
+        this.mockMvc.perform(post("/invoices/rectification/manual")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestBody))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.originalInvoice.series").value("2026"))
+                .andExpect(jsonPath("$.originalInvoice.number").value(30));
+
+        ArgumentCaptor<Invoice> invoiceCaptor = ArgumentCaptor.forClass(Invoice.class);
+        verify(this.invoiceService).createManualRectification(invoiceCaptor.capture());
+        assertEquals("Rectificacion manual", invoiceCaptor.getValue().getConcept());
+        assertEquals("2026", invoiceCaptor.getValue().getOriginalInvoice().getSeries());
+        assertEquals(userId, invoiceCaptor.getValue().getBillingInfo().getUserId());
+        assertEquals(new BigDecimal("100.00"), invoiceCaptor.getValue().getBaseAmount());
+    }
+
+    @Test
+    @WithMockUser(roles = "admin")
     void shouldViewInvoicePdf() throws Exception {
         UUID invoiceId = UUID.randomUUID();
         byte[] pdf = "%PDF-1.4".getBytes(StandardCharsets.UTF_8);

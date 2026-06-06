@@ -208,6 +208,13 @@ public class InvoiceService {
         return this.invoiceGateway.create(invoice);
     }
 
+    public Invoice createManualRectification(@Valid Invoice invoice) {
+        invoice.setId(UUID.randomUUID());
+        invoice.setBillingInfo(new BillingInfo(this.userFinder.readById(invoice.getBillingInfo().getUserId())));
+        invoice.applyDefaults();
+        return this.invoiceGateway.create(invoice);
+    }
+
     public Invoice read(UUID id) {
         Invoice invoice = this.invoiceGateway.read(id);
         if (invoice.getEngagement() != null) {

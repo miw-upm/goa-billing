@@ -4,6 +4,7 @@ import es.upm.api.adapter.in.resources.dtos.InvoiceCreationDto;
 import es.upm.api.domain.model.BillingInfo;
 import es.upm.api.domain.model.Invoice;
 import es.upm.api.domain.model.creation.InvoiceCreationFromEngagement;
+import es.upm.api.adapter.in.resources.dtos.InvoiceCreationManualRectificationDto;
 import es.upm.api.domain.model.creation.InvoiceCreationRectification;
 import es.upm.api.domain.model.criteria.InvoiceFindCriteria;
 import es.upm.api.domain.services.InvoiceService;
@@ -23,6 +24,7 @@ import java.util.stream.Stream;
 public class InvoiceResource {
     public static final String INVOICES = "/invoices";
     public static final String RECTIFICATION = "/rectification";
+    public static final String MANUAL = "/manual";
     public static final String FROM_ENGAGEMENT = "/from-engagement";
 
 
@@ -52,6 +54,25 @@ public class InvoiceResource {
     @PostMapping(RECTIFICATION)
     public Invoice createRectification(@RequestBody @Valid InvoiceCreationRectification creation) {
         return this.invoiceService.createRectification(creation);
+    }
+
+    @PostMapping(RECTIFICATION + MANUAL)
+    public Invoice createManualRectification(@RequestBody @Valid InvoiceCreationManualRectificationDto creation) {
+        Invoice invoice = Invoice.builder()
+                .originalInvoice(creation.getOriginalInvoice())
+                .concept(creation.getConcept())
+                .billingInfo(BillingInfo.builder()
+                        .userId(creation.getUserId())
+                        .build())
+                .percentage(creation.getPercentage())
+                .operationDate(creation.getOperationDate())
+                .baseAmount(creation.getBaseAmount())
+                .vatAmount(creation.getVatAmount())
+                .vatRate(creation.getVatRate())
+                .baseExpense(creation.getBaseExpense())
+                .vatExpense(creation.getVatExpense())
+                .build();
+        return this.invoiceService.createManualRectification(invoice);
     }
 
     @GetMapping("/{id}")
