@@ -229,6 +229,10 @@ public class InvoiceService {
     }
 
     public void delete(UUID id) {
+        Invoice currentInvoice = this.invoiceGateway.read(id);
+        if (currentInvoice.getEmissionDate() != null) {
+            throw new InvalidTransitionException("Issued invoices cannot be deleted, id: " + id);
+        }
         this.invoiceGateway.delete(id);
     }
 
