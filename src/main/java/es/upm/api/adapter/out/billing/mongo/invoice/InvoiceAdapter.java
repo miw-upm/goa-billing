@@ -6,6 +6,7 @@ import es.upm.api.domain.model.Invoice;
 import es.upm.api.domain.model.criteria.InvoiceFindCriteria;
 import es.upm.api.domain.ports.out.billing.InvoiceGateway;
 import es.upm.miw.exception.NotFoundException;
+import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.StringUtils;
 
@@ -32,17 +33,9 @@ public class InvoiceAdapter implements InvoiceGateway {
         InvoiceEntity invoiceEntity = this.invoiceRepository.findById(id.toString())
                 .orElseThrow(() -> new NotFoundException("Invoice id: " + id));
 
-        invoiceEntity.setConcept(invoice.getConcept());
-        invoiceEntity.setClosed(invoice.getClosed());
+        BeanUtils.copyProperties(invoice, invoiceEntity,
+                "id", "billingInfo", "legalProcedures", "payments", "priorPayments", "expenses", "originalInvoice");
         invoiceEntity.setBillingInfo(invoice.getBillingInfo() == null ? null : new BillingInfoEntity(invoice.getBillingInfo()));
-        invoiceEntity.setPercentage(invoice.getPercentage());
-        invoiceEntity.setEmissionDate(invoice.getEmissionDate());
-        invoiceEntity.setOperationDate(invoice.getOperationDate());
-        invoiceEntity.setSeries(invoice.getSeries());
-        invoiceEntity.setNumber(invoice.getNumber());
-        invoiceEntity.setBaseAmount(invoice.getBaseAmount());
-        invoiceEntity.setVatAmount(invoice.getVatAmount());
-        invoiceEntity.setVatRate(invoice.getVatRate());
         invoiceEntity.setEngagementId(invoice.getEngagement() == null || invoice.getEngagement().getId() == null
                 ? null : invoice.getEngagement().getId().toString());
         invoiceEntity.setLegalProcedures(invoice.getLegalProcedures() == null ? null
@@ -53,8 +46,6 @@ public class InvoiceAdapter implements InvoiceGateway {
                 : invoice.getPriorPayments().stream().map(PaymentEntity::new).toList());
         invoiceEntity.setExpenses(invoice.getExpenses() == null ? null
                 : invoice.getExpenses().stream().map(ExpenseEntity::new).toList());
-        invoiceEntity.setDiscounts(invoice.getDiscounts());
-        invoiceEntity.setPdfPath(invoice.getPdfPath());
         invoiceEntity.setOriginalInvoice(invoice.getOriginalInvoice() == null ? null
                 : new OriginalInvoiceEntity(invoice.getOriginalInvoice()));
 

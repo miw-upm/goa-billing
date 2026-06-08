@@ -208,6 +208,13 @@ public class InvoiceService {
         return this.invoiceGateway.create(invoice);
     }
 
+    public Invoice createManualRectification(@Valid Invoice invoice) {
+        invoice.setId(UUID.randomUUID());
+        invoice.setBillingInfo(new BillingInfo(this.userFinder.readById(invoice.getBillingInfo().getUserId())));
+        invoice.applyDefaults();
+        return this.invoiceGateway.create(invoice);
+    }
+
     public Invoice read(UUID id) {
         Invoice invoice = this.invoiceGateway.read(id);
         if (invoice.getEngagement() != null) {
@@ -229,6 +236,10 @@ public class InvoiceService {
     }
 
     public void delete(UUID id) {
+        Invoice currentInvoice = this.invoiceGateway.read(id);
+        if (currentInvoice.getEmissionDate() != null) {
+            throw new InvalidTransitionException("Issued invoices cannot be deleted, id: " + id);
+        }
         this.invoiceGateway.delete(id);
     }
 

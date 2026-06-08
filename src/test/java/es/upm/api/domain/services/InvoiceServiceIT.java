@@ -2,6 +2,7 @@ package es.upm.api.domain.services;
 
 import es.upm.api.domain.model.BillingInfo;
 import es.upm.api.domain.model.Invoice;
+import es.upm.api.domain.model.OriginalInvoice;
 import es.upm.api.domain.model.criteria.InvoiceFindCriteria;
 import es.upm.api.domain.model.external.EngagementSnapshot;
 import es.upm.api.domain.model.external.UserSnapshot;
@@ -25,6 +26,7 @@ import java.util.UUID;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
@@ -125,6 +127,10 @@ class InvoiceServiceIT {
     @Test
     void shouldDeleteInvoiceOnlyWhenDraft() {
         UUID invoiceId = UUID.randomUUID();
+        when(this.invoiceGateway.read(invoiceId)).thenReturn(Invoice.builder()
+                .id(invoiceId)
+                .emissionDate(null)
+                .build());
 
         this.invoiceService.delete(invoiceId);
 
@@ -187,5 +193,43 @@ class InvoiceServiceIT {
         verify(this.invoiceGateway).find(criteria);
     }
 
+    @Test
+    void shouldCreateManualRectification() {
+        Invoice invoice = Invoice.builder()
+                .originalInvoice(OriginalInvoice.builder()
+                        .series("2026")
+                        .number(30)
+                        .emissionDate(LocalDate.of(2026, 3, 20))
+                        .reason("Error en importes")
+                .build())
+                .concept("Rectificacion manual")
+                .billingInfo(BillingInfo.builder()
+                        .userId(this.userId)
+                        .build())
+                .operationDate(LocalDate.of(2026, 3, 21))
+                .baseAmount(new BigDecimal("100.00"))
+                .vatAmount(new BigDecimal("21.00"))
+                .vatRate(new BigDecimal("21.00"))
+                .build();
+        when(this.userFinder.readById(this.userId)).thenReturn(this.userSnapshot);
+        when(this.invoiceGateway.create(any(Invoice.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        Invoice created = this.invoiceService.createManualRectification(invoice);
+
+        assertNotNull(created.getId());
+        assertEquals("Rectificacion manual", created.getConcept());
+        assertEquals("2026", created.getOriginalInvoice().getSeries());
+        assertEquals(30, created.getOriginalInvoice().getNumber());
+        assertEquals(this.userId, created.getBillingInfo().getUserId());
+        assertEquals("John Doe", created.getBillingInfo().getFullName());
+        assertEquals("12345678A", created.getBillingInfo().getIdentity());
+        assertEquals(new BigDecimal("100"), created.getPercentage());
+        assertEquals(BigDecimal.ZERO, created.getBaseExpense());
+        assertEquals(BigDecimal.ZERO, created.getVatExpense());
+        verify(this.userFinder).readById(this.userId);
+        verify(this.invoiceGateway).create(any(Invoice.class));
+        verify(this.invoiceGateway, never()).read(anyString(), anyInt());
+    }
 
 }
