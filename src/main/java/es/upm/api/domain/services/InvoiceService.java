@@ -32,7 +32,7 @@ import java.util.stream.Stream;
 @Service
 @RequiredArgsConstructor
 public class InvoiceService {
-    private static final int FIRST_SERIES_NUMBER = 60;
+    private static final int FIRST_SERIES_NUMBER = 30;
     private static final BigDecimal DEFAULT_VAT_RATE = new BigDecimal("21");
     private static final int SCALE = 6;
     private final InvoiceGateway invoiceGateway;
