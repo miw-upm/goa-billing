@@ -76,7 +76,7 @@ public class InvoicePdfService {
         if (Objects.nonNull(invoice.getLegalProcedures())) {
             invoice.getLegalProcedures()
                     .forEach(procedure -> pdf.paragraph(procedure.getTitle() + "  -  " +
-                                    EUR.format(procedure.getBudget()))
+                                    procedure.buildFormatBudget())
                             .list(procedure.getLegalTasks()));
         }
         if (Objects.nonNull(invoice.getConcept())) {
