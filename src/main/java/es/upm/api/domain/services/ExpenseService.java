@@ -5,6 +5,7 @@ import es.upm.api.domain.model.SupplierInfo;
 import es.upm.api.domain.model.criteria.ExpenseFindCriteria;
 import es.upm.api.domain.ports.out.billing.ExpenseGateway;
 import es.upm.api.domain.ports.out.engagement.EngagementGateway;
+import es.upm.miw.exception.InvalidTransitionException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -45,6 +46,7 @@ public class ExpenseService {
 
     public void update(UUID id, Expense expense) {
         Expense currentExpense = this.expenseGateway.read(id);
+        this.assertQuarterOpen(currentExpense);
         expense.setId(id);
         expense.setRecordedAt(LocalDateTime.now());
         expense.setSeries(currentExpense.getSeries());
@@ -54,6 +56,18 @@ public class ExpenseService {
             expense.setEngagement(this.engagementGateway.read(expense.getEngagement().getId()));
         }
         this.expenseGateway.update(id, expense);
+    }
+
+    private void assertQuarterOpen(Expense expense) {
+        LocalDate expenseDate = expense.getIssueDate();
+        LocalDate endOfQuarter = expenseDate
+                .with(expenseDate.getMonth().firstMonthOfQuarter())
+                .plusMonths(3)
+                .minusDays(1);
+        if (LocalDate.now().isAfter(endOfQuarter)) {
+            throw new InvalidTransitionException(
+                    "No se puede modificar un gasto de un trimestre ya cerrado: " + expense.getId());
+        }
     }
 
     public Stream<Expense> find(ExpenseFindCriteria criteria) {

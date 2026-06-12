@@ -2,7 +2,6 @@ package es.upm.api.adapter.out.billing.mongo.expense;
 
 import org.springframework.data.mongodb.repository.MongoRepository;
 
-import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
