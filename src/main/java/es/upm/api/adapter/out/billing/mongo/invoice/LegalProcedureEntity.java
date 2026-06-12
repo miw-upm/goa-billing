@@ -15,6 +15,7 @@ import java.util.List;
 public class LegalProcedureEntity {
     private String title;
     private BigDecimal budget;
+    private String budgetProposal;
     private List<String> legalTasks;
 
     public LegalProcedureEntity(LegalProcedure legalProcedure) {

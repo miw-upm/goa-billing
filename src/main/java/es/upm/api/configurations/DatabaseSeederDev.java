@@ -184,6 +184,7 @@ public class DatabaseSeederDev {
                                 new LegalProcedureEntity(
                                         "Procedimiento penal",
                                         new BigDecimal("450.00"),
+                                        null,
                                         List.of("Revision", "Escrito")
                                 )
                         ))
@@ -217,6 +218,7 @@ public class DatabaseSeederDev {
                                 new LegalProcedureEntity(
                                         "Procedimiento civil",
                                         new BigDecimal("1200.00"),
+                                        null,
                                         List.of("Demanda")
                                 )
                         ))

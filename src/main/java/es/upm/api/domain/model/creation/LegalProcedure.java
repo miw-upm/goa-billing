@@ -14,6 +14,7 @@ import java.text.DecimalFormatSymbols;
 import java.text.NumberFormat;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 
 @Builder
 @Data
@@ -30,10 +31,11 @@ public class LegalProcedure {
     private List<String> legalTasks;
 
     public String buildFormatBudget() {
-        if (budget == null) {
+        if (budget == null){
             return budgetProposal + " (+ IVA)";
         } else {
-            return NumberFormat.getCurrencyInstance(Locale.forLanguageTag("es-ES")).format(budget) + " (+ IVA)";
+            return NumberFormat.getCurrencyInstance(Locale.forLanguageTag("es-ES")).format(budget) + " (+ IVA) - "
+                    + Objects.toString(budgetProposal, "");
         }
     }
 }
