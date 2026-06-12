@@ -3,6 +3,7 @@ package es.upm.api.domain.model;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import es.upm.api.domain.model.creation.LegalProcedure;
 import es.upm.api.domain.model.external.EngagementSnapshot;
+import es.upm.miw.exception.InvalidTransitionException;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -147,6 +148,10 @@ public class Invoice {
 
     public BigDecimal totalBudget() {
         if (legalProcedures != null) {
+            if (legalProcedures.stream().anyMatch(p -> p.getBudget() == null)) {
+                throw new InvalidTransitionException(
+                        "Cannot close the engagement letter: some procedures have no finalized budget");
+            }
             return sum(legalProcedures, LegalProcedure::getBudget);
         }
         return baseAmount;

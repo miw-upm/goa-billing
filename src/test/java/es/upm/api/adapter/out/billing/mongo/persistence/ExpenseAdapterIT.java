@@ -131,12 +131,12 @@ class ExpenseAdapterIT {
                 .withholdingTax(BigDecimal.ZERO)
                 .documentPath("doc/path")
                 .build();
-        when(this.expenseRepository.findAllByOrderByIssueDateDesc())
+        when(this.expenseRepository.findAllByOrderBySeriesDescNumberDesc())
                 .thenReturn(List.of(new ExpenseEntity(this.expense), new ExpenseEntity(oldExpense)));
 
         Stream<Expense> expenseStream = this.expensePersistenceMongodb.find(this.criteria);
 
-        verify(this.expenseRepository).findAllByOrderByIssueDateDesc();
+        verify(this.expenseRepository).findAllByOrderBySeriesDescNumberDesc();
 
         assertEquals(1, expenseStream.toList().size());
     }
@@ -156,12 +156,12 @@ class ExpenseAdapterIT {
                 .withholdingTax(BigDecimal.ZERO)
                 .documentPath("doc/path")
                 .build();
-        when(this.expenseRepository.findAllByOrderByIssueDateDesc())
+        when(this.expenseRepository.findAllByOrderBySeriesDescNumberDesc())
                 .thenReturn(List.of(new ExpenseEntity(this.expense), new ExpenseEntity(differentCategoryExpense)));
 
         Stream<Expense> expenseStream = this.expensePersistenceMongodb.find(this.criteria);
 
-        verify(this.expenseRepository).findAllByOrderByIssueDateDesc();
+        verify(this.expenseRepository).findAllByOrderBySeriesDescNumberDesc();
 
         List<Expense> filtered = expenseStream.toList();
         assertEquals(2, filtered.size());
@@ -170,14 +170,14 @@ class ExpenseAdapterIT {
     @Test
     void shouldFindWithSupplier() {
         this.criteria.setSupplier("100");
-        when(this.expenseRepository.findBySupplierNameContainingIgnoreCaseOrSupplierIdentityContainingIgnoreCaseOrderByIssueDateDesc(
+        when(this.expenseRepository.findBySupplierNameContainingIgnoreCaseOrSupplierIdentityContainingIgnoreCaseOrderBySeriesDescNumberDesc(
                 "100", "100"
         ))
                 .thenReturn(List.of(new ExpenseEntity(this.expense)));
 
         Stream<Expense> expenseStream = this.expensePersistenceMongodb.find(this.criteria);
 
-        verify(this.expenseRepository).findBySupplierNameContainingIgnoreCaseOrSupplierIdentityContainingIgnoreCaseOrderByIssueDateDesc(
+        verify(this.expenseRepository).findBySupplierNameContainingIgnoreCaseOrSupplierIdentityContainingIgnoreCaseOrderBySeriesDescNumberDesc(
                 "100", "100"
         );
 
@@ -187,7 +187,7 @@ class ExpenseAdapterIT {
     @Test
     void shouldReturnEmptyWhenCategoryDoesNotMatch() {
         this.criteria.setCategory("DOES_NOT_EXIST");
-        when(this.expenseRepository.findAllByOrderByIssueDateDesc())
+        when(this.expenseRepository.findAllByOrderBySeriesDescNumberDesc())
                 .thenReturn(List.of(new ExpenseEntity(this.expense)));
 
         assertEquals(0, this.expensePersistenceMongodb.find(this.criteria).toList().size());
@@ -251,14 +251,14 @@ class ExpenseAdapterIT {
     void shouldFindByEngagementIdPrefix() {
         String engagementIdPrefix = this.engagementUuid.toString().substring(0, 4);
         this.criteria.setEngagementId(engagementIdPrefix);
-        when(this.expenseRepository.findByEngagementIdStartingWithOrderByIssueDateDesc(engagementIdPrefix))
+        when(this.expenseRepository.findByEngagementIdStartingWithOrderBySeriesDescNumberDesc(engagementIdPrefix))
                 .thenReturn(List.of(new ExpenseEntity(this.expense)));
 
         List<Expense> expenses = this.expensePersistenceMongodb.find(this.criteria).toList();
 
         assertEquals(1, expenses.size());
         assertEquals(this.expense.getId(), expenses.getFirst().getId());
-        verify(this.expenseRepository).findByEngagementIdStartingWithOrderByIssueDateDesc(engagementIdPrefix);
+        verify(this.expenseRepository).findByEngagementIdStartingWithOrderBySeriesDescNumberDesc(engagementIdPrefix);
     }
 
     @Test

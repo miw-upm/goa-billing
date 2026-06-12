@@ -2,14 +2,16 @@ package es.upm.api.domain.model.creation;
 
 import es.upm.miw.validations.ListNotEmpty;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.PositiveOrZero;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
+import java.text.NumberFormat;
 import java.util.List;
+import java.util.Locale;
+import java.util.Objects;
 
 @Builder
 @Data
@@ -19,9 +21,18 @@ public class LegalProcedure {
     @NotBlank
     private String title;
 
-    @PositiveOrZero
     private BigDecimal budget;
+    private String budgetProposal;
 
     @ListNotEmpty
     private List<String> legalTasks;
+
+    public String buildFormatBudget() {
+        if (budget == null) {
+            return budgetProposal + " (+ IVA)";
+        } else {
+            return NumberFormat.getCurrencyInstance(Locale.forLanguageTag("es-ES")).format(budget) + " (+ IVA) - "
+                    + Objects.toString(budgetProposal, "");
+        }
+    }
 }

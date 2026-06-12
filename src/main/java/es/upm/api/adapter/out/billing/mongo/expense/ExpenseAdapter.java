@@ -53,13 +53,13 @@ public class ExpenseAdapter implements ExpenseGateway {
     public Stream<Expense> find(ExpenseFindCriteria criteria) {
         List<ExpenseEntity> result;
         if (StringUtils.hasText(criteria.getEngagementId())) {
-            result = this.expenseRepository.findByEngagementIdStartingWithOrderByIssueDateDesc(
+            result = this.expenseRepository.findByEngagementIdStartingWithOrderBySeriesDescNumberDesc(
                     this.normalizeEngagementIdPrefix(criteria.getEngagementId())
             );
         } else if (criteria.getSupplier() == null) {
-            result = this.expenseRepository.findAllByOrderByIssueDateDesc();
+            result = this.expenseRepository.findAllByOrderBySeriesDescNumberDesc();
         } else {
-            result = this.expenseRepository.findBySupplierNameContainingIgnoreCaseOrSupplierIdentityContainingIgnoreCaseOrderByIssueDateDesc(
+            result = this.expenseRepository.findBySupplierNameContainingIgnoreCaseOrSupplierIdentityContainingIgnoreCaseOrderBySeriesDescNumberDesc(
                     criteria.getSupplier(), criteria.getSupplier()
             );
         }

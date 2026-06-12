@@ -131,7 +131,7 @@ public class InvoiceService {
     public void emission(UUID id) {
         Invoice invoice = this.read(id);
         if (invoice.getEmissionDate() != null) {
-            throw new IllegalStateException("Already invoice issued: " + id);
+            throw new InvalidTransitionException("Already invoice issued: " + id);
         }
         String series = String.valueOf(LocalDate.now().getYear());
         if (invoice.isRectification()) {

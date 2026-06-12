@@ -84,9 +84,9 @@ class ExpenseRepositoryTest {
     }
 
     @Test
-    void shouldFindBySupplierContainsOrderByIssueDateDesc() {
+    void shouldFindBySupplierContainsOrderBySeriesDescNumberDesc() {
         List<ExpenseEntity> result = this.expenseRepository
-                .findBySupplierNameContainingIgnoreCaseOrSupplierIdentityContainingIgnoreCaseOrderByIssueDateDesc(
+                .findBySupplierNameContainingIgnoreCaseOrSupplierIdentityContainingIgnoreCaseOrderBySeriesDescNumberDesc(
                         "taxi", "taxi");
 
         assertEquals(2, result.size());
@@ -95,19 +95,9 @@ class ExpenseRepositoryTest {
     }
 
     @Test
-    void shouldFindByIssueDateGreaterThanEqualOrderByIssueDateDesc() {
-        List<ExpenseEntity> result = this.expenseRepository
-                .findByIssueDateGreaterThanEqualOrderByIssueDateDesc(LocalDate.of(2026, 3, 20));
-
-        assertEquals(2, result.size());
-        assertEquals(this.secondExpense.getId().toString(), result.getFirst().getId());
-        assertEquals(this.firstExpense.getId().toString(), result.get(1).getId());
-    }
-
-    @Test
-    void shouldFindByEngagementIdPrefixOrderByIssueDateDesc() {
+    void shouldFindByEngagementIdPrefixOrderBySeriesDescNumberDesc() {
         String prefix = this.firstExpense.getEngagement().getId().toString().substring(0, 4);
-        List<ExpenseEntity> result = this.expenseRepository.findByEngagementIdStartingWithOrderByIssueDateDesc(prefix);
+        List<ExpenseEntity> result = this.expenseRepository.findByEngagementIdStartingWithOrderBySeriesDescNumberDesc(prefix);
 
         assertEquals(2, result.size());
         assertEquals(this.secondExpense.getId().toString(), result.getFirst().getId());
