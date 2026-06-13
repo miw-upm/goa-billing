@@ -54,6 +54,11 @@ public class PaymentService {
     }
 
     public void delete(UUID id) {
+        Payment currentPayment = this.paymentGateway.read(id);
+        if (Boolean.TRUE.equals(currentPayment.getInvoiced())){
+            throw new ClientBusinessException("No se puede borrar un ingreso que ha sido facturado: "
+                    + id.toString().substring(0, 4));
+        }
         this.paymentGateway.delete(id);
     }
 
