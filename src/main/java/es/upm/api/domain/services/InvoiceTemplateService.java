@@ -8,7 +8,7 @@ import java.util.Map;
 
 @Service
 public class InvoiceTemplateService {
-    private static final String SUBJECT = "Factura generada en Ocaña Abogados";
+    private static final String SUBJECT = "Factura generada";
     private static final String HTML_TEMPLATE_PATH = "templates/issued-invoice.html";
 
     public Email buildHtmlEmail(String to, String firstName) {

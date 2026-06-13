@@ -52,7 +52,7 @@ public class ApiExceptionHandler {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler({
             BadRequestException.class,
-            InvalidTransitionException.class,
+            ClientBusinessException.class,
             org.springframework.dao.DuplicateKeyException.class,
             org.springframework.web.HttpRequestMethodNotSupportedException.class,
             org.springframework.web.bind.MethodArgumentNotValidException.class,
@@ -90,6 +90,16 @@ public class ApiExceptionHandler {
     })
     @ResponseBody
     public ErrorMessage badGateway(Exception exception) {
+        return new ErrorMessage(exception);
+    }
+
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    @ExceptionHandler({
+            InfrastructureException.class
+    })
+    @ResponseBody
+    public ErrorMessage infrastructure(ApiException exception) {
+        log.error("Infrastructure failure: {}", exception.getMessage(), exception);
         return new ErrorMessage(exception);
     }
 

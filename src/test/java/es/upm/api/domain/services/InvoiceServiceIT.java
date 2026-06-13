@@ -201,7 +201,7 @@ class InvoiceServiceIT {
                         .number(30)
                         .emissionDate(LocalDate.of(2026, 3, 20))
                         .reason("Error en importes")
-                .build())
+                        .build())
                 .concept("Rectificacion manual")
                 .billingInfo(BillingInfo.builder()
                         .userId(this.userId)
