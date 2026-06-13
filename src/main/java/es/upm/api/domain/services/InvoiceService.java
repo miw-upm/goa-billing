@@ -13,7 +13,7 @@ import es.upm.api.domain.ports.out.email.EmailWriter;
 import es.upm.api.domain.ports.out.engagement.EngagementGateway;
 import es.upm.api.domain.ports.out.user.UserFinder;
 import es.upm.miw.exception.BadRequestException;
-import es.upm.miw.exception.InvalidTransitionException;
+import es.upm.miw.exception.ClientBusinessException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -83,7 +83,7 @@ public class InvoiceService {
     public void createFromEngagement(InvoiceCreationFromEngagement creation) {
         EngagementSnapshot engagement = this.engagementGateway.read(creation.getEngagementId());
         if (engagement.getClosingDate() != null) {
-            throw new BadRequestException("Engagement is closed, no more invoices can be created, id: " + creation.getEngagementId());
+            throw new ClientBusinessException("Hoja de Encargo cerrada, o se pueden crear mas facturas");
         }
         Invoice invoice = Invoice.builder()
                 .concept(creation.getConcept())
@@ -116,7 +116,7 @@ public class InvoiceService {
                         BigDecimal total = invoice.paymentsAmount()
                                 .multiply(invoice.percentageFactor());
                         if (total.compareTo(BigDecimal.ZERO) == 0) {
-                            throw new InvalidTransitionException("An invoice with a zero amount is not valid.");
+                            throw new ClientBusinessException("Una factura con una BI de cero, no es válida.");
                         }
                         invoice.applyTotalAmount(total);
                         invoice.setBaseExpense(BigDecimal.ZERO);
@@ -131,7 +131,7 @@ public class InvoiceService {
     public void emission(UUID id) {
         Invoice invoice = this.read(id);
         if (invoice.getEmissionDate() != null) {
-            throw new InvalidTransitionException("Already invoice issued: " + id);
+            throw new ClientBusinessException("Factura ya emitida");
         }
         String series = String.valueOf(LocalDate.now().getYear());
         if (invoice.isRectification()) {
@@ -184,7 +184,7 @@ public class InvoiceService {
     public Invoice createRectification(@Valid InvoiceCreationRectification creation) {
         Invoice originalInvoice = this.invoiceGateway.read(creation.getSeries(), creation.getNumber());
         if (originalInvoice.getEmissionDate() == null) {
-            throw new BadRequestException("Cannot rectify a draft invoice: " + creation.getSeries() + "-" + creation.getNumber());
+            throw new BadRequestException("No se puede rectificar una factura no emitida: " + creation.getSeries() + "-" + creation.getNumber());
         }
         Invoice invoice = Invoice.builder()
                 .id(UUID.randomUUID())
@@ -226,7 +226,7 @@ public class InvoiceService {
     public Invoice update(UUID id, Invoice invoice) {
         Invoice currentInvoice = this.invoiceGateway.read(id);
         if (invoice.getEmissionDate() != null) {
-            throw new InvalidTransitionException("Issued invoices cannot be updated, id: " + id);
+            throw new ClientBusinessException("No se pueden cambiar facturas ya emitidas");
         }
         invoice.setId(id);
         invoice.setEmissionDate(null);
@@ -238,7 +238,7 @@ public class InvoiceService {
     public void delete(UUID id) {
         Invoice currentInvoice = this.invoiceGateway.read(id);
         if (currentInvoice.getEmissionDate() != null) {
-            throw new InvalidTransitionException("Issued invoices cannot be deleted, id: " + id);
+            throw new ClientBusinessException("No se pueden borrar facturas ya emitidas");
         }
         this.invoiceGateway.delete(id);
     }

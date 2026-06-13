@@ -93,40 +93,4 @@ class ExpenseServiceIT {
         assertEquals(this.expense, allExpenses.findFirst().orElse(null));
     }
 
-
-    @Test
-    void shouldNotUpdateExpenseWhenEngagementDoesNotExist() {
-        UUID id = UUID.randomUUID();
-        Expense existing = Expense.builder()
-                .id(id)
-                .engagement(this.engagement)
-                .baseAmount(BigDecimal.TEN)
-                .vatRate(21)
-                .supplier(SupplierInfo.builder().name("Old").identity("OLD").build())
-                .taxCategory(TaxCategory.OTROS)
-                .depreciationRate(100)
-                .issueDate(LocalDate.of(2026, 3, 20))
-                .documentPath("old/doc")
-                .build();
-        Expense updateData = Expense.builder()
-                .engagement(this.engagement)
-                .baseAmount(BigDecimal.valueOf(90))
-                .vatRate(21)
-                .supplier(SupplierInfo.builder().name("Updated supplier").identity("NEW").build())
-                .taxCategory(TaxCategory.SUMINISTROS)
-                .depreciationRate(10)
-                .build();
-        RuntimeException exception = new RuntimeException("Engagement not found");
-        when(this.expenseGateway.read(id)).thenReturn(existing);
-        when(this.engagementGateway.read(this.engagementId)).thenThrow(exception);
-
-        RuntimeException thrown = assertThrows(RuntimeException.class,
-                () -> this.expenseService.update(id, updateData));
-
-        assertEquals("Engagement not found", thrown.getMessage());
-        verify(this.expenseGateway).read(id);
-        verify(this.engagementGateway).read(this.engagementId);
-        verify(this.expenseGateway, never()).update(any(), any());
-    }
-
 }

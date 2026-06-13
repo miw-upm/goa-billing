@@ -6,7 +6,7 @@ import es.upm.api.domain.model.external.UserSnapshot;
 import es.upm.api.domain.ports.out.billing.PaymentGateway;
 import es.upm.api.domain.ports.out.engagement.EngagementGateway;
 import es.upm.api.domain.ports.out.user.UserFinder;
-import es.upm.miw.exception.InvalidTransitionException;
+import es.upm.miw.exception.ClientBusinessException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -41,7 +41,8 @@ public class PaymentService {
     public void update(UUID id, Payment payment) {
         Payment currentPayment = this.paymentGateway.read(id);
         if (Boolean.TRUE.equals(currentPayment.getInvoiced())) {
-            throw new InvalidTransitionException("Cannot modify a payment that has already been invoiced: " + id);
+            throw new ClientBusinessException("No se puede modificar un ingreso que ha sido facturado: "
+                    + id.toString().substring(0, 4));
         }
         payment.setId(id);
         if (Objects.isNull(payment.getInvoiced())) {

@@ -5,7 +5,7 @@ import es.upm.api.domain.model.SupplierInfo;
 import es.upm.api.domain.model.criteria.ExpenseFindCriteria;
 import es.upm.api.domain.ports.out.billing.ExpenseGateway;
 import es.upm.api.domain.ports.out.engagement.EngagementGateway;
-import es.upm.miw.exception.InvalidTransitionException;
+import es.upm.miw.exception.ClientBusinessException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -65,8 +65,9 @@ public class ExpenseService {
                 .plusMonths(3)
                 .minusDays(1);
         if (LocalDate.now().isAfter(endOfQuarter)) {
-            throw new InvalidTransitionException(
-                    "No se puede modificar un gasto de un trimestre ya cerrado: " + expense.getId());
+            throw new ClientBusinessException(
+                    "No se puede modificar un gasto de un trimestre ya cerrado: "
+                            + expense.getSeries() + "-" + expense.getNumber());
         }
     }
 
