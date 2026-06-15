@@ -5,6 +5,7 @@ import es.upm.api.domain.model.SupplierInfo;
 import es.upm.api.domain.model.criteria.ExpenseFindCriteria;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDate;
 import java.util.UUID;
 import java.util.stream.Stream;
 
@@ -23,4 +24,8 @@ public interface ExpenseGateway {
     Stream<SupplierInfo> findSuppliers(String supplier);
 
     Integer findNextNumber(String series, Integer depreciationRate);
+
+    Stream<Expense> findReceivedBook(LocalDate fromDate, LocalDate toDate);
+
+    long countReceivedBook(LocalDate fromDate, LocalDate toDate);
 }

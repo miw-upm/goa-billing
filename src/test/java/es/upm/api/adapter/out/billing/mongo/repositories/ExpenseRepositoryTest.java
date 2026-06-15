@@ -104,4 +104,36 @@ class ExpenseRepositoryTest {
         assertEquals(this.firstExpense.getId().toString(), result.get(1).getId());
     }
 
+    @Test
+    void shouldFindReceivedBook() {
+        Expense zeroVatExpense = Expense.builder()
+                .id(UUID.randomUUID())
+                .series("2026")
+                .number(3)
+                .baseAmount(BigDecimal.valueOf(50))
+                .vatRate(0)
+                .supplier(SupplierInfo.builder().name("No Vat").identity("N10000000").build())
+                .taxCategory(TaxCategory.OTROS)
+                .depreciationRate(100)
+                .issueDate(LocalDate.of(2026, 3, 23))
+                .withholdingTax(BigDecimal.ZERO)
+                .build();
+        this.expenseRepository.save(new ExpenseEntity(zeroVatExpense));
+
+        List<ExpenseEntity> result = this.expenseRepository.findReceivedBook(
+                LocalDate.of(2026, 1, 1), LocalDate.of(2026, 3, 31));
+
+        assertEquals(2, result.size());
+        assertEquals(this.firstExpense.getId().toString(), result.getFirst().getId());
+        assertEquals(this.secondExpense.getId().toString(), result.get(1).getId());
+    }
+
+    @Test
+    void shouldCountReceivedBook() {
+        long count = this.expenseRepository.countReceivedBook(
+                LocalDate.of(2026, 1, 1), LocalDate.of(2026, 3, 31));
+
+        assertEquals(2, count);
+    }
+
 }

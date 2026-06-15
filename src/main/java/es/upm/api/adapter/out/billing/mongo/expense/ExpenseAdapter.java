@@ -124,4 +124,15 @@ public class ExpenseAdapter implements ExpenseGateway {
                 .map(n -> n + 1)
                 .orElse(FIRST_SERIES_NUMBER);
     }
+
+    @Override
+    public Stream<Expense> findReceivedBook(LocalDate fromDate, LocalDate toDate) {
+        return this.expenseRepository.findReceivedBook(fromDate, toDate).stream()
+                .map(ExpenseEntity::toDomain);
+    }
+
+    @Override
+    public long countReceivedBook(LocalDate fromDate, LocalDate toDate) {
+        return this.expenseRepository.countReceivedBook(fromDate, toDate);
+    }
 }

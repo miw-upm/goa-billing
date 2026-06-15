@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.stream.IntStream;
 
 @PreAuthorize(Security.ADMIN_MANAGER_OPERATOR)
 @RestController
@@ -19,6 +20,7 @@ import java.util.List;
 public class TaxAgencyResource {
     public static final String TAX_AGENCY = "/tax-agency";
     public static final String INVOICE_ISSUED_BOOK = "/invoice-issued-book";
+    public static final String RECEIVED_BOOK = "/received-book";
 
     private final TaxAgencyService taxAgencyService;
 
@@ -27,6 +29,17 @@ public class TaxAgencyResource {
         List<String> lines = this.taxAgencyService
                 .invoiceIssuedBook(quarter.fromDate(year), quarter.toDate(year)).stream()
                 .map(InvoiceBookDto::from)
+                .map(InvoiceBookDto::toCsvLine)
+                .toList();
+        return String.join("\r\n", lines);
+    }
+
+    @GetMapping(value = RECEIVED_BOOK, produces = {"text/csv"})
+    public String receivedBook(@RequestParam int year, @RequestParam Quarter quarter) {
+        int offset = this.taxAgencyService.countByYearBeforeQuarter(year, quarter);
+        var expenses = this.taxAgencyService.findByYearAndQuarter(year, quarter);
+        List<String> lines = IntStream.range(0, expenses.size())
+                .mapToObj(index -> InvoiceBookDto.from(expenses.get(index), offset + index + 1))
                 .map(InvoiceBookDto::toCsvLine)
                 .toList();
         return String.join("\r\n", lines);

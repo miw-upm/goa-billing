@@ -1,7 +1,12 @@
 package es.upm.api.domain.services;
 
+import es.upm.api.adapter.in.resources.Quarter;
 import es.upm.api.domain.model.BillingInfo;
+import es.upm.api.domain.model.Expense;
 import es.upm.api.domain.model.Invoice;
+import es.upm.api.domain.model.SupplierInfo;
+import es.upm.api.domain.model.TaxCategory;
+import es.upm.api.domain.ports.out.billing.ExpenseGateway;
 import es.upm.api.domain.ports.out.billing.InvoiceGateway;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,6 +32,8 @@ class TaxAgencyServiceIT {
     private TaxAgencyService taxAgencyService;
     @MockitoBean
     private InvoiceGateway invoiceGateway;
+    @MockitoBean
+    private ExpenseGateway expenseGateway;
 
     @Test
     void shouldFindInvoiceIssuedBookByDateRange() {
@@ -42,6 +49,35 @@ class TaxAgencyServiceIT {
 
         assertEquals(List.of(first, second), invoices);
         verify(this.invoiceGateway).findIssuedBetween(fromDate, toDate);
+    }
+
+    @Test
+    void shouldFindReceivedBookByYearAndQuarter() {
+        LocalDate fromDate = LocalDate.of(2026, 4, 1);
+        LocalDate toDate = LocalDate.of(2026, 6, 30);
+        Expense first = this.buildExpense(LocalDate.of(2026, 4, 10));
+        Expense second = this.buildExpense(LocalDate.of(2026, 5, 15));
+        when(this.expenseGateway.findReceivedBook(fromDate, toDate)).thenReturn(Stream.of(first, second));
+
+        List<Expense> expenses = this.taxAgencyService.findByYearAndQuarter(2026, Quarter.T2);
+
+        assertEquals(List.of(first, second), expenses);
+        verify(this.expenseGateway).findReceivedBook(fromDate, toDate);
+    }
+
+    @Test
+    void shouldCountReceivedBookBeforeQuarter() {
+        LocalDate fromDate = LocalDate.of(2026, 1, 1);
+        LocalDate toDate = LocalDate.of(2026, 3, 31);
+        when(this.expenseGateway.countReceivedBook(fromDate, toDate)).thenReturn(3L);
+
+        assertEquals(3, this.taxAgencyService.countByYearBeforeQuarter(2026, Quarter.T2));
+        verify(this.expenseGateway).countReceivedBook(fromDate, toDate);
+    }
+
+    @Test
+    void shouldReturnZeroWhenCountingBeforeFirstQuarter() {
+        assertEquals(0, this.taxAgencyService.countByYearBeforeQuarter(2026, Quarter.T1));
     }
 
     @Test
@@ -71,6 +107,21 @@ class TaxAgencyServiceIT {
                 .baseAmount(new BigDecimal(baseAmount))
                 .vatRate(new BigDecimal("21"))
                 .vatAmount(new BigDecimal(vatAmount))
+                .build();
+    }
+
+    private Expense buildExpense(LocalDate issueDate) {
+        return Expense.builder()
+                .id(UUID.randomUUID())
+                .issueDate(issueDate)
+                .baseAmount(new BigDecimal("100.00"))
+                .vatRate(21)
+                .supplier(SupplierInfo.builder()
+                        .name("Supplier")
+                        .identity("B10000000")
+                        .build())
+                .taxCategory(TaxCategory.OTROS)
+                .depreciationRate(100)
                 .build();
     }
 }

@@ -262,6 +262,29 @@ class ExpenseAdapterIT {
     }
 
     @Test
+    void shouldFindReceivedBook() {
+        LocalDate fromDate = LocalDate.of(2026, 1, 1);
+        LocalDate toDate = LocalDate.of(2026, 6, 30);
+        when(this.expenseRepository.findReceivedBook(fromDate, toDate))
+                .thenReturn(List.of(new ExpenseEntity(this.expense)));
+
+        List<Expense> expenses = this.expensePersistenceMongodb.findReceivedBook(fromDate, toDate).toList();
+
+        assertEquals(List.of(this.expense), expenses);
+        verify(this.expenseRepository).findReceivedBook(fromDate, toDate);
+    }
+
+    @Test
+    void shouldCountReceivedBook() {
+        LocalDate fromDate = LocalDate.of(2026, 1, 1);
+        LocalDate toDate = LocalDate.of(2026, 3, 31);
+        when(this.expenseRepository.countReceivedBook(fromDate, toDate)).thenReturn(2L);
+
+        assertEquals(2L, this.expensePersistenceMongodb.countReceivedBook(fromDate, toDate));
+        verify(this.expenseRepository).countReceivedBook(fromDate, toDate);
+    }
+
+    @Test
     void shouldFindNextNumberForCurrentDepreciationRate() {
         ExpenseEntity lastCurrent = ExpenseEntity.builder()
                 .series("2026")

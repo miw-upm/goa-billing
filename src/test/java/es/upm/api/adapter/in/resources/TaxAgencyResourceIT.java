@@ -1,7 +1,10 @@
 package es.upm.api.adapter.in.resources;
 
 import es.upm.api.domain.model.BillingInfo;
+import es.upm.api.domain.model.Expense;
 import es.upm.api.domain.model.Invoice;
+import es.upm.api.domain.model.SupplierInfo;
+import es.upm.api.domain.model.TaxCategory;
 import es.upm.api.domain.services.TaxAgencyService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -84,6 +87,46 @@ class TaxAgencyResourceIT {
 
     @Test
     @WithMockUser(roles = "admin")
+    void shouldGenerateReceivedBookCsvWithContinuedReference() throws Exception {
+        Expense firstT2Expense = this.buildExpense(LocalDate.of(2026, 4, 10),
+                "Office Supplies", "B10000000", "100.00", 21);
+        Expense secondT2Expense = this.buildExpense(LocalDate.of(2026, 5, 15),
+                "Book Store", "B20000000", "200.00", 4);
+        String expected = String.join("\r\n",
+                "2;T2;%s;%s;Office Supplies;B10000000;%s;%s;0,21;%s;%s".formatted(
+                        DATE.format(LocalDate.of(2026, 4, 10)),
+                        DATE.format(LocalDate.of(2026, 4, 10)),
+                        AMOUNT.format(new BigDecimal("100.00")),
+                        AMOUNT.format(new BigDecimal("100")),
+                        AMOUNT.format(new BigDecimal("21.00")),
+                        AMOUNT.format(new BigDecimal("121.00"))
+                ),
+                "3;T2;%s;%s;Book Store;B20000000;%s;%s;0,04;%s;%s".formatted(
+                        DATE.format(LocalDate.of(2026, 5, 15)),
+                        DATE.format(LocalDate.of(2026, 5, 15)),
+                        AMOUNT.format(new BigDecimal("200.00")),
+                        AMOUNT.format(new BigDecimal("100")),
+                        AMOUNT.format(new BigDecimal("8.00")),
+                        AMOUNT.format(new BigDecimal("208.00"))
+                )
+        );
+        when(this.taxAgencyService.countByYearBeforeQuarter(2026, Quarter.T2)).thenReturn(1);
+        when(this.taxAgencyService.findByYearAndQuarter(2026, Quarter.T2))
+                .thenReturn(List.of(firstT2Expense, secondT2Expense));
+
+        this.mockMvc.perform(get("/tax-agency/received-book")
+                        .param("year", "2026")
+                        .param("quarter", "T2"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentTypeCompatibleWith("text/csv"))
+                .andExpect(content().string(expected));
+
+        verify(this.taxAgencyService).countByYearBeforeQuarter(2026, Quarter.T2);
+        verify(this.taxAgencyService).findByYearAndQuarter(2026, Quarter.T2);
+    }
+
+    @Test
+    @WithMockUser(roles = "admin")
     void shouldReturnBadRequestForInvalidQuarter() throws Exception {
         this.mockMvc.perform(get("/tax-agency/invoice-issued-book")
                         .param("year", "2026")
@@ -110,6 +153,22 @@ class TaxAgencyResourceIT {
                 .baseAmount(new BigDecimal(baseAmount))
                 .vatRate(new BigDecimal(vatRate))
                 .vatAmount(new BigDecimal(vatAmount))
+                .build();
+    }
+
+    private Expense buildExpense(LocalDate issueDate, String supplierName, String supplierIdentity,
+                                 String baseAmount, int vatRate) {
+        return Expense.builder()
+                .id(UUID.randomUUID())
+                .issueDate(issueDate)
+                .baseAmount(new BigDecimal(baseAmount))
+                .vatRate(vatRate)
+                .supplier(SupplierInfo.builder()
+                        .name(supplierName)
+                        .identity(supplierIdentity)
+                        .build())
+                .taxCategory(TaxCategory.OTROS)
+                .depreciationRate(100)
                 .build();
     }
 }
