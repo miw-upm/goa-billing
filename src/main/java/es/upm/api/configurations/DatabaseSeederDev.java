@@ -45,6 +45,9 @@ public class DatabaseSeederDev {
     public static final String ID_15 = "aaaaaaaa-bbbb-cccc-dddd-eeeeffff000f";
     public static final String ID_16 = "aaaaaaaa-bbbb-cccc-dddd-eeeeffff0010";
     public static final String ID_17 = "aaaaaaaa-bbbb-cccc-dddd-eeeeffff0011";
+    public static final String ID_18 = "aaaaaaaa-bbbb-cccc-dddd-eeeeffff0012";
+    public static final String ID_19 = "aaaaaaaa-bbbb-cccc-dddd-eeeeffff0013";
+    public static final String ID_20 = "aaaaaaaa-bbbb-cccc-dddd-eeeeffff0014";
     public static final UUID EL_0 = UUID.fromString(ID_0);
     public static final UUID EL_1 = UUID.fromString(ID_1);
     public static final UUID C_0 = UUID.fromString(ID_0);
@@ -232,6 +235,60 @@ public class DatabaseSeederDev {
                         .discounts(List.of(new BigDecimal("125.00")))
                         .pdfPath(null)
                         .originalInvoice(null)
+                        .build(),
+                InvoiceEntity.builder()
+                        .id(ID_18)
+                        .billingInfo(new BillingInfoEntity(
+                                C_0.toString(),
+                                "User 0000",
+                                "ID-00000000A",
+                                "Madrid, Spain"
+                        ))
+                        .emissionDate(LocalDate.of(2026, 4, 10))
+                        .operationDate(LocalDate.of(2026, 4, 10))
+                        .series("2026")
+                        .number(30)
+                        .baseAmount(new BigDecimal("300.00"))
+                        .vatRate(new BigDecimal("21"))
+                        .vatAmount(new BigDecimal("63.00"))
+                        .baseExpense(BigDecimal.ZERO)
+                        .vatExpense(BigDecimal.ZERO)
+                        .build(),
+                InvoiceEntity.builder()
+                        .id(ID_19)
+                        .billingInfo(new BillingInfoEntity(
+                                C_1.toString(),
+                                "User 0001",
+                                "ID-00000001B",
+                                "Madrid, Spain"
+                        ))
+                        .emissionDate(LocalDate.of(2026, 5, 15))
+                        .operationDate(LocalDate.of(2026, 5, 15))
+                        .series("2026")
+                        .number(31)
+                        .baseAmount(new BigDecimal("450.00"))
+                        .vatRate(new BigDecimal("21"))
+                        .vatAmount(new BigDecimal("94.50"))
+                        .baseExpense(BigDecimal.ZERO)
+                        .vatExpense(BigDecimal.ZERO)
+                        .build(),
+                InvoiceEntity.builder()
+                        .id(ID_20)
+                        .billingInfo(new BillingInfoEntity(
+                                C_0.toString(),
+                                "User 0000",
+                                "ID-00000000A",
+                                "Madrid, Spain"
+                        ))
+                        .emissionDate(LocalDate.of(2026, 6, 20))
+                        .operationDate(LocalDate.of(2026, 6, 20))
+                        .series("2026")
+                        .number(32)
+                        .baseAmount(new BigDecimal("600.00"))
+                        .vatRate(new BigDecimal("21"))
+                        .vatAmount(new BigDecimal("126.00"))
+                        .baseExpense(BigDecimal.ZERO)
+                        .vatExpense(BigDecimal.ZERO)
                         .build()
         ));
         log.warn("------- Initial Load from JAVA ---------------------------------------------------------------");
