@@ -140,6 +140,26 @@ class InvoiceRepositoryTest {
     }
 
     @Test
+    void shouldFindIssuedBetweenUsingOperationDateOrEmissionDateFallbackOrderByNumberAsc() {
+        Invoice fallbackEmissionDate = this.buildMinimalInvoice(4, LocalDate.of(2026, 3, 10), null);
+        Invoice operationDateOutsideRange = this.buildMinimalInvoice(3, LocalDate.of(2026, 3, 10), LocalDate.of(2026, 4, 1));
+        Invoice draft = this.buildMinimalInvoice(0, null, LocalDate.of(2026, 3, 10));
+        this.invoiceRepository.saveAll(List.of(
+                new InvoiceEntity(fallbackEmissionDate),
+                new InvoiceEntity(operationDateOutsideRange),
+                new InvoiceEntity(draft)
+        ));
+
+        List<InvoiceEntity> result = this.invoiceRepository.findIssuedBetweenOrderByNumberAsc(
+                LocalDate.of(2026, 3, 1), LocalDate.of(2026, 3, 31));
+
+        assertEquals(3, result.size());
+        assertEquals(1, result.get(0).getNumber());
+        assertEquals(2, result.get(1).getNumber());
+        assertEquals(4, result.get(2).getNumber());
+    }
+
+    @Test
     void shouldFindFirstBySeriesOrderByNumberDesc() {
         var optional = this.invoiceRepository.findFirstBySeriesOrderByNumberDesc("A");
 
@@ -153,5 +173,24 @@ class InvoiceRepositoryTest {
 
         assertTrue(optional.isPresent());
         assertEquals(this.firstInvoice.getId().toString(), optional.get().getId());
+    }
+
+    private Invoice buildMinimalInvoice(int number, LocalDate emissionDate, LocalDate operationDate) {
+        return Invoice.builder()
+                .id(UUID.randomUUID())
+                .billingInfo(BillingInfo.builder()
+                        .userId(UUID.randomUUID())
+                        .fullName("Jane Doe")
+                        .identity("87654321B")
+                        .fullAddress("Madrid")
+                        .build())
+                .emissionDate(emissionDate)
+                .operationDate(operationDate)
+                .series("A")
+                .number(number)
+                .baseAmount(BigDecimal.TEN)
+                .vatAmount(BigDecimal.ONE)
+                .vatRate(BigDecimal.valueOf(21))
+                .build();
     }
 }

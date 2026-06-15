@@ -4,6 +4,7 @@ import es.upm.api.domain.model.Invoice;
 import es.upm.api.domain.model.criteria.InvoiceFindCriteria;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDate;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Stream;
@@ -21,6 +22,8 @@ public interface InvoiceGateway {
     void delete(UUID id);
 
     Stream<Invoice> find(InvoiceFindCriteria criteria);
+
+    Stream<Invoice> findIssuedBetween(LocalDate fromDate, LocalDate toDate);
 
     Optional<Invoice> findById(UUID id);
 

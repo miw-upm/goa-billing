@@ -203,6 +203,20 @@ class InvoiceAdapterIT {
                 engagementIdPrefix, fromDate);
     }
 
+    @Test
+    void shouldFindIssuedInvoicesBetweenDates() {
+        LocalDate fromDate = LocalDate.of(2026, 1, 1);
+        LocalDate toDate = LocalDate.of(2026, 3, 31);
+        when(this.invoiceRepository.findIssuedBetweenOrderByNumberAsc(fromDate, toDate))
+                .thenReturn(List.of(new InvoiceEntity(this.invoice)));
+
+        List<Invoice> result = this.invoiceAdapter.findIssuedBetween(fromDate, toDate).toList();
+
+        assertEquals(1, result.size());
+        assertEquals(this.invoice.getId(), result.getFirst().getId());
+        verify(this.invoiceRepository).findIssuedBetweenOrderByNumberAsc(fromDate, toDate);
+    }
+
     private Invoice buildInvoice(UUID invoiceId, UUID engagementId, UUID userId, UUID paymentId,
                                  LocalDate emissionDate, BigDecimal baseAmount) {
         return Invoice.builder()

@@ -10,6 +10,7 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.StringUtils;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -92,6 +93,12 @@ public class InvoiceAdapter implements InvoiceGateway {
         }
 
         return result.stream()
+                .map(InvoiceEntity::toDomain);
+    }
+
+    @Override
+    public Stream<Invoice> findIssuedBetween(LocalDate fromDate, LocalDate toDate) {
+        return this.invoiceRepository.findIssuedBetweenOrderByNumberAsc(fromDate, toDate).stream()
                 .map(InvoiceEntity::toDomain);
     }
 
