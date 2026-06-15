@@ -1,6 +1,6 @@
 package es.upm.api.adapter.in.resources;
 
-import es.upm.api.adapter.in.resources.dtos.InvoiceIssuedBookDto;
+import es.upm.api.adapter.in.resources.dtos.InvoiceBookDto;
 import es.upm.api.domain.services.TaxAgencyService;
 import es.upm.miw.security.Security;
 import lombok.RequiredArgsConstructor;
@@ -26,8 +26,8 @@ public class TaxAgencyResource {
     public String invoiceIssuedBook(@RequestParam int year, @RequestParam Quarter quarter) {
         List<String> lines = this.taxAgencyService
                 .invoiceIssuedBook(quarter.fromDate(year), quarter.toDate(year)).stream()
-                .map(InvoiceIssuedBookDto::from)
-                .map(InvoiceIssuedBookDto::toCsvLine)
+                .map(InvoiceBookDto::from)
+                .map(InvoiceBookDto::toCsvLine)
                 .toList();
         return String.join("\r\n", lines);
     }

@@ -10,14 +10,15 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Locale;
 
-public record InvoiceIssuedBookDto(
-        String invoiceNumber,
+public record InvoiceBookDto(
+        String reference,
         String quarter,
         LocalDate operationDate,
         LocalDate emissionDate,
         String clientName,
         String clientNif,
         BigDecimal baseAmount,
+        BigDecimal deductibleAmount,
         BigDecimal vatRate,
         BigDecimal vatAmount,
         BigDecimal totalAmount
@@ -30,7 +31,7 @@ public record InvoiceIssuedBookDto(
         amount.setMinimumFractionDigits(2);
         amount.setMaximumFractionDigits(2);
         return String.join(";",
-                this.invoiceNumber,
+                this.reference,
                 this.quarter,
                 DATE.format(this.operationDate),
                 DATE.format(this.emissionDate),
@@ -43,12 +44,12 @@ public record InvoiceIssuedBookDto(
         );
     }
 
-    public static InvoiceIssuedBookDto from(Invoice invoice) {
+    public static InvoiceBookDto from(Invoice invoice) {
         BillingInfo bi = invoice.getBillingInfo();
         LocalDate date = invoice.getOperationDate();
         BigDecimal baseAmount = invoice.getBaseAmount();
         BigDecimal vatAmount = invoice.getVatAmount();
-        return new InvoiceIssuedBookDto(
+        return new InvoiceBookDto(
                 invoice.getSeries() + "-" + invoice.getNumber(),
                 Quarter.from(date).name(),
                 invoice.getOperationDate(),
@@ -56,6 +57,7 @@ public record InvoiceIssuedBookDto(
                 bi.getFullName(),
                 bi.getIdentity(),
                 baseAmount,
+                null,
                 invoice.vatFactor(),
                 vatAmount,
                 baseAmount.add(vatAmount)
