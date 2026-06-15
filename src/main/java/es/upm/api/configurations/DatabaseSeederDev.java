@@ -179,7 +179,7 @@ public class DatabaseSeederDev {
                         .billingInfo(new BillingInfoEntity(
                                 C_0.toString(),
                                 "User 0000",
-                                "ID-00000000A",
+                                "12345678Z",
                                 "Madrid, Spain"
                         ))
                         .percentage(new BigDecimal("100"))
@@ -213,7 +213,7 @@ public class DatabaseSeederDev {
                         .billingInfo(new BillingInfoEntity(
                                 C_1.toString(),
                                 "User 0001",
-                                "ID-00000001B",
+                                "87654321X",
                                 "Madrid, Spain"
                         ))
                         .percentage(new BigDecimal("100"))
@@ -241,7 +241,7 @@ public class DatabaseSeederDev {
                         .billingInfo(new BillingInfoEntity(
                                 C_0.toString(),
                                 "User 0000",
-                                "ID-00000000A",
+                                "12345678Z",
                                 "Madrid, Spain"
                         ))
                         .emissionDate(LocalDate.of(2026, 4, 10))
@@ -259,7 +259,7 @@ public class DatabaseSeederDev {
                         .billingInfo(new BillingInfoEntity(
                                 C_1.toString(),
                                 "User 0001",
-                                "ID-00000001B",
+                                "87654321X",
                                 "Madrid, Spain"
                         ))
                         .emissionDate(LocalDate.of(2026, 5, 15))
@@ -277,7 +277,7 @@ public class DatabaseSeederDev {
                         .billingInfo(new BillingInfoEntity(
                                 C_0.toString(),
                                 "User 0000",
-                                "ID-00000000A",
+                                "12345678Z",
                                 "Madrid, Spain"
                         ))
                         .emissionDate(LocalDate.of(2026, 6, 20))

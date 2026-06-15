@@ -33,9 +33,9 @@ class TaxAgencyServiceIT {
         LocalDate fromDate = LocalDate.of(2026, 1, 1);
         LocalDate toDate = LocalDate.of(2026, 3, 31);
         Invoice first = this.buildInvoice(31, LocalDate.of(2026, 1, 20), LocalDate.of(2026, 1, 19),
-                "11111111A", "First Client", "100.00", "21.00");
+                "12345678Z", "First Client", "100.00", "21.00");
         Invoice second = this.buildInvoice(32, LocalDate.of(2026, 2, 20), LocalDate.of(2026, 2, 19),
-                "22222222B", "Second Client", "200.00", "42.00");
+                "87654321X", "Second Client", "200.00", "42.00");
         when(this.invoiceGateway.findIssuedBetween(fromDate, toDate)).thenReturn(Stream.of(first, second));
 
         List<Invoice> invoices = this.taxAgencyService.invoiceIssuedBook(fromDate, toDate);

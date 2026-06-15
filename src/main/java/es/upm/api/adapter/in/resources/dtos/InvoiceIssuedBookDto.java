@@ -13,30 +13,33 @@ import java.util.Locale;
 public record InvoiceIssuedBookDto(
         String invoiceNumber,
         String quarter,
-        LocalDate emissionDate,
         LocalDate operationDate,
-        String clientNif,
+        LocalDate emissionDate,
         String clientName,
+        String clientNif,
         BigDecimal baseAmount,
-        int vatRate,
+        BigDecimal vatRate,
         BigDecimal vatAmount,
         BigDecimal totalAmount
 ) {
     private static final DateTimeFormatter DATE = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
     public String toCsvLine() {
-        NumberFormat eur = NumberFormat.getCurrencyInstance(Locale.forLanguageTag("es-ES"));
+        NumberFormat amount = NumberFormat.getNumberInstance(Locale.forLanguageTag("es-ES"));
+        amount.setGroupingUsed(false);
+        amount.setMinimumFractionDigits(2);
+        amount.setMaximumFractionDigits(2);
         return String.join(";",
                 this.invoiceNumber,
                 this.quarter,
-                DATE.format(this.emissionDate),
                 DATE.format(this.operationDate),
-                this.clientNif,
+                DATE.format(this.emissionDate),
                 this.clientName,
-                eur.format(this.baseAmount),
-                String.valueOf(this.vatRate),
-                eur.format(this.vatAmount),
-                eur.format(this.totalAmount)
+                this.clientNif,
+                amount.format(this.baseAmount),
+                amount.format(this.vatRate),
+                amount.format(this.vatAmount),
+                amount.format(this.totalAmount)
         );
     }
 
@@ -46,14 +49,14 @@ public record InvoiceIssuedBookDto(
         BigDecimal baseAmount = invoice.getBaseAmount();
         BigDecimal vatAmount = invoice.getVatAmount();
         return new InvoiceIssuedBookDto(
-                invoice.getSeries() + "-" + String.format("%05d", invoice.getNumber()),
+                invoice.getSeries() + "-" + invoice.getNumber(),
                 Quarter.from(date).name(),
-                invoice.getEmissionDate(),
                 invoice.getOperationDate(),
-                bi.getIdentity(),
+                invoice.getEmissionDate(),
                 bi.getFullName(),
+                bi.getIdentity(),
                 baseAmount,
-                invoice.getVatRate().intValue(),
+                invoice.vatFactor(),
                 vatAmount,
                 baseAmount.add(vatAmount)
         );

@@ -31,8 +31,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc(addFilters = false)
 @ActiveProfiles("test")
 class TaxAgencyResourceIT {
-    private static final NumberFormat EUR = NumberFormat.getCurrencyInstance(Locale.forLanguageTag("es-ES"));
+    private static final NumberFormat AMOUNT = NumberFormat.getNumberInstance(Locale.forLanguageTag("es-ES"));
     private static final DateTimeFormatter DATE = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+
+    static {
+        AMOUNT.setGroupingUsed(false);
+        AMOUNT.setMinimumFractionDigits(2);
+        AMOUNT.setMaximumFractionDigits(2);
+    }
 
     @Autowired
     private MockMvc mockMvc;
@@ -45,23 +51,23 @@ class TaxAgencyResourceIT {
         LocalDate fromDate = LocalDate.of(2026, 1, 1);
         LocalDate toDate = LocalDate.of(2026, 3, 31);
         Invoice first = this.buildInvoice(31, LocalDate.of(2026, 1, 20), LocalDate.of(2026, 1, 19),
-                "11111111A", "First Client", "100.00", "21.00");
+                "12345678Z", "First Client", "100.00", "21", "21.00");
         Invoice second = this.buildInvoice(32, LocalDate.of(2026, 2, 20), LocalDate.of(2026, 2, 19),
-                "22222222B", "Second Client", "200.00", "42.00");
+                "87654321X", "Second Client", "200.00", "4", "8.00");
         String expected = String.join("\r\n",
-                "2026-00031;T1;%s;%s;11111111A;First Client;%s;21;%s;%s".formatted(
-                        DATE.format(LocalDate.of(2026, 1, 20)),
+                "2026-31;T1;%s;%s;First Client;12345678Z;%s;0,21;%s;%s".formatted(
                         DATE.format(LocalDate.of(2026, 1, 19)),
-                        EUR.format(new BigDecimal("100.00")),
-                        EUR.format(new BigDecimal("21.00")),
-                        EUR.format(new BigDecimal("121.00"))
+                        DATE.format(LocalDate.of(2026, 1, 20)),
+                        AMOUNT.format(new BigDecimal("100.00")),
+                        AMOUNT.format(new BigDecimal("21.00")),
+                        AMOUNT.format(new BigDecimal("121.00"))
                 ),
-                "2026-00032;T1;%s;%s;22222222B;Second Client;%s;21;%s;%s".formatted(
-                        DATE.format(LocalDate.of(2026, 2, 20)),
+                "2026-32;T1;%s;%s;Second Client;87654321X;%s;0,04;%s;%s".formatted(
                         DATE.format(LocalDate.of(2026, 2, 19)),
-                        EUR.format(new BigDecimal("200.00")),
-                        EUR.format(new BigDecimal("42.00")),
-                        EUR.format(new BigDecimal("242.00"))
+                        DATE.format(LocalDate.of(2026, 2, 20)),
+                        AMOUNT.format(new BigDecimal("200.00")),
+                        AMOUNT.format(new BigDecimal("8.00")),
+                        AMOUNT.format(new BigDecimal("208.00"))
                 )
         );
         when(this.taxAgencyService.invoiceIssuedBook(fromDate, toDate)).thenReturn(List.of(first, second));
@@ -88,7 +94,7 @@ class TaxAgencyResourceIT {
     }
 
     private Invoice buildInvoice(int number, LocalDate emissionDate, LocalDate operationDate,
-                                 String identity, String fullName, String baseAmount, String vatAmount) {
+                                 String identity, String fullName, String baseAmount, String vatRate, String vatAmount) {
         return Invoice.builder()
                 .id(UUID.randomUUID())
                 .series("2026")
@@ -102,7 +108,7 @@ class TaxAgencyResourceIT {
                         .fullAddress("Madrid")
                         .build())
                 .baseAmount(new BigDecimal(baseAmount))
-                .vatRate(new BigDecimal("21"))
+                .vatRate(new BigDecimal(vatRate))
                 .vatAmount(new BigDecimal(vatAmount))
                 .build();
     }
