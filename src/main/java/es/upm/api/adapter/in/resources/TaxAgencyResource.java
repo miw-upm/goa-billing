@@ -23,10 +23,9 @@ public class TaxAgencyResource {
     private final TaxAgencyService taxAgencyService;
 
     @GetMapping(value = INVOICE_ISSUED_BOOK, produces = {"text/csv"})
-    public String invoiceIssuedBook(@RequestParam int year, @RequestParam String quarter) {
-        Quarter requestedQuarter = Quarter.from(quarter);
+    public String invoiceIssuedBook(@RequestParam int year, @RequestParam Quarter quarter) {
         List<String> lines = this.taxAgencyService
-                .invoiceIssuedBook(requestedQuarter.fromDate(year), requestedQuarter.toDate(year)).stream()
+                .invoiceIssuedBook(quarter.fromDate(year), quarter.toDate(year)).stream()
                 .map(InvoiceIssuedBookDto::from)
                 .map(InvoiceIssuedBookDto::toCsvLine)
                 .toList();

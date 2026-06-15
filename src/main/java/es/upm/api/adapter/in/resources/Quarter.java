@@ -1,7 +1,5 @@
 package es.upm.api.adapter.in.resources;
 
-import es.upm.miw.exception.BadRequestException;
-
 import java.time.LocalDate;
 
 public enum Quarter {
@@ -27,21 +25,7 @@ public enum Quarter {
         return firstDayOfLastMonth.withDayOfMonth(firstDayOfLastMonth.lengthOfMonth());
     }
 
-    public static Quarter from(String value) {
-        for (Quarter quarter : values()) {
-            if (quarter.name().equalsIgnoreCase(value)) {
-                return quarter;
-            }
-        }
-        throw new BadRequestException("Quarter must be one of T1, T2, T3, T4: " + value);
-    }
-
     public static Quarter from(LocalDate date) {
-        for (Quarter quarter : values()) {
-            if (date.getMonthValue() >= quarter.firstMonth && date.getMonthValue() <= quarter.lastMonth) {
-                return quarter;
-            }
-        }
-        throw new BadRequestException("Invalid quarter date: " + date);
+        return values()[(date.getMonthValue() - 1) / 3];
     }
 }
