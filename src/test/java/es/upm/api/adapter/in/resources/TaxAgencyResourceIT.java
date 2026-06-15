@@ -63,7 +63,7 @@ class TaxAgencyResourceIT {
                         EUR.format(new BigDecimal("42.00")),
                         EUR.format(new BigDecimal("242.00"))
                 )
-        ) + "\r\n";
+        );
         when(this.taxAgencyService.invoiceIssuedBook(fromDate, toDate)).thenReturn(List.of(first, second));
 
         this.mockMvc.perform(get("/tax-agency/invoice-issued-book")

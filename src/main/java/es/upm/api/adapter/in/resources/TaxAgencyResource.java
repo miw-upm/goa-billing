@@ -29,6 +29,6 @@ public class TaxAgencyResource {
                 .map(InvoiceIssuedBookDto::from)
                 .map(InvoiceIssuedBookDto::toCsvLine)
                 .toList();
-        return lines.isEmpty() ? "" : String.join("\r\n", lines) + "\r\n";
+        return String.join("\r\n", lines);
     }
 }
