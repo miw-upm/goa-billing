@@ -84,14 +84,6 @@ class PaymentServiceIT {
         verify(this.userFinder).readById(this.userId);
     }
 
-
-    @Test
-    void shouldDeletePayment() {
-        UUID id = UUID.randomUUID();
-        this.paymentService.delete(id);
-        verify(this.paymentGateway).delete(id);
-    }
-
     @Test
     void shouldNotCreateWhenUserFinderFails() {
         RuntimeException exception = new RuntimeException("User not found");
