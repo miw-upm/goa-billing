@@ -97,8 +97,8 @@ class TaxAgencyServiceIT {
         Invoice secondInvoice = this.buildInvoice(32, LocalDate.of(2026, 5, 20), LocalDate.of(2026, 5, 19),
                 "87654321X", "Second Client", "200.00", "8.00");
         Expense currentExpense = this.buildExpense(LocalDate.of(2026, 4, 10), "50.00", 21, 100);
-        Expense reducedVatCurrentExpense = this.buildExpense(LocalDate.of(2026, 5, 10), "25.00", 4, 100);
-        Expense investmentExpense = this.buildExpense(LocalDate.of(2026, 6, 10), "4000.00", 21, 10);
+        Expense reducedVatCurrentExpense = this.buildExpense(LocalDate.of(2026, 5, 10), "25.00", 4, 100, new BigDecimal("50"));
+        Expense investmentExpense = this.buildExpense(LocalDate.of(2026, 6, 10), "4000.00", 21, 10, new BigDecimal("25"));
         when(this.invoiceGateway.findIssuedBetween(fromDate, toDate))
                 .thenReturn(Stream.of(firstInvoice, secondInvoice));
         when(this.expenseGateway.findInvoiceReceivedBook(fromDate, toDate, INVESTMENT_ASSET_THRESHOLD))
@@ -111,10 +111,10 @@ class TaxAgencyServiceIT {
         assertEquals(new VatSummary(
                 new BigDecimal("300.00"),
                 new BigDecimal("29.00"),
-                new BigDecimal("75.00"),
-                new BigDecimal("11.50"),
-                new BigDecimal("4000.00"),
-                new BigDecimal("840.00")
+                new BigDecimal("62.500000"),
+                new BigDecimal("11.00000000"),
+                new BigDecimal("1000.000000"),
+                new BigDecimal("210.00000000")
         ), result);
         verify(this.invoiceGateway).findIssuedBetween(fromDate, toDate);
         verify(this.expenseGateway).findInvoiceReceivedBook(fromDate, toDate, INVESTMENT_ASSET_THRESHOLD);
@@ -146,10 +146,16 @@ class TaxAgencyServiceIT {
     }
 
     private Expense buildExpense(LocalDate issueDate, String baseAmount, int vatRate, int depreciationRate) {
+        return this.buildExpense(issueDate, baseAmount, vatRate, depreciationRate, null);
+    }
+
+    private Expense buildExpense(LocalDate issueDate, String baseAmount, int vatRate, int depreciationRate,
+                                 BigDecimal deductibleAmount) {
         return Expense.builder()
                 .id(UUID.randomUUID())
                 .issueDate(issueDate)
                 .baseAmount(new BigDecimal(baseAmount))
+                .deductibleAmount(deductibleAmount)
                 .vatRate(vatRate)
                 .supplier(SupplierInfo.builder()
                         .name("Supplier")

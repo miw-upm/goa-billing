@@ -46,10 +46,10 @@ public class TaxAgencyService {
         return new VatSummary(
                 this.sum(invoiceIssuedBook, Invoice::getBaseAmount),
                 this.sum(invoiceIssuedBook, Invoice::getVatAmount),
-                this.sum(invoiceReceivedCurrentBook, Expense::getBaseAmount),
-                this.sum(invoiceReceivedCurrentBook, Expense::vatAmount),
-                this.sum(invoiceReceivedInvestmentBook, Expense::getBaseAmount),
-                this.sum(invoiceReceivedInvestmentBook, Expense::vatAmount)
+                this.sum(invoiceReceivedCurrentBook, Expense::deductibleBaseAmount),
+                this.sum(invoiceReceivedCurrentBook, Expense::deductibleVatAmount),
+                this.sum(invoiceReceivedInvestmentBook, Expense::deductibleBaseAmount),
+                this.sum(invoiceReceivedInvestmentBook, Expense::deductibleVatAmount)
         );
     }
 

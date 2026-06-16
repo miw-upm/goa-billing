@@ -48,6 +48,8 @@ public class Expense {
     @Positive
     private BigDecimal baseAmount;
 
+    private BigDecimal deductibleAmount;
+
     @NotNull
     @Positive
     private Integer vatRate;
@@ -80,6 +82,20 @@ public class Expense {
 
     public BigDecimal vatAmount() {
         return this.baseAmount.multiply(this.vatFactor());
+    }
+
+    public BigDecimal deductibleFactor() {
+        return this.deductibleAmount == null
+                ? BigDecimal.ONE
+                : this.deductibleAmount.divide(HUNDRED, SCALE, RoundingMode.HALF_UP);
+    }
+
+    public BigDecimal deductibleBaseAmount() {
+        return this.baseAmount.multiply(this.deductibleFactor());
+    }
+
+    public BigDecimal deductibleVatAmount() {
+        return this.deductibleBaseAmount().multiply(this.vatFactor());
     }
 
 }

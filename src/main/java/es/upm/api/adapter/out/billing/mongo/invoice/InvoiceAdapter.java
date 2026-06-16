@@ -92,8 +92,12 @@ public class InvoiceAdapter implements InvoiceGateway {
             result = this.invoiceRepository.findByEmissionDateGreaterThanEqualOrderByEmissionDateDesc(criteria.getFromDate());
         }
 
-        return result.stream()
+        Stream<Invoice> stream = result.stream()
                 .map(InvoiceEntity::toDomain);
+        if (criteria.getIssued() != null) {
+            stream = stream.filter(invoice -> criteria.getIssued().equals(invoice.isIssued()));
+        }
+        return stream;
     }
 
     @Override

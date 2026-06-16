@@ -64,5 +64,9 @@ class FindCriteriaTest {
         criteria = new InvoiceFindCriteria();
         criteria.setEngagementId("2H60");
         assertFalse(criteria.isEmpty());
+
+        criteria = new InvoiceFindCriteria();
+        criteria.setIssued(true);
+        assertFalse(criteria.isEmpty());
     }
 }

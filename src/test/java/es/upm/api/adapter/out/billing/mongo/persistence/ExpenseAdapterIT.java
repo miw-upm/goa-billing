@@ -52,6 +52,7 @@ class ExpenseAdapterIT {
                 .id(UUID.randomUUID())
                 .engagement(EngagementSnapshot.builder().id(engagementUuid).build())
                 .baseAmount(BigDecimal.valueOf(25))
+                .deductibleAmount(BigDecimal.ONE)
                 .vatRate(21)
                 .supplier(SupplierInfo.builder().name("Taxi Madrid").identity("A10000000").build())
                 .taxCategory(TaxCategory.OTROS)
@@ -76,6 +77,7 @@ class ExpenseAdapterIT {
         assertEquals(this.expense.getId().toString(), persistedExpenseEntity.getId());
         assertEquals(this.expense.getEngagement().getId().toString(), persistedExpenseEntity.getEngagementId());
         assertEquals(this.expense.getBaseAmount(), persistedExpenseEntity.getBaseAmount());
+        assertEquals(this.expense.getDeductibleAmount(), persistedExpenseEntity.getDeductibleAmount());
         assertEquals(this.expense.getVatRate(), persistedExpenseEntity.getVatRate());
         assertEquals(this.expense.getSupplier(), persistedExpenseEntity.getSupplier().toDomain());
         assertEquals(this.expense.getTaxCategory(), persistedExpenseEntity.getTaxCategory());

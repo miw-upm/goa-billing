@@ -204,6 +204,40 @@ class InvoiceAdapterIT {
     }
 
     @Test
+    void shouldFindOnlyIssuedInvoices() {
+        Invoice unissuedInvoice = this.buildInvoice(UUID.randomUUID(), this.engagementId, this.userId, this.paymentId,
+                LocalDate.of(2026, 3, 21), BigDecimal.valueOf(120));
+        unissuedInvoice.setEmissionDate(null);
+        InvoiceFindCriteria findCriteria = new InvoiceFindCriteria();
+        findCriteria.setIssued(true);
+        when(this.invoiceRepository.findAllByOrderByEmissionDateDesc())
+                .thenReturn(List.of(new InvoiceEntity(this.invoice), new InvoiceEntity(unissuedInvoice)));
+
+        List<Invoice> result = this.invoiceAdapter.find(findCriteria).toList();
+
+        assertEquals(1, result.size());
+        assertEquals(this.invoice.getId(), result.getFirst().getId());
+        verify(this.invoiceRepository).findAllByOrderByEmissionDateDesc();
+    }
+
+    @Test
+    void shouldFindOnlyNotIssuedInvoices() {
+        Invoice unissuedInvoice = this.buildInvoice(UUID.randomUUID(), this.engagementId, this.userId, this.paymentId,
+                LocalDate.of(2026, 3, 21), BigDecimal.valueOf(120));
+        unissuedInvoice.setEmissionDate(null);
+        InvoiceFindCriteria findCriteria = new InvoiceFindCriteria();
+        findCriteria.setIssued(false);
+        when(this.invoiceRepository.findAllByOrderByEmissionDateDesc())
+                .thenReturn(List.of(new InvoiceEntity(this.invoice), new InvoiceEntity(unissuedInvoice)));
+
+        List<Invoice> result = this.invoiceAdapter.find(findCriteria).toList();
+
+        assertEquals(1, result.size());
+        assertEquals(unissuedInvoice.getId(), result.getFirst().getId());
+        verify(this.invoiceRepository).findAllByOrderByEmissionDateDesc();
+    }
+
+    @Test
     void shouldFindIssuedInvoicesBetweenDates() {
         LocalDate fromDate = LocalDate.of(2026, 1, 1);
         LocalDate toDate = LocalDate.of(2026, 3, 31);
