@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.IntStream;
 
@@ -36,8 +37,12 @@ public class TaxAgencyResource {
 
     @GetMapping(value = RECEIVED_BOOK, produces = {"text/csv"})
     public String receivedBook(@RequestParam int year, @RequestParam Quarter quarter) {
-        int offset = this.taxAgencyService.countByYearBeforeQuarter(year, quarter);
-        var expenses = this.taxAgencyService.findByYearAndQuarter(year, quarter);
+        LocalDate fromDate = quarter.fromDate(year);
+        LocalDate toDate = quarter.toDate(year);
+        int offset = quarter == Quarter.T1
+                ? 0
+                : this.taxAgencyService.countInvoiceReceiveBook(LocalDate.of(year, 1, 1), fromDate.minusDays(1));
+        var expenses = this.taxAgencyService.invoiceReceiveBook(fromDate, toDate);
         List<String> lines = IntStream.range(0, expenses.size())
                 .mapToObj(index -> InvoiceBookDto.from(expenses.get(index), offset + index + 1))
                 .map(InvoiceBookDto::toCsvLine)

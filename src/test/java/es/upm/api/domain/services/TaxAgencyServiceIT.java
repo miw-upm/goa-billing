@@ -1,6 +1,5 @@
 package es.upm.api.domain.services;
 
-import es.upm.api.adapter.in.resources.Quarter;
 import es.upm.api.domain.model.BillingInfo;
 import es.upm.api.domain.model.Expense;
 import es.upm.api.domain.model.Invoice;
@@ -27,6 +26,7 @@ import static org.mockito.Mockito.when;
 @SpringBootTest
 @ActiveProfiles("test")
 class TaxAgencyServiceIT {
+    private static final BigDecimal INVESTMENT_ASSET_THRESHOLD = new BigDecimal("3005.06");
 
     @Autowired
     private TaxAgencyService taxAgencyService;
@@ -52,32 +52,29 @@ class TaxAgencyServiceIT {
     }
 
     @Test
-    void shouldFindReceivedBookByYearAndQuarter() {
+    void shouldFindReceivedBookByDateRange() {
         LocalDate fromDate = LocalDate.of(2026, 4, 1);
         LocalDate toDate = LocalDate.of(2026, 6, 30);
         Expense first = this.buildExpense(LocalDate.of(2026, 4, 10));
         Expense second = this.buildExpense(LocalDate.of(2026, 5, 15));
-        when(this.expenseGateway.findReceivedBook(fromDate, toDate)).thenReturn(Stream.of(first, second));
+        when(this.expenseGateway.findInvoiceReceivedBook(fromDate, toDate, INVESTMENT_ASSET_THRESHOLD))
+                .thenReturn(Stream.of(first, second));
 
-        List<Expense> expenses = this.taxAgencyService.findByYearAndQuarter(2026, Quarter.T2);
+        List<Expense> expenses = this.taxAgencyService
+                .findInvoiceReceivedBook(fromDate, toDate, INVESTMENT_ASSET_THRESHOLD);
 
         assertEquals(List.of(first, second), expenses);
-        verify(this.expenseGateway).findReceivedBook(fromDate, toDate);
+        verify(this.expenseGateway).findInvoiceReceivedBook(fromDate, toDate, INVESTMENT_ASSET_THRESHOLD);
     }
 
     @Test
-    void shouldCountReceivedBookBeforeQuarter() {
+    void shouldCountReceivedBookBeforeDate() {
         LocalDate fromDate = LocalDate.of(2026, 1, 1);
         LocalDate toDate = LocalDate.of(2026, 3, 31);
-        when(this.expenseGateway.countReceivedBook(fromDate, toDate)).thenReturn(3L);
+        when(this.expenseGateway.countInvoiceReceivedBook(fromDate, toDate, INVESTMENT_ASSET_THRESHOLD)).thenReturn(3L);
 
-        assertEquals(3, this.taxAgencyService.countByYearBeforeQuarter(2026, Quarter.T2));
-        verify(this.expenseGateway).countReceivedBook(fromDate, toDate);
-    }
-
-    @Test
-    void shouldReturnZeroWhenCountingBeforeFirstQuarter() {
-        assertEquals(0, this.taxAgencyService.countByYearBeforeQuarter(2026, Quarter.T1));
+        assertEquals(3, this.taxAgencyService.countInvoiceReceivedBook(fromDate, toDate, INVESTMENT_ASSET_THRESHOLD));
+        verify(this.expenseGateway).countInvoiceReceivedBook(fromDate, toDate, INVESTMENT_ASSET_THRESHOLD);
     }
 
     @Test

@@ -1,6 +1,5 @@
 package es.upm.api.domain.services;
 
-import es.upm.api.adapter.in.resources.Quarter;
 import es.upm.api.domain.model.Expense;
 import es.upm.api.domain.model.Invoice;
 import es.upm.api.domain.ports.out.billing.ExpenseGateway;
@@ -8,12 +7,14 @@ import es.upm.api.domain.ports.out.billing.InvoiceGateway;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 public class TaxAgencyService {
+    private static final BigDecimal INVESTMENT_ASSET_THRESHOLD = new BigDecimal("3005.06");
     private final InvoiceGateway invoiceGateway;
     private final ExpenseGateway expenseGateway;
 
@@ -22,17 +23,20 @@ public class TaxAgencyService {
                 .toList();
     }
 
-    public List<Expense> findByYearAndQuarter(int year, Quarter quarter) {
-        return this.expenseGateway.findReceivedBook(quarter.fromDate(year), quarter.toDate(year))
+    public List<Expense> invoiceReceiveBook(LocalDate fromDate, LocalDate toDate) {
+        return this.findInvoiceReceivedBook(fromDate, toDate, INVESTMENT_ASSET_THRESHOLD);
+    }
+
+    public List<Expense> findInvoiceReceivedBook(LocalDate fromDate, LocalDate toDate, BigDecimal taxableBaseThreshold) {
+        return this.expenseGateway.findInvoiceReceivedBook(fromDate, toDate, taxableBaseThreshold)
                 .toList();
     }
 
-    public int countByYearBeforeQuarter(int year, Quarter quarter) {
-        LocalDate fromDate = LocalDate.of(year, 1, 1);
-        LocalDate toDate = quarter.fromDate(year).minusDays(1);
-        if (toDate.isBefore(fromDate)) {
-            return 0;
-        }
-        return Math.toIntExact(this.expenseGateway.countReceivedBook(fromDate, toDate));
+    public int countInvoiceReceiveBook(LocalDate fromDate, LocalDate toDate) {
+        return this.countInvoiceReceivedBook(fromDate, toDate, INVESTMENT_ASSET_THRESHOLD);
+    }
+
+    public int countInvoiceReceivedBook(LocalDate fromDate, LocalDate toDate, BigDecimal taxableBaseThreshold) {
+        return Math.toIntExact(this.expenseGateway.countInvoiceReceivedBook(fromDate, toDate, taxableBaseThreshold));
     }
 }

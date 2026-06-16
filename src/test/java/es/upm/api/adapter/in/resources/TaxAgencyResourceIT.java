@@ -23,6 +23,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -110,8 +112,9 @@ class TaxAgencyResourceIT {
                         AMOUNT.format(new BigDecimal("208.00"))
                 )
         );
-        when(this.taxAgencyService.countByYearBeforeQuarter(2026, Quarter.T2)).thenReturn(1);
-        when(this.taxAgencyService.findByYearAndQuarter(2026, Quarter.T2))
+        when(this.taxAgencyService.countInvoiceReceiveBook(LocalDate.of(2026, 1, 1), LocalDate.of(2026, 3, 31)))
+                .thenReturn(1);
+        when(this.taxAgencyService.invoiceReceiveBook(LocalDate.of(2026, 4, 1), LocalDate.of(2026, 6, 30)))
                 .thenReturn(List.of(firstT2Expense, secondT2Expense));
 
         this.mockMvc.perform(get("/tax-agency/received-book")
@@ -121,8 +124,35 @@ class TaxAgencyResourceIT {
                 .andExpect(content().contentTypeCompatibleWith("text/csv"))
                 .andExpect(content().string(expected));
 
-        verify(this.taxAgencyService).countByYearBeforeQuarter(2026, Quarter.T2);
-        verify(this.taxAgencyService).findByYearAndQuarter(2026, Quarter.T2);
+        verify(this.taxAgencyService).countInvoiceReceiveBook(LocalDate.of(2026, 1, 1), LocalDate.of(2026, 3, 31));
+        verify(this.taxAgencyService).invoiceReceiveBook(LocalDate.of(2026, 4, 1), LocalDate.of(2026, 6, 30));
+    }
+
+    @Test
+    @WithMockUser(roles = "admin")
+    void shouldGenerateReceivedBookCsvStartingAtOneInFirstQuarter() throws Exception {
+        Expense expense = this.buildExpense(LocalDate.of(2026, 2, 10),
+                "Office Supplies", "B10000000", "100.00", 21);
+        String expected = "1;T1;%s;%s;Office Supplies;B10000000;%s;%s;0,21;%s;%s".formatted(
+                DATE.format(LocalDate.of(2026, 2, 10)),
+                DATE.format(LocalDate.of(2026, 2, 10)),
+                AMOUNT.format(new BigDecimal("100.00")),
+                AMOUNT.format(BigDecimal.ONE),
+                AMOUNT.format(new BigDecimal("21.00")),
+                AMOUNT.format(new BigDecimal("121.00"))
+        );
+        when(this.taxAgencyService.invoiceReceiveBook(LocalDate.of(2026, 1, 1), LocalDate.of(2026, 3, 31)))
+                .thenReturn(List.of(expense));
+
+        this.mockMvc.perform(get("/tax-agency/received-book")
+                        .param("year", "2026")
+                        .param("quarter", "T1"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentTypeCompatibleWith("text/csv"))
+                .andExpect(content().string(expected));
+
+        verify(this.taxAgencyService, never()).countInvoiceReceiveBook(any(LocalDate.class), any(LocalDate.class));
+        verify(this.taxAgencyService).invoiceReceiveBook(LocalDate.of(2026, 1, 1), LocalDate.of(2026, 3, 31));
     }
 
     @Test

@@ -16,7 +16,7 @@ import java.util.Locale;
 
 public record InvoiceBookDto(
         String reference,
-        String quarter,
+        Quarter quarter,
         LocalDate operationDate,
         LocalDate emissionDate,
         String clientName,
@@ -37,7 +37,7 @@ public record InvoiceBookDto(
         amount.setMaximumFractionDigits(2);
         List<String> values = new ArrayList<>(List.of(
                 this.reference,
-                this.quarter,
+                this.quarter.name(),
                 DATE.format(this.operationDate),
                 DATE.format(this.emissionDate),
                 this.clientName,
@@ -62,7 +62,7 @@ public record InvoiceBookDto(
         BigDecimal vatAmount = invoice.getVatAmount();
         return new InvoiceBookDto(
                 invoice.getSeries() + "-" + invoice.getNumber(),
-                Quarter.from(date).name(),
+                Quarter.from(date),
                 invoice.getOperationDate(),
                 invoice.getEmissionDate(),
                 bi.getFullName(),
@@ -83,7 +83,7 @@ public record InvoiceBookDto(
         BigDecimal vatAmount = baseAmount.multiply(vatRate);
         return new InvoiceBookDto(
                 String.valueOf(reference),
-                Quarter.from(date).name(),
+                Quarter.from(date),
                 date,
                 date,
                 supplier.getName(),

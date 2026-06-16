@@ -6,6 +6,7 @@ import es.upm.api.domain.model.Expense;
 import es.upm.api.domain.model.SupplierInfo;
 import es.upm.api.domain.model.TaxCategory;
 import es.upm.api.domain.model.external.EngagementSnapshot;
+import org.bson.types.Decimal128;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,6 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @DataMongoTest
 @ActiveProfiles("test")
 class ExpenseRepositoryTest {
+    private static final Decimal128 INVESTMENT_ASSET_THRESHOLD = Decimal128.parse("3005.06");
 
     @Autowired
     private ExpenseRepository expenseRepository;
@@ -118,22 +120,49 @@ class ExpenseRepositoryTest {
                 .issueDate(LocalDate.of(2026, 3, 23))
                 .withholdingTax(BigDecimal.ZERO)
                 .build();
-        this.expenseRepository.save(new ExpenseEntity(zeroVatExpense));
+        Expense excludedInvestmentAssetExpense = Expense.builder()
+                .id(UUID.randomUUID())
+                .series("2026")
+                .number(4)
+                .baseAmount(BigDecimal.valueOf(4000))
+                .vatRate(21)
+                .supplier(SupplierInfo.builder().name("Investment").identity("I10000000").build())
+                .taxCategory(TaxCategory.OTROS)
+                .depreciationRate(10)
+                .issueDate(LocalDate.of(2026, 3, 19))
+                .withholdingTax(BigDecimal.ZERO)
+                .build();
+        this.expenseRepository.saveAll(List.of(new ExpenseEntity(zeroVatExpense), new ExpenseEntity(excludedInvestmentAssetExpense)));
 
         List<ExpenseEntity> result = this.expenseRepository.findReceivedBook(
-                LocalDate.of(2026, 1, 1), LocalDate.of(2026, 3, 31));
+                LocalDate.of(2026, 1, 1), LocalDate.of(2026, 3, 31), INVESTMENT_ASSET_THRESHOLD);
 
-        assertEquals(2, result.size());
-        assertEquals(this.firstExpense.getId().toString(), result.getFirst().getId());
-        assertEquals(this.secondExpense.getId().toString(), result.get(1).getId());
+        assertEquals(3, result.size());
+        assertEquals(this.thirdExpense.getId().toString(), result.getFirst().getId());
+        assertEquals(this.firstExpense.getId().toString(), result.get(1).getId());
+        assertEquals(this.secondExpense.getId().toString(), result.get(2).getId());
     }
 
     @Test
     void shouldCountReceivedBook() {
-        long count = this.expenseRepository.countReceivedBook(
-                LocalDate.of(2026, 1, 1), LocalDate.of(2026, 3, 31));
+        Expense excludedInvestmentAssetExpense = Expense.builder()
+                .id(UUID.randomUUID())
+                .series("2026")
+                .number(4)
+                .baseAmount(BigDecimal.valueOf(4000))
+                .vatRate(21)
+                .supplier(SupplierInfo.builder().name("Investment").identity("I10000000").build())
+                .taxCategory(TaxCategory.OTROS)
+                .depreciationRate(10)
+                .issueDate(LocalDate.of(2026, 3, 19))
+                .withholdingTax(BigDecimal.ZERO)
+                .build();
+        this.expenseRepository.save(new ExpenseEntity(excludedInvestmentAssetExpense));
 
-        assertEquals(2, count);
+        long count = this.expenseRepository.countReceivedBook(
+                LocalDate.of(2026, 1, 1), LocalDate.of(2026, 3, 31), INVESTMENT_ASSET_THRESHOLD);
+
+        assertEquals(3, count);
     }
 
 }

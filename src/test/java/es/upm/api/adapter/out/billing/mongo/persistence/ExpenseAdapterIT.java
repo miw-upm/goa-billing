@@ -9,6 +9,7 @@ import es.upm.api.domain.model.TaxCategory;
 import es.upm.api.domain.model.criteria.ExpenseFindCriteria;
 import es.upm.api.domain.model.external.EngagementSnapshot;
 import es.upm.miw.exception.NotFoundException;
+import org.bson.types.Decimal128;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -33,6 +34,8 @@ import static org.mockito.Mockito.when;
 @SpringBootTest
 @ActiveProfiles("test")
 class ExpenseAdapterIT {
+    private static final BigDecimal INVESTMENT_ASSET_THRESHOLD = new BigDecimal("3005.06");
+    private static final Decimal128 INVESTMENT_ASSET_THRESHOLD_DECIMAL = Decimal128.parse("3005.06");
 
     private final ExpenseFindCriteria criteria = new ExpenseFindCriteria();
     private final UUID engagementUuid = UUID.fromString("aaaaaaaa-bbbb-cccc-dddd-eeeeee000000");
@@ -262,26 +265,28 @@ class ExpenseAdapterIT {
     }
 
     @Test
-    void shouldFindReceivedBook() {
+    void shouldFindInvoiceReceivedBook() {
         LocalDate fromDate = LocalDate.of(2026, 1, 1);
         LocalDate toDate = LocalDate.of(2026, 6, 30);
-        when(this.expenseRepository.findReceivedBook(fromDate, toDate))
+        when(this.expenseRepository.findReceivedBook(fromDate, toDate, INVESTMENT_ASSET_THRESHOLD_DECIMAL))
                 .thenReturn(List.of(new ExpenseEntity(this.expense)));
 
-        List<Expense> expenses = this.expensePersistenceMongodb.findReceivedBook(fromDate, toDate).toList();
+        List<Expense> expenses = this.expensePersistenceMongodb
+                .findInvoiceReceivedBook(fromDate, toDate, INVESTMENT_ASSET_THRESHOLD).toList();
 
         assertEquals(List.of(this.expense), expenses);
-        verify(this.expenseRepository).findReceivedBook(fromDate, toDate);
+        verify(this.expenseRepository).findReceivedBook(fromDate, toDate, INVESTMENT_ASSET_THRESHOLD_DECIMAL);
     }
 
     @Test
-    void shouldCountReceivedBook() {
+    void shouldCountInvoiceReceivedBook() {
         LocalDate fromDate = LocalDate.of(2026, 1, 1);
         LocalDate toDate = LocalDate.of(2026, 3, 31);
-        when(this.expenseRepository.countReceivedBook(fromDate, toDate)).thenReturn(2L);
+        when(this.expenseRepository.countReceivedBook(fromDate, toDate, INVESTMENT_ASSET_THRESHOLD_DECIMAL)).thenReturn(2L);
 
-        assertEquals(2L, this.expensePersistenceMongodb.countReceivedBook(fromDate, toDate));
-        verify(this.expenseRepository).countReceivedBook(fromDate, toDate);
+        assertEquals(2L, this.expensePersistenceMongodb
+                .countInvoiceReceivedBook(fromDate, toDate, INVESTMENT_ASSET_THRESHOLD));
+        verify(this.expenseRepository).countReceivedBook(fromDate, toDate, INVESTMENT_ASSET_THRESHOLD_DECIMAL);
     }
 
     @Test

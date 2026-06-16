@@ -1,5 +1,6 @@
 package es.upm.api.adapter.out.billing.mongo.expense;
 
+import org.bson.types.Decimal128;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Query;
 
@@ -29,18 +30,24 @@ public interface ExpenseRepository extends MongoRepository<ExpenseEntity, String
     @Query(value = """
             {
               'issueDate': { $gte: ?0, $lte: ?1 },
-              'depreciationRate': 100,
-              'vatRate': { $gt: 0 }
+              'vatRate': { $gt: 0 },
+              '$or': [
+                { 'depreciationRate': 100 },
+                { 'depreciationRate': { $ne: 100 }, 'baseAmount': { $lt: ?2 } }
+              ]
             }
             """, sort = "{ 'issueDate': 1 }")
-    List<ExpenseEntity> findReceivedBook(LocalDate fromDate, LocalDate toDate);
+    List<ExpenseEntity> findReceivedBook(LocalDate fromDate, LocalDate toDate, Decimal128 taxableBaseThreshold);
 
     @Query(value = """
             {
               'issueDate': { $gte: ?0, $lte: ?1 },
-              'depreciationRate': 100,
-              'vatRate': { $gt: 0 }
+              'vatRate': { $gt: 0 },
+              '$or': [
+                { 'depreciationRate': 100 },
+                { 'depreciationRate': { $ne: 100 }, 'baseAmount': { $lt: ?2 } }
+              ]
             }
             """, count = true)
-    long countReceivedBook(LocalDate fromDate, LocalDate toDate);
+    long countReceivedBook(LocalDate fromDate, LocalDate toDate, Decimal128 taxableBaseThreshold);
 }

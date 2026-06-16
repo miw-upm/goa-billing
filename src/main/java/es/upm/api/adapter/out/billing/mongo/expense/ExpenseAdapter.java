@@ -6,9 +6,11 @@ import es.upm.api.domain.model.criteria.ExpenseFindCriteria;
 import es.upm.api.domain.ports.out.billing.ExpenseGateway;
 import es.upm.miw.exception.BadRequestException;
 import es.upm.miw.exception.NotFoundException;
+import org.bson.types.Decimal128;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.StringUtils;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Locale;
@@ -126,13 +128,15 @@ public class ExpenseAdapter implements ExpenseGateway {
     }
 
     @Override
-    public Stream<Expense> findReceivedBook(LocalDate fromDate, LocalDate toDate) {
-        return this.expenseRepository.findReceivedBook(fromDate, toDate).stream()
+    public Stream<Expense> findInvoiceReceivedBook(LocalDate fromDate, LocalDate toDate, BigDecimal taxableBaseThreshold) {
+        return this.expenseRepository.findReceivedBook(
+                        fromDate, toDate, Decimal128.parse(taxableBaseThreshold.toPlainString())).stream()
                 .map(ExpenseEntity::toDomain);
     }
 
     @Override
-    public long countReceivedBook(LocalDate fromDate, LocalDate toDate) {
-        return this.expenseRepository.countReceivedBook(fromDate, toDate);
+    public long countInvoiceReceivedBook(LocalDate fromDate, LocalDate toDate, BigDecimal taxableBaseThreshold) {
+        return this.expenseRepository.countReceivedBook(
+                fromDate, toDate, Decimal128.parse(taxableBaseThreshold.toPlainString()));
     }
 }
