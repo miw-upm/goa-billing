@@ -5,6 +5,7 @@ import es.upm.api.domain.model.Expense;
 import es.upm.api.domain.model.Invoice;
 import es.upm.api.domain.model.SupplierInfo;
 import es.upm.api.domain.model.TaxCategory;
+import es.upm.api.domain.model.report.VatSummary;
 import es.upm.api.domain.ports.out.billing.ExpenseGateway;
 import es.upm.api.domain.ports.out.billing.InvoiceGateway;
 import org.junit.jupiter.api.Test;
@@ -87,6 +88,39 @@ class TaxAgencyServiceIT {
         verify(this.invoiceGateway).findIssuedBetween(fromDate, toDate);
     }
 
+    @Test
+    void shouldBuildModel303() {
+        LocalDate fromDate = LocalDate.of(2026, 4, 1);
+        LocalDate toDate = LocalDate.of(2026, 6, 30);
+        Invoice firstInvoice = this.buildInvoice(31, LocalDate.of(2026, 4, 20), LocalDate.of(2026, 4, 19),
+                "12345678Z", "First Client", "100.00", "21.00");
+        Invoice secondInvoice = this.buildInvoice(32, LocalDate.of(2026, 5, 20), LocalDate.of(2026, 5, 19),
+                "87654321X", "Second Client", "200.00", "8.00");
+        Expense currentExpense = this.buildExpense(LocalDate.of(2026, 4, 10), "50.00", 21, 100);
+        Expense reducedVatCurrentExpense = this.buildExpense(LocalDate.of(2026, 5, 10), "25.00", 4, 100);
+        Expense investmentExpense = this.buildExpense(LocalDate.of(2026, 6, 10), "4000.00", 21, 10);
+        when(this.invoiceGateway.findIssuedBetween(fromDate, toDate))
+                .thenReturn(Stream.of(firstInvoice, secondInvoice));
+        when(this.expenseGateway.findInvoiceReceivedBook(fromDate, toDate, INVESTMENT_ASSET_THRESHOLD))
+                .thenReturn(Stream.of(currentExpense, reducedVatCurrentExpense));
+        when(this.expenseGateway.findInvoiceReceivedInvestmentBook(fromDate, toDate, INVESTMENT_ASSET_THRESHOLD))
+                .thenReturn(Stream.of(investmentExpense));
+
+        VatSummary result = this.taxAgencyService.vatSummary(fromDate, toDate);
+
+        assertEquals(new VatSummary(
+                new BigDecimal("300.00"),
+                new BigDecimal("29.00"),
+                new BigDecimal("75.00"),
+                new BigDecimal("11.50"),
+                new BigDecimal("4000.00"),
+                new BigDecimal("840.00")
+        ), result);
+        verify(this.invoiceGateway).findIssuedBetween(fromDate, toDate);
+        verify(this.expenseGateway).findInvoiceReceivedBook(fromDate, toDate, INVESTMENT_ASSET_THRESHOLD);
+        verify(this.expenseGateway).findInvoiceReceivedInvestmentBook(fromDate, toDate, INVESTMENT_ASSET_THRESHOLD);
+    }
+
     private Invoice buildInvoice(int number, LocalDate emissionDate, LocalDate operationDate,
                                  String identity, String fullName, String baseAmount, String vatAmount) {
         return Invoice.builder()
@@ -108,17 +142,21 @@ class TaxAgencyServiceIT {
     }
 
     private Expense buildExpense(LocalDate issueDate) {
+        return this.buildExpense(issueDate, "100.00", 21, 100);
+    }
+
+    private Expense buildExpense(LocalDate issueDate, String baseAmount, int vatRate, int depreciationRate) {
         return Expense.builder()
                 .id(UUID.randomUUID())
                 .issueDate(issueDate)
-                .baseAmount(new BigDecimal("100.00"))
-                .vatRate(21)
+                .baseAmount(new BigDecimal(baseAmount))
+                .vatRate(vatRate)
                 .supplier(SupplierInfo.builder()
                         .name("Supplier")
                         .identity("B10000000")
                         .build())
                 .taxCategory(TaxCategory.OTROS)
-                .depreciationRate(100)
+                .depreciationRate(depreciationRate)
                 .build();
     }
 }

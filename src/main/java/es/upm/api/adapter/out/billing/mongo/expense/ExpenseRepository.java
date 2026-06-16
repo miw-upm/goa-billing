@@ -43,6 +43,16 @@ public interface ExpenseRepository extends MongoRepository<ExpenseEntity, String
             {
               'issueDate': { $gte: ?0, $lte: ?1 },
               'vatRate': { $gt: 0 },
+              'depreciationRate': { $ne: 100 },
+              'baseAmount': { $gt: ?2 }
+            }
+            """, sort = "{ 'issueDate': 1 }")
+    List<ExpenseEntity> findReceivedInvestmentBook(LocalDate fromDate, LocalDate toDate, Decimal128 taxableBaseThreshold);
+
+    @Query(value = """
+            {
+              'issueDate': { $gte: ?0, $lte: ?1 },
+              'vatRate': { $gt: 0 },
               '$or': [
                 { 'depreciationRate': 100 },
                 { 'depreciationRate': { $ne: 100 }, 'baseAmount': { $lt: ?2 } }

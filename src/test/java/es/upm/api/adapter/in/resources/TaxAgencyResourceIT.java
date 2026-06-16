@@ -5,6 +5,7 @@ import es.upm.api.domain.model.Expense;
 import es.upm.api.domain.model.Invoice;
 import es.upm.api.domain.model.SupplierInfo;
 import es.upm.api.domain.model.TaxCategory;
+import es.upm.api.domain.model.report.VatSummary;
 import es.upm.api.domain.services.TaxAgencyService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -153,6 +154,43 @@ class TaxAgencyResourceIT {
 
         verify(this.taxAgencyService, never()).countInvoiceReceiveBook(any(LocalDate.class), any(LocalDate.class));
         verify(this.taxAgencyService).invoiceReceiveBook(LocalDate.of(2026, 1, 1), LocalDate.of(2026, 3, 31));
+    }
+
+    @Test
+    @WithMockUser(roles = "admin")
+    void shouldReturnModel303() throws Exception {
+        LocalDate fromDate = LocalDate.of(2026, 4, 1);
+        LocalDate toDate = LocalDate.of(2026, 6, 30);
+        VatSummary vatSummary = new VatSummary(
+                new BigDecimal("300.00"),
+                new BigDecimal("29.00"),
+                new BigDecimal("75.00"),
+                new BigDecimal("11.50"),
+                new BigDecimal("4000.00"),
+                new BigDecimal("840.00")
+        );
+        when(this.taxAgencyService.vatSummary(fromDate, toDate)).thenReturn(vatSummary);
+
+        this.mockMvc.perform(get("/tax-agency/models/303")
+                        .param("year", "2026")
+                        .param("quarter", "T2"))
+                .andExpect(status().isOk())
+                .andExpect(content().json("""
+                        {
+                          "year": 2026,
+                          "quarter": "T2",
+                          "vatSummary": {
+                            "invoiceIssuedBase": 300.00,
+                            "invoiceIssuedVat": 29.00,
+                            "invoiceReceivedCurrentBase": 75.00,
+                            "invoiceReceivedCurrentVat": 11.50,
+                            "invoiceReceivedInvestmentBase": 4000.00,
+                            "invoiceReceivedInvestmentVat": 840.00
+                          }
+                        }
+                        """));
+
+        verify(this.taxAgencyService).vatSummary(fromDate, toDate);
     }
 
     @Test

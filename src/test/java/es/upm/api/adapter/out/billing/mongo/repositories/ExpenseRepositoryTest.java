@@ -165,4 +165,27 @@ class ExpenseRepositoryTest {
         assertEquals(3, count);
     }
 
+    @Test
+    void shouldFindReceivedInvestmentBook() {
+        Expense investmentAssetExpense = Expense.builder()
+                .id(UUID.randomUUID())
+                .series("2026")
+                .number(4)
+                .baseAmount(BigDecimal.valueOf(4000))
+                .vatRate(21)
+                .supplier(SupplierInfo.builder().name("Investment").identity("I10000000").build())
+                .taxCategory(TaxCategory.OTROS)
+                .depreciationRate(10)
+                .issueDate(LocalDate.of(2026, 3, 19))
+                .withholdingTax(BigDecimal.ZERO)
+                .build();
+        this.expenseRepository.save(new ExpenseEntity(investmentAssetExpense));
+
+        List<ExpenseEntity> result = this.expenseRepository.findReceivedInvestmentBook(
+                LocalDate.of(2026, 1, 1), LocalDate.of(2026, 3, 31), INVESTMENT_ASSET_THRESHOLD);
+
+        assertEquals(1, result.size());
+        assertEquals(investmentAssetExpense.getId().toString(), result.getFirst().getId());
+    }
+
 }

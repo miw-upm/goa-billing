@@ -135,6 +135,14 @@ public class ExpenseAdapter implements ExpenseGateway {
     }
 
     @Override
+    public Stream<Expense> findInvoiceReceivedInvestmentBook(
+            LocalDate fromDate, LocalDate toDate, BigDecimal taxableBaseThreshold) {
+        return this.expenseRepository.findReceivedInvestmentBook(
+                        fromDate, toDate, Decimal128.parse(taxableBaseThreshold.toPlainString())).stream()
+                .map(ExpenseEntity::toDomain);
+    }
+
+    @Override
     public long countInvoiceReceivedBook(LocalDate fromDate, LocalDate toDate, BigDecimal taxableBaseThreshold) {
         return this.expenseRepository.countReceivedBook(
                 fromDate, toDate, Decimal128.parse(taxableBaseThreshold.toPlainString()));
