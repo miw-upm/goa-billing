@@ -48,6 +48,8 @@ public class DatabaseSeederDev {
     public static final String ID_18 = "aaaaaaaa-bbbb-cccc-dddd-eeeeffff0012";
     public static final String ID_19 = "aaaaaaaa-bbbb-cccc-dddd-eeeeffff0013";
     public static final String ID_20 = "aaaaaaaa-bbbb-cccc-dddd-eeeeffff0014";
+    public static final String ID_21 = "aaaaaaaa-bbbb-cccc-dddd-eeeeffff0015";
+    public static final String ID_22 = "aaaaaaaa-bbbb-cccc-dddd-eeeeffff0016";
     public static final UUID EL_0 = UUID.fromString(ID_0);
     public static final UUID EL_1 = UUID.fromString(ID_1);
     public static final UUID C_0 = UUID.fromString(ID_0);
@@ -138,6 +140,36 @@ public class DatabaseSeederDev {
                         .depreciationRate(100)
                         .issueDate(LocalDate.of(2026, 3, 18))
                         .description("Cena")
+                        .withholdingTax(BigDecimal.ZERO)
+                        .documentPath(null)
+                        .build(),
+                ExpenseEntity.builder()
+                        .id(ID_21)
+                        .recordedAt(LocalDateTime.of(2026, 4, 10, 9, 0))
+                        .series("2026")
+                        .number(5)
+                        .baseAmount(new BigDecimal("95.00"))
+                        .vatRate(21)
+                        .supplier(new SupplierInfoEntity("Material Oficina", "B50000000"))
+                        .taxCategory(TaxCategory.OTROS)
+                        .depreciationRate(100)
+                        .issueDate(LocalDate.of(2026, 4, 10))
+                        .description("Material de oficina")
+                        .withholdingTax(BigDecimal.ZERO)
+                        .documentPath(null)
+                        .build(),
+                ExpenseEntity.builder()
+                        .id(ID_22)
+                        .recordedAt(LocalDateTime.of(2026, 5, 15, 9, 0))
+                        .series("2026")
+                        .number(6)
+                        .baseAmount(new BigDecimal("210.00"))
+                        .vatRate(21)
+                        .supplier(new SupplierInfoEntity("Papeleria Central", "B60000000"))
+                        .taxCategory(TaxCategory.OTROS)
+                        .depreciationRate(100)
+                        .issueDate(LocalDate.of(2026, 5, 15))
+                        .description("Papeleria")
                         .withholdingTax(BigDecimal.ZERO)
                         .documentPath(null)
                         .build()

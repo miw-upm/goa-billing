@@ -89,7 +89,7 @@ public record InvoiceBookDto(
                 supplier.getName(),
                 supplier.getIdentity(),
                 baseAmount,
-                new BigDecimal("100"),
+                BigDecimal.ONE,
                 vatRate,
                 vatAmount,
                 baseAmount.add(vatAmount)

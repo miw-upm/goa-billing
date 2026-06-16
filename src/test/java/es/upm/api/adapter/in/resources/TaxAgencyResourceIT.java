@@ -97,7 +97,7 @@ class TaxAgencyResourceIT {
                         DATE.format(LocalDate.of(2026, 4, 10)),
                         DATE.format(LocalDate.of(2026, 4, 10)),
                         AMOUNT.format(new BigDecimal("100.00")),
-                        AMOUNT.format(new BigDecimal("100")),
+                        AMOUNT.format(BigDecimal.ONE),
                         AMOUNT.format(new BigDecimal("21.00")),
                         AMOUNT.format(new BigDecimal("121.00"))
                 ),
@@ -105,7 +105,7 @@ class TaxAgencyResourceIT {
                         DATE.format(LocalDate.of(2026, 5, 15)),
                         DATE.format(LocalDate.of(2026, 5, 15)),
                         AMOUNT.format(new BigDecimal("200.00")),
-                        AMOUNT.format(new BigDecimal("100")),
+                        AMOUNT.format(BigDecimal.ONE),
                         AMOUNT.format(new BigDecimal("8.00")),
                         AMOUNT.format(new BigDecimal("208.00"))
                 )
