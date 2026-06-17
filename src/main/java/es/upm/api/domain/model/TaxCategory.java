@@ -15,5 +15,6 @@ public enum TaxCategory {
     TRIBUTOS,                   // IAE, IBI proporcional, tasas
     FORMACION,                  // cursos, libros, congresos
     PUBLICIDAD,                 // marketing, publicidad
+    PERSONAL,                   // NOMINAS CON APORTACIONES DE EMPRESA
     OTROS
 }
