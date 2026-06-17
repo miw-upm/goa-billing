@@ -2,6 +2,7 @@ package es.upm.api.domain.services;
 
 import es.upm.api.domain.model.Expense;
 import es.upm.api.domain.model.Invoice;
+import es.upm.api.domain.model.report.NetIncomeBreakdown;
 import es.upm.api.domain.model.report.VatSummary;
 import es.upm.api.domain.ports.out.billing.ExpenseGateway;
 import es.upm.api.domain.ports.out.billing.InvoiceGateway;
@@ -9,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.function.Function;
@@ -16,7 +18,10 @@ import java.util.function.Function;
 @Service
 @RequiredArgsConstructor
 public class TaxAgencyService {
+    private static final int SCALE = 6;
     private static final BigDecimal INVESTMENT_ASSET_THRESHOLD = new BigDecimal("3005.06");
+    private static final BigDecimal HUNDRED = new BigDecimal("100");
+    private static final BigDecimal TWELVE = new BigDecimal("12");
     private final InvoiceGateway invoiceGateway;
     private final ExpenseGateway expenseGateway;
 
@@ -53,6 +58,21 @@ public class TaxAgencyService {
         );
     }
 
+    public NetIncomeBreakdown netIncomeBreakdown(LocalDate toDate) {
+        LocalDate fromDate = LocalDate.of(toDate.getYear(), 1, 1);
+        List<Invoice> invoiceIssuedBook = this.invoiceIssuedBook(fromDate, toDate);
+        List<Expense> invoiceReceivedCurrentBook = this.invoiceReceiveBook(fromDate, toDate);
+        List<Expense> investmentAssets = this.expenseGateway.findInvestmentAssetsUntil(toDate, INVESTMENT_ASSET_THRESHOLD)
+                .toList();
+        return new NetIncomeBreakdown(
+                this.sum(invoiceIssuedBook, Invoice::getBaseAmount),
+                this.sum(invoiceReceivedCurrentBook, Expense::deductibleBaseAmount),
+                this.sum(investmentAssets, investmentAsset -> this.investmentAmortization(investmentAsset, toDate)),
+                this.sum(invoiceReceivedCurrentBook,
+                        expense -> expense.getWithholdingTax() == null ? BigDecimal.ZERO : expense.getWithholdingTax())
+        );
+    }
+
     public int countInvoiceReceiveBook(LocalDate fromDate, LocalDate toDate) {
         return this.countInvoiceReceivedBook(fromDate, toDate, INVESTMENT_ASSET_THRESHOLD);
     }
@@ -65,5 +85,42 @@ public class TaxAgencyService {
         return values.stream()
                 .map(mapper)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    private BigDecimal investmentAmortization(Expense investmentAsset, LocalDate toDate) {
+        BigDecimal baseAmount = investmentAsset.deductibleBaseAmount();
+        BigDecimal amortizedBeforeYear = this.amortizationAmount(
+                baseAmount, investmentAsset.getDepreciationRate(),
+                this.monthsBeforeYear(investmentAsset.getIssueDate(), toDate)
+        );
+        BigDecimal remainingAmount = baseAmount.subtract(amortizedBeforeYear).max(BigDecimal.ZERO);
+        BigDecimal currentYearAmortization = this.amortizationAmount(
+                baseAmount, investmentAsset.getDepreciationRate(),
+                this.monthsInCurrentYear(investmentAsset.getIssueDate(), toDate)
+        );
+        return currentYearAmortization.min(remainingAmount);
+    }
+
+    private BigDecimal amortizationAmount(BigDecimal baseAmount, int depreciationRate, int months) {
+        return baseAmount
+                .multiply(BigDecimal.valueOf(depreciationRate))
+                .multiply(BigDecimal.valueOf(months))
+                .divide(HUNDRED.multiply(TWELVE), SCALE, RoundingMode.HALF_UP);
+    }
+
+    private int monthsBeforeYear(LocalDate issueDate, LocalDate toDate) {
+        if (issueDate.getYear() >= toDate.getYear()) {
+            return 0;
+        }
+        int firstYearMonths = 13 - issueDate.getMonthValue();
+        int fullYearsBetween = toDate.getYear() - issueDate.getYear() - 1;
+        return firstYearMonths + fullYearsBetween * 12;
+    }
+
+    private int monthsInCurrentYear(LocalDate issueDate, LocalDate toDate) {
+        if (issueDate.getYear() == toDate.getYear()) {
+            return toDate.getMonthValue() - issueDate.getMonthValue() + 1;
+        }
+        return toDate.getMonthValue();
     }
 }

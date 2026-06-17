@@ -5,6 +5,7 @@ import es.upm.api.domain.model.Expense;
 import es.upm.api.domain.model.Invoice;
 import es.upm.api.domain.model.SupplierInfo;
 import es.upm.api.domain.model.TaxCategory;
+import es.upm.api.domain.model.report.NetIncomeBreakdown;
 import es.upm.api.domain.model.report.VatSummary;
 import es.upm.api.domain.ports.out.billing.ExpenseGateway;
 import es.upm.api.domain.ports.out.billing.InvoiceGateway;
@@ -108,17 +109,52 @@ class TaxAgencyServiceIT {
 
         VatSummary result = this.taxAgencyService.vatSummary(fromDate, toDate);
 
-        assertEquals(new VatSummary(
+        this.assertVatSummary(new VatSummary(
                 new BigDecimal("300.00"),
                 new BigDecimal("29.00"),
-                new BigDecimal("62.500000"),
-                new BigDecimal("11.00000000"),
-                new BigDecimal("1000.000000"),
-                new BigDecimal("210.00000000")
+                new BigDecimal("62.50"),
+                new BigDecimal("11.00"),
+                new BigDecimal("1000.00"),
+                new BigDecimal("210.00")
         ), result);
         verify(this.invoiceGateway).findIssuedBetween(fromDate, toDate);
         verify(this.expenseGateway).findInvoiceReceivedBook(fromDate, toDate, INVESTMENT_ASSET_THRESHOLD);
         verify(this.expenseGateway).findInvoiceReceivedInvestmentBook(fromDate, toDate, INVESTMENT_ASSET_THRESHOLD);
+    }
+
+    @Test
+    void shouldBuildNetIncomeBreakdown() {
+        LocalDate toDate = LocalDate.of(2026, 6, 30);
+        LocalDate fromYearDate = LocalDate.of(2026, 1, 1);
+        Invoice firstInvoice = this.buildInvoice(31, LocalDate.of(2026, 4, 20), LocalDate.of(2026, 4, 19),
+                "12345678Z", "First Client", "100.00", "21.00");
+        Invoice secondInvoice = this.buildInvoice(32, LocalDate.of(2026, 5, 20), LocalDate.of(2026, 5, 19),
+                "87654321X", "Second Client", "200.00", "42.00");
+        Expense currentExpense = this.buildExpense(LocalDate.of(2026, 4, 10), "50.00", 21, 100,
+                null, new BigDecimal("7.50"));
+        Expense reducedCurrentExpense = this.buildExpense(LocalDate.of(2026, 5, 10), "25.00", 4, 100,
+                new BigDecimal("50"), new BigDecimal("2.50"));
+        Expense currentYearInvestment = this.buildExpense(LocalDate.of(2026, 2, 12), "12000.00", 21, 12);
+        Expense previousYearInvestment = this.buildExpense(LocalDate.of(2025, 6, 12), "6000.00", 21, 20);
+        Expense alreadyAmortizedInvestment = this.buildExpense(LocalDate.of(2020, 1, 12), "6000.00", 21, 50);
+        when(this.invoiceGateway.findIssuedBetween(fromYearDate, toDate))
+                .thenReturn(Stream.of(firstInvoice, secondInvoice));
+        when(this.expenseGateway.findInvoiceReceivedBook(fromYearDate, toDate, INVESTMENT_ASSET_THRESHOLD))
+                .thenReturn(Stream.of(currentExpense, reducedCurrentExpense));
+        when(this.expenseGateway.findInvestmentAssetsUntil(toDate, INVESTMENT_ASSET_THRESHOLD))
+                .thenReturn(Stream.of(currentYearInvestment, previousYearInvestment, alreadyAmortizedInvestment));
+
+        NetIncomeBreakdown result = this.taxAgencyService.netIncomeBreakdown(toDate);
+
+        this.assertNetIncomeBreakdown(new NetIncomeBreakdown(
+                new BigDecimal("300.00"),
+                new BigDecimal("62.50"),
+                new BigDecimal("1200.00"),
+                new BigDecimal("10.00")
+        ), result);
+        verify(this.invoiceGateway).findIssuedBetween(fromYearDate, toDate);
+        verify(this.expenseGateway).findInvoiceReceivedBook(fromYearDate, toDate, INVESTMENT_ASSET_THRESHOLD);
+        verify(this.expenseGateway).findInvestmentAssetsUntil(toDate, INVESTMENT_ASSET_THRESHOLD);
     }
 
     private Invoice buildInvoice(int number, LocalDate emissionDate, LocalDate operationDate,
@@ -151,6 +187,11 @@ class TaxAgencyServiceIT {
 
     private Expense buildExpense(LocalDate issueDate, String baseAmount, int vatRate, int depreciationRate,
                                  BigDecimal deductibleAmount) {
+        return this.buildExpense(issueDate, baseAmount, vatRate, depreciationRate, deductibleAmount, null);
+    }
+
+    private Expense buildExpense(LocalDate issueDate, String baseAmount, int vatRate, int depreciationRate,
+                                 BigDecimal deductibleAmount, BigDecimal withholdingTax) {
         return Expense.builder()
                 .id(UUID.randomUUID())
                 .issueDate(issueDate)
@@ -163,6 +204,27 @@ class TaxAgencyServiceIT {
                         .build())
                 .taxCategory(TaxCategory.OTROS)
                 .depreciationRate(depreciationRate)
+                .withholdingTax(withholdingTax)
                 .build();
+    }
+
+    private void assertVatSummary(VatSummary expected, VatSummary actual) {
+        this.assertBigDecimalEquals(expected.invoiceIssuedBase(), actual.invoiceIssuedBase());
+        this.assertBigDecimalEquals(expected.invoiceIssuedVat(), actual.invoiceIssuedVat());
+        this.assertBigDecimalEquals(expected.invoiceReceivedCurrentBase(), actual.invoiceReceivedCurrentBase());
+        this.assertBigDecimalEquals(expected.invoiceReceivedCurrentVat(), actual.invoiceReceivedCurrentVat());
+        this.assertBigDecimalEquals(expected.invoiceReceivedInvestmentBase(), actual.invoiceReceivedInvestmentBase());
+        this.assertBigDecimalEquals(expected.invoiceReceivedInvestmentVat(), actual.invoiceReceivedInvestmentVat());
+    }
+
+    private void assertNetIncomeBreakdown(NetIncomeBreakdown expected, NetIncomeBreakdown actual) {
+        this.assertBigDecimalEquals(expected.income(), actual.income());
+        this.assertBigDecimalEquals(expected.currentExpenses(), actual.currentExpenses());
+        this.assertBigDecimalEquals(expected.investmentAmortization(), actual.investmentAmortization());
+        this.assertBigDecimalEquals(expected.withholdings(), actual.withholdings());
+    }
+
+    private void assertBigDecimalEquals(BigDecimal expected, BigDecimal actual) {
+        assertEquals(0, expected.compareTo(actual));
     }
 }

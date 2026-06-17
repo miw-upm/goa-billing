@@ -30,5 +30,7 @@ public interface ExpenseGateway {
 
     Stream<Expense> findInvoiceReceivedInvestmentBook(LocalDate fromDate, LocalDate toDate, BigDecimal taxableBaseThreshold);
 
+    Stream<Expense> findInvestmentAssetsUntil(LocalDate toDate, BigDecimal taxableBaseThreshold);
+
     long countInvoiceReceivedBook(LocalDate fromDate, LocalDate toDate, BigDecimal taxableBaseThreshold);
 }
