@@ -1,6 +1,7 @@
 package es.upm.api.adapter.in.resources;
 
 import es.upm.api.adapter.in.resources.dtos.InvoiceBookDto;
+import es.upm.api.adapter.in.resources.dtos.Model130Dto;
 import es.upm.api.adapter.in.resources.dtos.Model303Dto;
 import es.upm.api.domain.services.TaxAgencyService;
 import es.upm.miw.security.Security;
@@ -23,6 +24,7 @@ public class TaxAgencyResource {
     public static final String TAX_AGENCY = "/tax-agency";
     public static final String INVOICE_ISSUED_BOOK = "/invoice-issued-book";
     public static final String RECEIVED_BOOK = "/received-book";
+    public static final String MODEL_130 = "/models/130";
     public static final String MODEL_303 = "/models/303";
 
     private final TaxAgencyService taxAgencyService;
@@ -55,5 +57,10 @@ public class TaxAgencyResource {
     @GetMapping(MODEL_303)
     public Model303Dto model303(@RequestParam int year, @RequestParam Quarter quarter) {
         return new Model303Dto(year, quarter, this.taxAgencyService.vatSummary(quarter.fromDate(year), quarter.toDate(year)));
+    }
+
+    @GetMapping(MODEL_130)
+    public Model130Dto model130(@RequestParam int year, @RequestParam Quarter quarter) {
+        return new Model130Dto(year, quarter, this.taxAgencyService.netIncomeBreakdown(quarter.toDate(year)));
     }
 }

@@ -5,6 +5,7 @@ import es.upm.api.domain.model.Expense;
 import es.upm.api.domain.model.Invoice;
 import es.upm.api.domain.model.SupplierInfo;
 import es.upm.api.domain.model.TaxCategory;
+import es.upm.api.domain.model.report.NetIncomeBreakdown;
 import es.upm.api.domain.model.report.VatSummary;
 import es.upm.api.domain.services.TaxAgencyService;
 import org.junit.jupiter.api.Test;
@@ -188,6 +189,38 @@ class TaxAgencyResourceIT {
                         """));
 
         verify(this.taxAgencyService).vatSummary(fromDate, toDate);
+    }
+
+    @Test
+    @WithMockUser(roles = "admin")
+    void shouldReturnModel130() throws Exception {
+        LocalDate toDate = LocalDate.of(2026, 6, 30);
+        NetIncomeBreakdown netIncomeBreakdown = new NetIncomeBreakdown(
+                new BigDecimal("300.00"),
+                new BigDecimal("75.00"),
+                new BigDecimal("1200.00"),
+                new BigDecimal("10.00")
+        );
+        when(this.taxAgencyService.netIncomeBreakdown(toDate)).thenReturn(netIncomeBreakdown);
+
+        this.mockMvc.perform(get("/tax-agency/models/130")
+                        .param("year", "2026")
+                        .param("quarter", "T2"))
+                .andExpect(status().isOk())
+                .andExpect(content().json("""
+                        {
+                          "year": 2026,
+                          "quarter": "T2",
+                          "netIncomeBreakdown": {
+                            "income": 300.00,
+                            "currentExpenses": 75.00,
+                            "investmentAmortization": 1200.00,
+                            "withholdings": 10.00
+                          }
+                        }
+                        """));
+
+        verify(this.taxAgencyService).netIncomeBreakdown(toDate);
     }
 
     @Test
