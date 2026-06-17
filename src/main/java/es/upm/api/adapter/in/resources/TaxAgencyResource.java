@@ -1,7 +1,7 @@
 package es.upm.api.adapter.in.resources;
 
 import es.upm.api.adapter.in.resources.dtos.InvoiceBookDto;
-import es.upm.api.adapter.in.resources.dtos.Model303;
+import es.upm.api.adapter.in.resources.dtos.Model303Dto;
 import es.upm.api.domain.services.TaxAgencyService;
 import es.upm.miw.security.Security;
 import lombok.RequiredArgsConstructor;
@@ -53,7 +53,7 @@ public class TaxAgencyResource {
     }
 
     @GetMapping(MODEL_303)
-    public Model303 model303(@RequestParam int year, @RequestParam Quarter quarter) {
-        return new Model303(year, quarter, this.taxAgencyService.vatSummary(quarter.fromDate(year), quarter.toDate(year)));
+    public Model303Dto model303(@RequestParam int year, @RequestParam Quarter quarter) {
+        return new Model303Dto(year, quarter, this.taxAgencyService.vatSummary(quarter.fromDate(year), quarter.toDate(year)));
     }
 }
