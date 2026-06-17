@@ -14,6 +14,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -24,6 +25,8 @@ import java.util.UUID;
 @AllArgsConstructor
 public class Expense {
     public static final int CURRENT = 100;
+    private static final int SCALE = 6;
+    private static final BigDecimal HUNDRED = new BigDecimal("100");
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private UUID id;
 
@@ -45,8 +48,10 @@ public class Expense {
     @Positive
     private BigDecimal baseAmount;
 
+    private BigDecimal deductibleAmount;
+
     @NotNull
-    @Positive
+    @PositiveOrZero
     private Integer vatRate;
 
     @Valid
@@ -69,6 +74,28 @@ public class Expense {
 
     public boolean isCapital() {
         return depreciationRate != CURRENT;
+    }
+
+    public BigDecimal vatFactor() {
+        return BigDecimal.valueOf(this.vatRate).divide(HUNDRED, SCALE, RoundingMode.HALF_UP);
+    }
+
+    public BigDecimal vatAmount() {
+        return this.baseAmount.multiply(this.vatFactor());
+    }
+
+    public BigDecimal deductibleFactor() {
+        return this.deductibleAmount == null
+                ? BigDecimal.ONE
+                : this.deductibleAmount.divide(HUNDRED, SCALE, RoundingMode.HALF_UP);
+    }
+
+    public BigDecimal deductibleBaseAmount() {
+        return this.baseAmount.multiply(this.deductibleFactor());
+    }
+
+    public BigDecimal deductibleVatAmount() {
+        return this.deductibleBaseAmount().multiply(this.vatFactor());
     }
 
 }

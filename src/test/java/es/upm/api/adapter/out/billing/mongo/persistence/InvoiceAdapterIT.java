@@ -70,6 +70,7 @@ class InvoiceAdapterIT {
         assertEquals(this.invoice.getLegalProcedures(),
                 captor.getValue().getLegalProcedures().stream().map(LegalProcedureEntity::toDomain).toList());
         assertEquals(this.invoice.getBaseAmount(), captor.getValue().getBaseAmount());
+        assertEquals(this.invoice.getWithholdingRate(), captor.getValue().getWithholdingRate());
         assertEquals(this.invoice.getPriorPayments(),
                 captor.getValue().getPriorPayments().stream().map(paymentEntity -> paymentEntity.toDomain()).toList());
         assertEquals(this.invoice.getExpenses(), captor.getValue().toDomain().getExpenses());
@@ -203,6 +204,66 @@ class InvoiceAdapterIT {
                 engagementIdPrefix, fromDate);
     }
 
+    @Test
+    void shouldFindOnlyIssuedInvoices() {
+        Invoice unissuedInvoice = this.buildInvoice(UUID.randomUUID(), this.engagementId, this.userId, this.paymentId,
+                LocalDate.of(2026, 3, 21), BigDecimal.valueOf(120));
+        unissuedInvoice.setEmissionDate(null);
+        InvoiceFindCriteria findCriteria = new InvoiceFindCriteria();
+        findCriteria.setIssued(true);
+        when(this.invoiceRepository.findAllByOrderByEmissionDateDesc())
+                .thenReturn(List.of(new InvoiceEntity(this.invoice), new InvoiceEntity(unissuedInvoice)));
+
+        List<Invoice> result = this.invoiceAdapter.find(findCriteria).toList();
+
+        assertEquals(1, result.size());
+        assertEquals(this.invoice.getId(), result.getFirst().getId());
+        verify(this.invoiceRepository).findAllByOrderByEmissionDateDesc();
+    }
+
+    @Test
+    void shouldFindOnlyNotIssuedInvoices() {
+        Invoice unissuedInvoice = this.buildInvoice(UUID.randomUUID(), this.engagementId, this.userId, this.paymentId,
+                LocalDate.of(2026, 3, 21), BigDecimal.valueOf(120));
+        unissuedInvoice.setEmissionDate(null);
+        InvoiceFindCriteria findCriteria = new InvoiceFindCriteria();
+        findCriteria.setIssued(false);
+        when(this.invoiceRepository.findAllByOrderByEmissionDateDesc())
+                .thenReturn(List.of(new InvoiceEntity(this.invoice), new InvoiceEntity(unissuedInvoice)));
+
+        List<Invoice> result = this.invoiceAdapter.find(findCriteria).toList();
+
+        assertEquals(1, result.size());
+        assertEquals(unissuedInvoice.getId(), result.getFirst().getId());
+        verify(this.invoiceRepository).findAllByOrderByEmissionDateDesc();
+    }
+
+    @Test
+    void shouldFindIssuedInvoicesBetweenDates() {
+        LocalDate fromDate = LocalDate.of(2026, 1, 1);
+        LocalDate toDate = LocalDate.of(2026, 3, 31);
+        when(this.invoiceRepository.findIssuedBetweenOrderByNumberAsc(fromDate, toDate))
+                .thenReturn(List.of(new InvoiceEntity(this.invoice)));
+
+        List<Invoice> result = this.invoiceAdapter.findIssuedBetween(fromDate, toDate).toList();
+
+        assertEquals(1, result.size());
+        assertEquals(this.invoice.getId(), result.getFirst().getId());
+        verify(this.invoiceRepository).findIssuedBetweenOrderByNumberAsc(fromDate, toDate);
+    }
+
+    @Test
+    void shouldFindIssuedInvoicesBetweenNumbers() {
+        when(this.invoiceRepository.findIssuedBetweenOrderByNumberAsc("2026", 1, 2))
+                .thenReturn(List.of(new InvoiceEntity(this.invoice)));
+
+        List<Invoice> result = this.invoiceAdapter.findIssuedBetween("2026", 1, 2).toList();
+
+        assertEquals(1, result.size());
+        assertEquals(this.invoice.getId(), result.getFirst().getId());
+        verify(this.invoiceRepository).findIssuedBetweenOrderByNumberAsc("2026", 1, 2);
+    }
+
     private Invoice buildInvoice(UUID invoiceId, UUID engagementId, UUID userId, UUID paymentId,
                                  LocalDate emissionDate, BigDecimal baseAmount) {
         return Invoice.builder()
@@ -223,6 +284,7 @@ class InvoiceAdapterIT {
                 .baseAmount(baseAmount)
                 .vatAmount(new BigDecimal("18.90"))
                 .vatRate(BigDecimal.valueOf(21))
+                .withholdingRate(new BigDecimal("15"))
                 .engagement(EngagementSnapshot.builder().id(engagementId).build())
                 .legalProcedures(List.of(LegalProcedure.builder()
                         .title("Procedimiento")

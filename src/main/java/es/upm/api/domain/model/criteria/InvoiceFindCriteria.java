@@ -13,6 +13,7 @@ public class InvoiceFindCriteria {
     private String client;
     private LocalDate fromDate;
     private String engagementId;
+    private Boolean issued;
 
     public InvoiceFindCriteria(String client, LocalDate fromDate) {
         this.client = client;
@@ -20,6 +21,6 @@ public class InvoiceFindCriteria {
     }
 
     public boolean isEmpty() {
-        return this.client == null && this.fromDate == null && this.engagementId == null;
+        return this.client == null && this.fromDate == null && this.engagementId == null && this.issued == null;
     }
 }

@@ -38,6 +38,7 @@ public class Invoice {
     private BigDecimal baseAmount;
     private BigDecimal vatAmount;
     private BigDecimal vatRate;
+    private BigDecimal withholdingRate;
     private BigDecimal baseExpense;
     private BigDecimal vatExpense;
     private EngagementSnapshot engagement;

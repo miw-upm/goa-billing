@@ -6,9 +6,11 @@ import es.upm.api.domain.model.criteria.ExpenseFindCriteria;
 import es.upm.api.domain.ports.out.billing.ExpenseGateway;
 import es.upm.miw.exception.BadRequestException;
 import es.upm.miw.exception.NotFoundException;
+import org.bson.types.Decimal128;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.StringUtils;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Locale;
@@ -123,5 +125,66 @@ public class ExpenseAdapter implements ExpenseGateway {
                 .map(ExpenseEntity::getNumber)
                 .map(n -> n + 1)
                 .orElse(FIRST_SERIES_NUMBER);
+    }
+
+    @Override
+    public Stream<Expense> findInvoiceReceivedBook(LocalDate fromDate, LocalDate toDate, BigDecimal taxableBaseThreshold) {
+        return this.expenseRepository.findReceivedBook(
+                        fromDate, toDate, Decimal128.parse(taxableBaseThreshold.toPlainString())).stream()
+                .map(ExpenseEntity::toDomain);
+    }
+
+    @Override
+    public Stream<Expense> findInvoiceReceivedBook(
+            String series, int fromNumber, int toNumber, BigDecimal taxableBaseThreshold) {
+        return this.expenseRepository.findReceivedBook(
+                        series, fromNumber, toNumber, Decimal128.parse(taxableBaseThreshold.toPlainString())).stream()
+                .map(ExpenseEntity::toDomain);
+    }
+
+    @Override
+    public Stream<Expense> findCurrentExpensesBook(LocalDate fromDate, LocalDate toDate) {
+        return this.expenseRepository.findCurrentExpensesBook(fromDate, toDate).stream()
+                .map(ExpenseEntity::toDomain);
+    }
+
+    @Override
+    public Stream<Expense> findCurrentExpensesBook(String series, int fromNumber, int toNumber) {
+        return this.expenseRepository.findCurrentExpensesBook(series, fromNumber, toNumber).stream()
+                .map(ExpenseEntity::toDomain);
+    }
+
+    @Override
+    public Stream<Expense> findInvoiceReceivedInvestmentBook(
+            LocalDate fromDate, LocalDate toDate, BigDecimal taxableBaseThreshold) {
+        return this.expenseRepository.findReceivedInvestmentBook(
+                        fromDate, toDate, Decimal128.parse(taxableBaseThreshold.toPlainString())).stream()
+                .map(ExpenseEntity::toDomain);
+    }
+
+    @Override
+    public Stream<Expense> findInvoiceReceivedInvestmentBook(
+            String series, int fromNumber, int toNumber, BigDecimal taxableBaseThreshold) {
+        return this.expenseRepository.findReceivedInvestmentBook(
+                        series, fromNumber, toNumber, Decimal128.parse(taxableBaseThreshold.toPlainString())).stream()
+                .map(ExpenseEntity::toDomain);
+    }
+
+    @Override
+    public Stream<Expense> findInvestmentAssetsUntil(LocalDate toDate) {
+        return this.expenseRepository.findInvestmentAssetsUntil(toDate).stream()
+                .map(ExpenseEntity::toDomain);
+    }
+
+    @Override
+    public Stream<Expense> findInvestmentAssetsUntil(String series, int toNumber) {
+        return this.expenseRepository.findInvestmentAssetsUntil(series, toNumber).stream()
+                .map(ExpenseEntity::toDomain);
+    }
+
+    @Override
+    public long countInvoiceReceivedBook(LocalDate fromDate, LocalDate toDate, BigDecimal taxableBaseThreshold) {
+        return this.expenseRepository.countReceivedBook(
+                fromDate, toDate, Decimal128.parse(taxableBaseThreshold.toPlainString()));
     }
 }

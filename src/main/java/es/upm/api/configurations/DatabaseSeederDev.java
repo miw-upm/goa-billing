@@ -45,6 +45,11 @@ public class DatabaseSeederDev {
     public static final String ID_15 = "aaaaaaaa-bbbb-cccc-dddd-eeeeffff000f";
     public static final String ID_16 = "aaaaaaaa-bbbb-cccc-dddd-eeeeffff0010";
     public static final String ID_17 = "aaaaaaaa-bbbb-cccc-dddd-eeeeffff0011";
+    public static final String ID_18 = "aaaaaaaa-bbbb-cccc-dddd-eeeeffff0012";
+    public static final String ID_19 = "aaaaaaaa-bbbb-cccc-dddd-eeeeffff0013";
+    public static final String ID_20 = "aaaaaaaa-bbbb-cccc-dddd-eeeeffff0014";
+    public static final String ID_21 = "aaaaaaaa-bbbb-cccc-dddd-eeeeffff0015";
+    public static final String ID_22 = "aaaaaaaa-bbbb-cccc-dddd-eeeeffff0016";
     public static final UUID EL_0 = UUID.fromString(ID_0);
     public static final UUID EL_1 = UUID.fromString(ID_1);
     public static final UUID C_0 = UUID.fromString(ID_0);
@@ -137,6 +142,36 @@ public class DatabaseSeederDev {
                         .description("Cena")
                         .withholdingTax(BigDecimal.ZERO)
                         .documentPath(null)
+                        .build(),
+                ExpenseEntity.builder()
+                        .id(ID_21)
+                        .recordedAt(LocalDateTime.of(2026, 4, 10, 9, 0))
+                        .series("2026")
+                        .number(5)
+                        .baseAmount(new BigDecimal("95.00"))
+                        .vatRate(21)
+                        .supplier(new SupplierInfoEntity("Material Oficina", "B50000000"))
+                        .taxCategory(TaxCategory.OTROS)
+                        .depreciationRate(100)
+                        .issueDate(LocalDate.of(2026, 4, 10))
+                        .description("Material de oficina")
+                        .withholdingTax(BigDecimal.ZERO)
+                        .documentPath(null)
+                        .build(),
+                ExpenseEntity.builder()
+                        .id(ID_22)
+                        .recordedAt(LocalDateTime.of(2026, 5, 15, 9, 0))
+                        .series("2026")
+                        .number(6)
+                        .baseAmount(new BigDecimal("210.00"))
+                        .vatRate(21)
+                        .supplier(new SupplierInfoEntity("Papeleria Central", "B60000000"))
+                        .taxCategory(TaxCategory.OTROS)
+                        .depreciationRate(100)
+                        .issueDate(LocalDate.of(2026, 5, 15))
+                        .description("Papeleria")
+                        .withholdingTax(BigDecimal.ZERO)
+                        .documentPath(null)
                         .build()
         ));
         this.paymentRepository.saveAll(List.of(
@@ -176,7 +211,7 @@ public class DatabaseSeederDev {
                         .billingInfo(new BillingInfoEntity(
                                 C_0.toString(),
                                 "User 0000",
-                                "ID-00000000A",
+                                "12345678Z",
                                 "Madrid, Spain"
                         ))
                         .percentage(new BigDecimal("100"))
@@ -210,7 +245,7 @@ public class DatabaseSeederDev {
                         .billingInfo(new BillingInfoEntity(
                                 C_1.toString(),
                                 "User 0001",
-                                "ID-00000001B",
+                                "87654321X",
                                 "Madrid, Spain"
                         ))
                         .percentage(new BigDecimal("100"))
@@ -232,6 +267,60 @@ public class DatabaseSeederDev {
                         .discounts(List.of(new BigDecimal("125.00")))
                         .pdfPath(null)
                         .originalInvoice(null)
+                        .build(),
+                InvoiceEntity.builder()
+                        .id(ID_18)
+                        .billingInfo(new BillingInfoEntity(
+                                C_0.toString(),
+                                "User 0000",
+                                "12345678Z",
+                                "Madrid, Spain"
+                        ))
+                        .emissionDate(LocalDate.of(2026, 4, 10))
+                        .operationDate(LocalDate.of(2026, 4, 10))
+                        .series("2026")
+                        .number(30)
+                        .baseAmount(new BigDecimal("300.00"))
+                        .vatRate(new BigDecimal("21"))
+                        .vatAmount(new BigDecimal("63.00"))
+                        .baseExpense(BigDecimal.ZERO)
+                        .vatExpense(BigDecimal.ZERO)
+                        .build(),
+                InvoiceEntity.builder()
+                        .id(ID_19)
+                        .billingInfo(new BillingInfoEntity(
+                                C_1.toString(),
+                                "User 0001",
+                                "87654321X",
+                                "Madrid, Spain"
+                        ))
+                        .emissionDate(LocalDate.of(2026, 5, 15))
+                        .operationDate(LocalDate.of(2026, 5, 15))
+                        .series("2026")
+                        .number(31)
+                        .baseAmount(new BigDecimal("450.00"))
+                        .vatRate(new BigDecimal("21"))
+                        .vatAmount(new BigDecimal("94.50"))
+                        .baseExpense(BigDecimal.ZERO)
+                        .vatExpense(BigDecimal.ZERO)
+                        .build(),
+                InvoiceEntity.builder()
+                        .id(ID_20)
+                        .billingInfo(new BillingInfoEntity(
+                                C_0.toString(),
+                                "User 0000",
+                                "12345678Z",
+                                "Madrid, Spain"
+                        ))
+                        .emissionDate(LocalDate.of(2026, 6, 20))
+                        .operationDate(LocalDate.of(2026, 6, 20))
+                        .series("2026")
+                        .number(32)
+                        .baseAmount(new BigDecimal("600.00"))
+                        .vatRate(new BigDecimal("21"))
+                        .vatAmount(new BigDecimal("126.00"))
+                        .baseExpense(BigDecimal.ZERO)
+                        .vatExpense(BigDecimal.ZERO)
                         .build()
         ));
         log.warn("------- Initial Load from JAVA ---------------------------------------------------------------");

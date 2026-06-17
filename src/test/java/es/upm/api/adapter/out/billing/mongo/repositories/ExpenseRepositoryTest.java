@@ -6,6 +6,7 @@ import es.upm.api.domain.model.Expense;
 import es.upm.api.domain.model.SupplierInfo;
 import es.upm.api.domain.model.TaxCategory;
 import es.upm.api.domain.model.external.EngagementSnapshot;
+import org.bson.types.Decimal128;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,6 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @DataMongoTest
 @ActiveProfiles("test")
 class ExpenseRepositoryTest {
+    private static final Decimal128 INVESTMENT_ASSET_THRESHOLD = Decimal128.parse("3005.06");
 
     @Autowired
     private ExpenseRepository expenseRepository;
@@ -102,6 +104,290 @@ class ExpenseRepositoryTest {
         assertEquals(2, result.size());
         assertEquals(this.secondExpense.getId().toString(), result.getFirst().getId());
         assertEquals(this.firstExpense.getId().toString(), result.get(1).getId());
+    }
+
+    @Test
+    void shouldFindReceivedBook() {
+        Expense zeroVatExpense = Expense.builder()
+                .id(UUID.randomUUID())
+                .series("2026")
+                .number(3)
+                .baseAmount(BigDecimal.valueOf(50))
+                .vatRate(0)
+                .supplier(SupplierInfo.builder().name("No Vat").identity("N10000000").build())
+                .taxCategory(TaxCategory.OTROS)
+                .depreciationRate(100)
+                .issueDate(LocalDate.of(2026, 3, 23))
+                .withholdingTax(BigDecimal.ZERO)
+                .build();
+        Expense excludedInvestmentAssetExpense = Expense.builder()
+                .id(UUID.randomUUID())
+                .series("2026")
+                .number(4)
+                .baseAmount(BigDecimal.valueOf(4000))
+                .vatRate(21)
+                .supplier(SupplierInfo.builder().name("Investment").identity("I10000000").build())
+                .taxCategory(TaxCategory.OTROS)
+                .depreciationRate(10)
+                .issueDate(LocalDate.of(2026, 3, 19))
+                .withholdingTax(BigDecimal.ZERO)
+                .build();
+        this.expenseRepository.saveAll(List.of(new ExpenseEntity(zeroVatExpense), new ExpenseEntity(excludedInvestmentAssetExpense)));
+
+        List<ExpenseEntity> result = this.expenseRepository.findReceivedBook(
+                LocalDate.of(2026, 1, 1), LocalDate.of(2026, 3, 31), INVESTMENT_ASSET_THRESHOLD);
+
+        assertEquals(3, result.size());
+        assertEquals(this.thirdExpense.getId().toString(), result.getFirst().getId());
+        assertEquals(this.firstExpense.getId().toString(), result.get(1).getId());
+        assertEquals(this.secondExpense.getId().toString(), result.get(2).getId());
+    }
+
+    @Test
+    void shouldFindReceivedBookByNumberRange() {
+        Expense zeroVatExpense = Expense.builder()
+                .id(UUID.randomUUID())
+                .series("2026")
+                .number(3)
+                .baseAmount(BigDecimal.valueOf(50))
+                .vatRate(0)
+                .supplier(SupplierInfo.builder().name("No Vat").identity("N10000000").build())
+                .taxCategory(TaxCategory.OTROS)
+                .depreciationRate(100)
+                .issueDate(LocalDate.of(2026, 3, 23))
+                .withholdingTax(BigDecimal.ZERO)
+                .build();
+        Expense excludedInvestmentAssetExpense = Expense.builder()
+                .id(UUID.randomUUID())
+                .series("2026")
+                .number(4)
+                .baseAmount(BigDecimal.valueOf(4000))
+                .vatRate(21)
+                .supplier(SupplierInfo.builder().name("Investment").identity("I10000000").build())
+                .taxCategory(TaxCategory.OTROS)
+                .depreciationRate(10)
+                .issueDate(LocalDate.of(2026, 3, 19))
+                .withholdingTax(BigDecimal.ZERO)
+                .build();
+        Expense smallInvestmentExpense = Expense.builder()
+                .id(UUID.randomUUID())
+                .series("2026")
+                .number(5)
+                .baseAmount(BigDecimal.valueOf(300))
+                .vatRate(21)
+                .supplier(SupplierInfo.builder().name("Small Investment").identity("I20000000").build())
+                .taxCategory(TaxCategory.OTROS)
+                .depreciationRate(10)
+                .issueDate(LocalDate.of(2026, 3, 24))
+                .withholdingTax(BigDecimal.ZERO)
+                .build();
+        this.expenseRepository.saveAll(List.of(
+                new ExpenseEntity(zeroVatExpense),
+                new ExpenseEntity(excludedInvestmentAssetExpense),
+                new ExpenseEntity(smallInvestmentExpense)
+        ));
+
+        List<ExpenseEntity> result = this.expenseRepository.findReceivedBook(
+                "2026", 1, 5, INVESTMENT_ASSET_THRESHOLD);
+
+        assertEquals(3, result.size());
+        assertEquals(this.firstExpense.getId().toString(), result.getFirst().getId());
+        assertEquals(this.secondExpense.getId().toString(), result.get(1).getId());
+        assertEquals(smallInvestmentExpense.getId().toString(), result.get(2).getId());
+    }
+
+    @Test
+    void shouldFindCurrentExpensesBookExcludingInvestments() {
+        Expense zeroVatExpense = Expense.builder()
+                .id(UUID.randomUUID())
+                .series("2026")
+                .number(3)
+                .baseAmount(BigDecimal.valueOf(50))
+                .vatRate(0)
+                .supplier(SupplierInfo.builder().name("No Vat").identity("N10000000").build())
+                .taxCategory(TaxCategory.OTROS)
+                .depreciationRate(100)
+                .issueDate(LocalDate.of(2026, 3, 23))
+                .withholdingTax(BigDecimal.ZERO)
+                .build();
+        this.expenseRepository.save(new ExpenseEntity(zeroVatExpense));
+
+        List<ExpenseEntity> result = this.expenseRepository.findCurrentExpensesBook(
+                LocalDate.of(2026, 1, 1), LocalDate.of(2026, 3, 31));
+
+        assertEquals(3, result.size());
+        assertEquals(this.firstExpense.getId().toString(), result.getFirst().getId());
+        assertEquals(this.secondExpense.getId().toString(), result.get(1).getId());
+        assertEquals(zeroVatExpense.getId().toString(), result.get(2).getId());
+    }
+
+    @Test
+    void shouldFindCurrentExpensesBookByNumberRangeExcludingInvestments() {
+        Expense zeroVatExpense = Expense.builder()
+                .id(UUID.randomUUID())
+                .series("2026")
+                .number(3)
+                .baseAmount(BigDecimal.valueOf(50))
+                .vatRate(0)
+                .supplier(SupplierInfo.builder().name("No Vat").identity("N10000000").build())
+                .taxCategory(TaxCategory.OTROS)
+                .depreciationRate(100)
+                .issueDate(LocalDate.of(2026, 3, 23))
+                .withholdingTax(BigDecimal.ZERO)
+                .build();
+        Expense investmentAssetExpense = Expense.builder()
+                .id(UUID.randomUUID())
+                .series("2026")
+                .number(4)
+                .baseAmount(BigDecimal.valueOf(4000))
+                .vatRate(21)
+                .supplier(SupplierInfo.builder().name("Investment").identity("I10000000").build())
+                .taxCategory(TaxCategory.OTROS)
+                .depreciationRate(10)
+                .issueDate(LocalDate.of(2026, 3, 24))
+                .withholdingTax(BigDecimal.ZERO)
+                .build();
+        this.expenseRepository.saveAll(List.of(new ExpenseEntity(zeroVatExpense), new ExpenseEntity(investmentAssetExpense)));
+
+        List<ExpenseEntity> result = this.expenseRepository.findCurrentExpensesBook("2026", 1, 4);
+
+        assertEquals(3, result.size());
+        assertEquals(this.firstExpense.getId().toString(), result.getFirst().getId());
+        assertEquals(this.secondExpense.getId().toString(), result.get(1).getId());
+        assertEquals(zeroVatExpense.getId().toString(), result.get(2).getId());
+    }
+
+    @Test
+    void shouldCountReceivedBook() {
+        Expense excludedInvestmentAssetExpense = Expense.builder()
+                .id(UUID.randomUUID())
+                .series("2026")
+                .number(4)
+                .baseAmount(BigDecimal.valueOf(4000))
+                .vatRate(21)
+                .supplier(SupplierInfo.builder().name("Investment").identity("I10000000").build())
+                .taxCategory(TaxCategory.OTROS)
+                .depreciationRate(10)
+                .issueDate(LocalDate.of(2026, 3, 19))
+                .withholdingTax(BigDecimal.ZERO)
+                .build();
+        this.expenseRepository.save(new ExpenseEntity(excludedInvestmentAssetExpense));
+
+        long count = this.expenseRepository.countReceivedBook(
+                LocalDate.of(2026, 1, 1), LocalDate.of(2026, 3, 31), INVESTMENT_ASSET_THRESHOLD);
+
+        assertEquals(3, count);
+    }
+
+    @Test
+    void shouldFindReceivedInvestmentBook() {
+        Expense investmentAssetExpense = Expense.builder()
+                .id(UUID.randomUUID())
+                .series("2026")
+                .number(4)
+                .baseAmount(BigDecimal.valueOf(4000))
+                .vatRate(21)
+                .supplier(SupplierInfo.builder().name("Investment").identity("I10000000").build())
+                .taxCategory(TaxCategory.OTROS)
+                .depreciationRate(10)
+                .issueDate(LocalDate.of(2026, 3, 19))
+                .withholdingTax(BigDecimal.ZERO)
+                .build();
+        this.expenseRepository.save(new ExpenseEntity(investmentAssetExpense));
+
+        List<ExpenseEntity> result = this.expenseRepository.findReceivedInvestmentBook(
+                LocalDate.of(2026, 1, 1), LocalDate.of(2026, 3, 31), INVESTMENT_ASSET_THRESHOLD);
+
+        assertEquals(1, result.size());
+        assertEquals(investmentAssetExpense.getId().toString(), result.getFirst().getId());
+    }
+
+    @Test
+    void shouldFindReceivedInvestmentBookByNumberRange() {
+        Expense investmentAssetExpense = Expense.builder()
+                .id(UUID.randomUUID())
+                .series("2026")
+                .number(4)
+                .baseAmount(BigDecimal.valueOf(4000))
+                .vatRate(21)
+                .supplier(SupplierInfo.builder().name("Investment").identity("I10000000").build())
+                .taxCategory(TaxCategory.OTROS)
+                .depreciationRate(10)
+                .issueDate(LocalDate.of(2026, 3, 19))
+                .withholdingTax(BigDecimal.ZERO)
+                .build();
+        Expense zeroVatInvestmentAssetExpense = Expense.builder()
+                .id(UUID.randomUUID())
+                .series("2026")
+                .number(5)
+                .baseAmount(BigDecimal.valueOf(4000))
+                .vatRate(0)
+                .supplier(SupplierInfo.builder().name("No Vat Investment").identity("I20000000").build())
+                .taxCategory(TaxCategory.OTROS)
+                .depreciationRate(10)
+                .issueDate(LocalDate.of(2026, 3, 20))
+                .withholdingTax(BigDecimal.ZERO)
+                .build();
+        Expense smallInvestmentAssetExpense = Expense.builder()
+                .id(UUID.randomUUID())
+                .series("2026")
+                .number(6)
+                .baseAmount(BigDecimal.valueOf(300))
+                .vatRate(21)
+                .supplier(SupplierInfo.builder().name("Small Investment").identity("I30000000").build())
+                .taxCategory(TaxCategory.OTROS)
+                .depreciationRate(10)
+                .issueDate(LocalDate.of(2026, 3, 21))
+                .withholdingTax(BigDecimal.ZERO)
+                .build();
+        this.expenseRepository.saveAll(List.of(
+                new ExpenseEntity(investmentAssetExpense),
+                new ExpenseEntity(zeroVatInvestmentAssetExpense),
+                new ExpenseEntity(smallInvestmentAssetExpense)
+        ));
+
+        List<ExpenseEntity> result = this.expenseRepository.findReceivedInvestmentBook(
+                "2026", 4, 6, INVESTMENT_ASSET_THRESHOLD);
+
+        assertEquals(1, result.size());
+        assertEquals(investmentAssetExpense.getId().toString(), result.getFirst().getId());
+    }
+
+    @Test
+    void shouldFindInvestmentAssetsUntilByNumber() {
+        Expense investmentAssetExpense = Expense.builder()
+                .id(UUID.randomUUID())
+                .series("2026")
+                .number(4)
+                .baseAmount(BigDecimal.valueOf(4000))
+                .vatRate(21)
+                .supplier(SupplierInfo.builder().name("Investment").identity("I10000000").build())
+                .taxCategory(TaxCategory.OTROS)
+                .depreciationRate(10)
+                .issueDate(LocalDate.of(2026, 3, 19))
+                .withholdingTax(BigDecimal.ZERO)
+                .build();
+        Expense laterInvestmentAssetExpense = Expense.builder()
+                .id(UUID.randomUUID())
+                .series("2026")
+                .number(5)
+                .baseAmount(BigDecimal.valueOf(5000))
+                .vatRate(21)
+                .supplier(SupplierInfo.builder().name("Later Investment").identity("I20000000").build())
+                .taxCategory(TaxCategory.OTROS)
+                .depreciationRate(10)
+                .issueDate(LocalDate.of(2026, 3, 20))
+                .withholdingTax(BigDecimal.ZERO)
+                .build();
+        this.expenseRepository.saveAll(List.of(
+                new ExpenseEntity(investmentAssetExpense),
+                new ExpenseEntity(laterInvestmentAssetExpense)
+        ));
+
+        List<ExpenseEntity> result = this.expenseRepository.findInvestmentAssetsUntil("2026", 4);
+
+        assertEquals(1, result.size());
+        assertEquals(investmentAssetExpense.getId().toString(), result.getFirst().getId());
     }
 
 }

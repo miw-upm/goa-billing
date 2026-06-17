@@ -33,6 +33,8 @@ public class ExpenseEntity {
     private String engagementId;
     @Field(targetType = FieldType.DECIMAL128)
     private BigDecimal baseAmount;
+    @Field(targetType = FieldType.DECIMAL128)
+    private BigDecimal deductibleAmount;
     private Integer vatRate;
     private SupplierInfoEntity supplier;
     private TaxCategory taxCategory;

@@ -9,6 +9,7 @@ import es.upm.api.domain.model.TaxCategory;
 import es.upm.api.domain.model.criteria.ExpenseFindCriteria;
 import es.upm.api.domain.model.external.EngagementSnapshot;
 import es.upm.miw.exception.NotFoundException;
+import org.bson.types.Decimal128;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -33,6 +34,8 @@ import static org.mockito.Mockito.when;
 @SpringBootTest
 @ActiveProfiles("test")
 class ExpenseAdapterIT {
+    private static final BigDecimal INVESTMENT_ASSET_THRESHOLD = new BigDecimal("3005.06");
+    private static final Decimal128 INVESTMENT_ASSET_THRESHOLD_DECIMAL = Decimal128.parse("3005.06");
 
     private final ExpenseFindCriteria criteria = new ExpenseFindCriteria();
     private final UUID engagementUuid = UUID.fromString("aaaaaaaa-bbbb-cccc-dddd-eeeeee000000");
@@ -49,6 +52,7 @@ class ExpenseAdapterIT {
                 .id(UUID.randomUUID())
                 .engagement(EngagementSnapshot.builder().id(engagementUuid).build())
                 .baseAmount(BigDecimal.valueOf(25))
+                .deductibleAmount(BigDecimal.ONE)
                 .vatRate(21)
                 .supplier(SupplierInfo.builder().name("Taxi Madrid").identity("A10000000").build())
                 .taxCategory(TaxCategory.OTROS)
@@ -73,6 +77,7 @@ class ExpenseAdapterIT {
         assertEquals(this.expense.getId().toString(), persistedExpenseEntity.getId());
         assertEquals(this.expense.getEngagement().getId().toString(), persistedExpenseEntity.getEngagementId());
         assertEquals(this.expense.getBaseAmount(), persistedExpenseEntity.getBaseAmount());
+        assertEquals(this.expense.getDeductibleAmount(), persistedExpenseEntity.getDeductibleAmount());
         assertEquals(this.expense.getVatRate(), persistedExpenseEntity.getVatRate());
         assertEquals(this.expense.getSupplier(), persistedExpenseEntity.getSupplier().toDomain());
         assertEquals(this.expense.getTaxCategory(), persistedExpenseEntity.getTaxCategory());
@@ -259,6 +264,107 @@ class ExpenseAdapterIT {
         assertEquals(1, expenses.size());
         assertEquals(this.expense.getId(), expenses.getFirst().getId());
         verify(this.expenseRepository).findByEngagementIdStartingWithOrderBySeriesDescNumberDesc(engagementIdPrefix);
+    }
+
+    @Test
+    void shouldFindInvoiceReceivedBook() {
+        LocalDate fromDate = LocalDate.of(2026, 1, 1);
+        LocalDate toDate = LocalDate.of(2026, 6, 30);
+        when(this.expenseRepository.findReceivedBook(fromDate, toDate, INVESTMENT_ASSET_THRESHOLD_DECIMAL))
+                .thenReturn(List.of(new ExpenseEntity(this.expense)));
+
+        List<Expense> expenses = this.expensePersistenceMongodb
+                .findInvoiceReceivedBook(fromDate, toDate, INVESTMENT_ASSET_THRESHOLD).toList();
+
+        assertEquals(List.of(this.expense), expenses);
+        verify(this.expenseRepository).findReceivedBook(fromDate, toDate, INVESTMENT_ASSET_THRESHOLD_DECIMAL);
+    }
+
+    @Test
+    void shouldFindInvoiceReceivedBookByNumberRange() {
+        when(this.expenseRepository.findReceivedBook("2026", 2, 3, INVESTMENT_ASSET_THRESHOLD_DECIMAL))
+                .thenReturn(List.of(new ExpenseEntity(this.expense)));
+
+        List<Expense> expenses = this.expensePersistenceMongodb
+                .findInvoiceReceivedBook("2026", 2, 3, INVESTMENT_ASSET_THRESHOLD).toList();
+
+        assertEquals(List.of(this.expense), expenses);
+        verify(this.expenseRepository).findReceivedBook("2026", 2, 3, INVESTMENT_ASSET_THRESHOLD_DECIMAL);
+    }
+
+    @Test
+    void shouldFindCurrentExpensesBook() {
+        LocalDate fromDate = LocalDate.of(2026, 1, 1);
+        LocalDate toDate = LocalDate.of(2026, 6, 30);
+        when(this.expenseRepository.findCurrentExpensesBook(fromDate, toDate))
+                .thenReturn(List.of(new ExpenseEntity(this.expense)));
+
+        List<Expense> expenses = this.expensePersistenceMongodb
+                .findCurrentExpensesBook(fromDate, toDate).toList();
+
+        assertEquals(List.of(this.expense), expenses);
+        verify(this.expenseRepository).findCurrentExpensesBook(fromDate, toDate);
+    }
+
+    @Test
+    void shouldFindCurrentExpensesBookByNumberRange() {
+        when(this.expenseRepository.findCurrentExpensesBook("2026", 1, 3))
+                .thenReturn(List.of(new ExpenseEntity(this.expense)));
+
+        List<Expense> expenses = this.expensePersistenceMongodb
+                .findCurrentExpensesBook("2026", 1, 3).toList();
+
+        assertEquals(List.of(this.expense), expenses);
+        verify(this.expenseRepository).findCurrentExpensesBook("2026", 1, 3);
+    }
+
+    @Test
+    void shouldFindInvoiceReceivedInvestmentBook() {
+        LocalDate fromDate = LocalDate.of(2026, 1, 1);
+        LocalDate toDate = LocalDate.of(2026, 6, 30);
+        when(this.expenseRepository.findReceivedInvestmentBook(fromDate, toDate, INVESTMENT_ASSET_THRESHOLD_DECIMAL))
+                .thenReturn(List.of(new ExpenseEntity(this.expense)));
+
+        List<Expense> expenses = this.expensePersistenceMongodb
+                .findInvoiceReceivedInvestmentBook(fromDate, toDate, INVESTMENT_ASSET_THRESHOLD).toList();
+
+        assertEquals(List.of(this.expense), expenses);
+        verify(this.expenseRepository).findReceivedInvestmentBook(fromDate, toDate, INVESTMENT_ASSET_THRESHOLD_DECIMAL);
+    }
+
+    @Test
+    void shouldFindInvoiceReceivedInvestmentBookByNumberRange() {
+        when(this.expenseRepository.findReceivedInvestmentBook("2026", 2, 3, INVESTMENT_ASSET_THRESHOLD_DECIMAL))
+                .thenReturn(List.of(new ExpenseEntity(this.expense)));
+
+        List<Expense> expenses = this.expensePersistenceMongodb
+                .findInvoiceReceivedInvestmentBook("2026", 2, 3, INVESTMENT_ASSET_THRESHOLD).toList();
+
+        assertEquals(List.of(this.expense), expenses);
+        verify(this.expenseRepository).findReceivedInvestmentBook("2026", 2, 3, INVESTMENT_ASSET_THRESHOLD_DECIMAL);
+    }
+
+    @Test
+    void shouldFindInvestmentAssetsUntilByNumber() {
+        when(this.expenseRepository.findInvestmentAssetsUntil("2026", 3))
+                .thenReturn(List.of(new ExpenseEntity(this.expense)));
+
+        List<Expense> expenses = this.expensePersistenceMongodb
+                .findInvestmentAssetsUntil("2026", 3).toList();
+
+        assertEquals(List.of(this.expense), expenses);
+        verify(this.expenseRepository).findInvestmentAssetsUntil("2026", 3);
+    }
+
+    @Test
+    void shouldCountInvoiceReceivedBook() {
+        LocalDate fromDate = LocalDate.of(2026, 1, 1);
+        LocalDate toDate = LocalDate.of(2026, 3, 31);
+        when(this.expenseRepository.countReceivedBook(fromDate, toDate, INVESTMENT_ASSET_THRESHOLD_DECIMAL)).thenReturn(2L);
+
+        assertEquals(2L, this.expensePersistenceMongodb
+                .countInvoiceReceivedBook(fromDate, toDate, INVESTMENT_ASSET_THRESHOLD));
+        verify(this.expenseRepository).countReceivedBook(fromDate, toDate, INVESTMENT_ASSET_THRESHOLD_DECIMAL);
     }
 
     @Test
