@@ -70,6 +70,7 @@ class InvoiceAdapterIT {
         assertEquals(this.invoice.getLegalProcedures(),
                 captor.getValue().getLegalProcedures().stream().map(LegalProcedureEntity::toDomain).toList());
         assertEquals(this.invoice.getBaseAmount(), captor.getValue().getBaseAmount());
+        assertEquals(this.invoice.getWithholdingRate(), captor.getValue().getWithholdingRate());
         assertEquals(this.invoice.getPriorPayments(),
                 captor.getValue().getPriorPayments().stream().map(paymentEntity -> paymentEntity.toDomain()).toList());
         assertEquals(this.invoice.getExpenses(), captor.getValue().toDomain().getExpenses());
@@ -271,6 +272,7 @@ class InvoiceAdapterIT {
                 .baseAmount(baseAmount)
                 .vatAmount(new BigDecimal("18.90"))
                 .vatRate(BigDecimal.valueOf(21))
+                .withholdingRate(new BigDecimal("15"))
                 .engagement(EngagementSnapshot.builder().id(engagementId).build())
                 .legalProcedures(List.of(LegalProcedure.builder()
                         .title("Procedimiento")

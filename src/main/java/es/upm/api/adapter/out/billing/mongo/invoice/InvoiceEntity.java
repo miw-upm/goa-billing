@@ -42,6 +42,7 @@ public class InvoiceEntity {
     @Field(targetType = FieldType.DECIMAL128)
     private BigDecimal vatAmount;
     private BigDecimal vatRate;
+    private BigDecimal withholdingRate;
     private BigDecimal baseExpense;
     private BigDecimal vatExpense;
     private String engagementId;
