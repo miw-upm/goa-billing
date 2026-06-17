@@ -307,6 +307,18 @@ class ExpenseAdapterIT {
     }
 
     @Test
+    void shouldFindCurrentExpensesBookByNumberRange() {
+        when(this.expenseRepository.findCurrentExpensesBook("2026", 1, 3))
+                .thenReturn(List.of(new ExpenseEntity(this.expense)));
+
+        List<Expense> expenses = this.expensePersistenceMongodb
+                .findCurrentExpensesBook("2026", 1, 3).toList();
+
+        assertEquals(List.of(this.expense), expenses);
+        verify(this.expenseRepository).findCurrentExpensesBook("2026", 1, 3);
+    }
+
+    @Test
     void shouldFindInvoiceReceivedInvestmentBook() {
         LocalDate fromDate = LocalDate.of(2026, 1, 1);
         LocalDate toDate = LocalDate.of(2026, 6, 30);
@@ -318,6 +330,30 @@ class ExpenseAdapterIT {
 
         assertEquals(List.of(this.expense), expenses);
         verify(this.expenseRepository).findReceivedInvestmentBook(fromDate, toDate, INVESTMENT_ASSET_THRESHOLD_DECIMAL);
+    }
+
+    @Test
+    void shouldFindInvoiceReceivedInvestmentBookByNumberRange() {
+        when(this.expenseRepository.findReceivedInvestmentBook("2026", 2, 3, INVESTMENT_ASSET_THRESHOLD_DECIMAL))
+                .thenReturn(List.of(new ExpenseEntity(this.expense)));
+
+        List<Expense> expenses = this.expensePersistenceMongodb
+                .findInvoiceReceivedInvestmentBook("2026", 2, 3, INVESTMENT_ASSET_THRESHOLD).toList();
+
+        assertEquals(List.of(this.expense), expenses);
+        verify(this.expenseRepository).findReceivedInvestmentBook("2026", 2, 3, INVESTMENT_ASSET_THRESHOLD_DECIMAL);
+    }
+
+    @Test
+    void shouldFindInvestmentAssetsUntilByNumber() {
+        when(this.expenseRepository.findInvestmentAssetsUntil("2026", 3))
+                .thenReturn(List.of(new ExpenseEntity(this.expense)));
+
+        List<Expense> expenses = this.expensePersistenceMongodb
+                .findInvestmentAssetsUntil("2026", 3).toList();
+
+        assertEquals(List.of(this.expense), expenses);
+        verify(this.expenseRepository).findInvestmentAssetsUntil("2026", 3);
     }
 
     @Test

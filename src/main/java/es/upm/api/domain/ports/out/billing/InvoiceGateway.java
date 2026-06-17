@@ -25,6 +25,8 @@ public interface InvoiceGateway {
 
     Stream<Invoice> findIssuedBetween(LocalDate fromDate, LocalDate toDate);
 
+    Stream<Invoice> findIssuedBetween(String series, int fromNumber, int toNumber);
+
     Optional<Invoice> findById(UUID id);
 
     Optional<Integer> findLastNumber(String series);

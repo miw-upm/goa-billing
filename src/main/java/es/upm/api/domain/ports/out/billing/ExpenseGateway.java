@@ -32,9 +32,15 @@ public interface ExpenseGateway {
 
     Stream<Expense> findCurrentExpensesBook(LocalDate fromDate, LocalDate toDate);
 
+    Stream<Expense> findCurrentExpensesBook(String series, int fromNumber, int toNumber);
+
     Stream<Expense> findInvoiceReceivedInvestmentBook(LocalDate fromDate, LocalDate toDate, BigDecimal taxableBaseThreshold);
 
+    Stream<Expense> findInvoiceReceivedInvestmentBook(String series, int fromNumber, int toNumber, BigDecimal taxableBaseThreshold);
+
     Stream<Expense> findInvestmentAssetsUntil(LocalDate toDate);
+
+    Stream<Expense> findInvestmentAssetsUntil(String series, int toNumber);
 
     long countInvoiceReceivedBook(LocalDate fromDate, LocalDate toDate, BigDecimal taxableBaseThreshold);
 }

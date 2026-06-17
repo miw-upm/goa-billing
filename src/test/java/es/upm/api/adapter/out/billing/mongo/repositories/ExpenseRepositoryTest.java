@@ -222,6 +222,42 @@ class ExpenseRepositoryTest {
     }
 
     @Test
+    void shouldFindCurrentExpensesBookByNumberRangeExcludingInvestments() {
+        Expense zeroVatExpense = Expense.builder()
+                .id(UUID.randomUUID())
+                .series("2026")
+                .number(3)
+                .baseAmount(BigDecimal.valueOf(50))
+                .vatRate(0)
+                .supplier(SupplierInfo.builder().name("No Vat").identity("N10000000").build())
+                .taxCategory(TaxCategory.OTROS)
+                .depreciationRate(100)
+                .issueDate(LocalDate.of(2026, 3, 23))
+                .withholdingTax(BigDecimal.ZERO)
+                .build();
+        Expense investmentAssetExpense = Expense.builder()
+                .id(UUID.randomUUID())
+                .series("2026")
+                .number(4)
+                .baseAmount(BigDecimal.valueOf(4000))
+                .vatRate(21)
+                .supplier(SupplierInfo.builder().name("Investment").identity("I10000000").build())
+                .taxCategory(TaxCategory.OTROS)
+                .depreciationRate(10)
+                .issueDate(LocalDate.of(2026, 3, 24))
+                .withholdingTax(BigDecimal.ZERO)
+                .build();
+        this.expenseRepository.saveAll(List.of(new ExpenseEntity(zeroVatExpense), new ExpenseEntity(investmentAssetExpense)));
+
+        List<ExpenseEntity> result = this.expenseRepository.findCurrentExpensesBook("2026", 1, 4);
+
+        assertEquals(3, result.size());
+        assertEquals(this.firstExpense.getId().toString(), result.getFirst().getId());
+        assertEquals(this.secondExpense.getId().toString(), result.get(1).getId());
+        assertEquals(zeroVatExpense.getId().toString(), result.get(2).getId());
+    }
+
+    @Test
     void shouldCountReceivedBook() {
         Expense excludedInvestmentAssetExpense = Expense.builder()
                 .id(UUID.randomUUID())
@@ -261,6 +297,94 @@ class ExpenseRepositoryTest {
 
         List<ExpenseEntity> result = this.expenseRepository.findReceivedInvestmentBook(
                 LocalDate.of(2026, 1, 1), LocalDate.of(2026, 3, 31), INVESTMENT_ASSET_THRESHOLD);
+
+        assertEquals(1, result.size());
+        assertEquals(investmentAssetExpense.getId().toString(), result.getFirst().getId());
+    }
+
+    @Test
+    void shouldFindReceivedInvestmentBookByNumberRange() {
+        Expense investmentAssetExpense = Expense.builder()
+                .id(UUID.randomUUID())
+                .series("2026")
+                .number(4)
+                .baseAmount(BigDecimal.valueOf(4000))
+                .vatRate(21)
+                .supplier(SupplierInfo.builder().name("Investment").identity("I10000000").build())
+                .taxCategory(TaxCategory.OTROS)
+                .depreciationRate(10)
+                .issueDate(LocalDate.of(2026, 3, 19))
+                .withholdingTax(BigDecimal.ZERO)
+                .build();
+        Expense zeroVatInvestmentAssetExpense = Expense.builder()
+                .id(UUID.randomUUID())
+                .series("2026")
+                .number(5)
+                .baseAmount(BigDecimal.valueOf(4000))
+                .vatRate(0)
+                .supplier(SupplierInfo.builder().name("No Vat Investment").identity("I20000000").build())
+                .taxCategory(TaxCategory.OTROS)
+                .depreciationRate(10)
+                .issueDate(LocalDate.of(2026, 3, 20))
+                .withholdingTax(BigDecimal.ZERO)
+                .build();
+        Expense smallInvestmentAssetExpense = Expense.builder()
+                .id(UUID.randomUUID())
+                .series("2026")
+                .number(6)
+                .baseAmount(BigDecimal.valueOf(300))
+                .vatRate(21)
+                .supplier(SupplierInfo.builder().name("Small Investment").identity("I30000000").build())
+                .taxCategory(TaxCategory.OTROS)
+                .depreciationRate(10)
+                .issueDate(LocalDate.of(2026, 3, 21))
+                .withholdingTax(BigDecimal.ZERO)
+                .build();
+        this.expenseRepository.saveAll(List.of(
+                new ExpenseEntity(investmentAssetExpense),
+                new ExpenseEntity(zeroVatInvestmentAssetExpense),
+                new ExpenseEntity(smallInvestmentAssetExpense)
+        ));
+
+        List<ExpenseEntity> result = this.expenseRepository.findReceivedInvestmentBook(
+                "2026", 4, 6, INVESTMENT_ASSET_THRESHOLD);
+
+        assertEquals(1, result.size());
+        assertEquals(investmentAssetExpense.getId().toString(), result.getFirst().getId());
+    }
+
+    @Test
+    void shouldFindInvestmentAssetsUntilByNumber() {
+        Expense investmentAssetExpense = Expense.builder()
+                .id(UUID.randomUUID())
+                .series("2026")
+                .number(4)
+                .baseAmount(BigDecimal.valueOf(4000))
+                .vatRate(21)
+                .supplier(SupplierInfo.builder().name("Investment").identity("I10000000").build())
+                .taxCategory(TaxCategory.OTROS)
+                .depreciationRate(10)
+                .issueDate(LocalDate.of(2026, 3, 19))
+                .withholdingTax(BigDecimal.ZERO)
+                .build();
+        Expense laterInvestmentAssetExpense = Expense.builder()
+                .id(UUID.randomUUID())
+                .series("2026")
+                .number(5)
+                .baseAmount(BigDecimal.valueOf(5000))
+                .vatRate(21)
+                .supplier(SupplierInfo.builder().name("Later Investment").identity("I20000000").build())
+                .taxCategory(TaxCategory.OTROS)
+                .depreciationRate(10)
+                .issueDate(LocalDate.of(2026, 3, 20))
+                .withholdingTax(BigDecimal.ZERO)
+                .build();
+        this.expenseRepository.saveAll(List.of(
+                new ExpenseEntity(investmentAssetExpense),
+                new ExpenseEntity(laterInvestmentAssetExpense)
+        ));
+
+        List<ExpenseEntity> result = this.expenseRepository.findInvestmentAssetsUntil("2026", 4);
 
         assertEquals(1, result.size());
         assertEquals(investmentAssetExpense.getId().toString(), result.getFirst().getId());

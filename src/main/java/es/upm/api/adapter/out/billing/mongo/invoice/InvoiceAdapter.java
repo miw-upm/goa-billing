@@ -106,6 +106,12 @@ public class InvoiceAdapter implements InvoiceGateway {
                 .map(InvoiceEntity::toDomain);
     }
 
+    @Override
+    public Stream<Invoice> findIssuedBetween(String series, int fromNumber, int toNumber) {
+        return this.invoiceRepository.findIssuedBetweenOrderByNumberAsc(series, fromNumber, toNumber).stream()
+                .map(InvoiceEntity::toDomain);
+    }
+
     private String normalizeEngagementIdPrefix(String engagementId) {
         String normalized = engagementId.trim();
         return normalized.length() <= 4 ? normalized : normalized.substring(0, 4);

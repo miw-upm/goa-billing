@@ -62,6 +62,15 @@ public interface ExpenseRepository extends MongoRepository<ExpenseEntity, String
 
     @Query(value = """
             {
+              'series': ?0,
+              'number': { $gte: ?1, $lte: ?2 },
+              'depreciationRate': 100
+            }
+            """, sort = "{ 'number': 1 }")
+    List<ExpenseEntity> findCurrentExpensesBook(String series, int fromNumber, int toNumber);
+
+    @Query(value = """
+            {
               'issueDate': { $gte: ?0, $lte: ?1 },
               'vatRate': { $gt: 0 },
               'depreciationRate': { $ne: 100 },
@@ -72,11 +81,32 @@ public interface ExpenseRepository extends MongoRepository<ExpenseEntity, String
 
     @Query(value = """
             {
+              'series': ?0,
+              'number': { $gte: ?1, $lte: ?2 },
+              'vatRate': { $gt: 0 },
+              'depreciationRate': { $ne: 100 },
+              'baseAmount': { $gt: ?3 }
+            }
+            """, sort = "{ 'number': 1 }")
+    List<ExpenseEntity> findReceivedInvestmentBook(
+            String series, int fromNumber, int toNumber, Decimal128 taxableBaseThreshold);
+
+    @Query(value = """
+            {
               'issueDate': { $lte: ?0 },
               'depreciationRate': { $ne: 100 }
             }
             """, sort = "{ 'issueDate': 1 }")
     List<ExpenseEntity> findInvestmentAssetsUntil(LocalDate toDate);
+
+    @Query(value = """
+            {
+              'series': ?0,
+              'number': { $gte: 1, $lte: ?1 },
+              'depreciationRate': { $ne: 100 }
+            }
+            """, sort = "{ 'number': 1 }")
+    List<ExpenseEntity> findInvestmentAssetsUntil(String series, int toNumber);
 
     @Query(value = """
             {

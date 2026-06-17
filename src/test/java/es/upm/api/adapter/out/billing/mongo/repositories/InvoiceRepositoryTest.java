@@ -160,6 +160,20 @@ class InvoiceRepositoryTest {
     }
 
     @Test
+    void shouldFindIssuedBetweenNumbersOrderByNumberAsc() {
+        Invoice draft = this.buildMinimalInvoice(3, null, LocalDate.of(2026, 3, 10));
+        Invoice otherSeries = this.buildMinimalInvoice(1, LocalDate.of(2026, 3, 10), LocalDate.of(2026, 3, 10));
+        otherSeries.setSeries("B");
+        this.invoiceRepository.saveAll(List.of(new InvoiceEntity(draft), new InvoiceEntity(otherSeries)));
+
+        List<InvoiceEntity> result = this.invoiceRepository.findIssuedBetweenOrderByNumberAsc("A", 1, 3);
+
+        assertEquals(2, result.size());
+        assertEquals(1, result.getFirst().getNumber());
+        assertEquals(2, result.get(1).getNumber());
+    }
+
+    @Test
     void shouldFindFirstBySeriesOrderByNumberDesc() {
         var optional = this.invoiceRepository.findFirstBySeriesOrderByNumberDesc("A");
 

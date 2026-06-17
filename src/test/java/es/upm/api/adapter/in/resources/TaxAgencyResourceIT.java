@@ -85,14 +85,14 @@ class TaxAgencyResourceIT {
     @Test
     @WithMockUser(roles = "admin")
     void shouldGenerateReceivedBookCsvWithContinuedReference() throws Exception {
-        Expense firstT2Expense = this.buildExpense(LocalDate.of(2026, 4, 10),
+        Expense firstT2Expense = this.buildExpense(LocalDate.of(2026, 3, 10),
                 "2026", 2, "Office Supplies", "B10000000", "100.00", 21, null);
         Expense secondT2Expense = this.buildExpense(LocalDate.of(2026, 5, 15),
                 "2026", 3, "Book Store", "B20000000", "200.00", 4, new BigDecimal("50"));
         String expected = String.join("\r\n",
                 "2026-2;T2;%s;%s;Office Supplies;B10000000;%s;0,21;%s;%s".formatted(
-                        DATE.format(LocalDate.of(2026, 4, 10)),
-                        DATE.format(LocalDate.of(2026, 4, 10)),
+                        DATE.format(LocalDate.of(2026, 3, 10)),
+                        DATE.format(LocalDate.of(2026, 3, 10)),
                         AMOUNT.format(new BigDecimal("100.00")),
                         AMOUNT.format(new BigDecimal("21.00")),
                         AMOUNT.format(new BigDecimal("121.00"))
@@ -150,8 +150,6 @@ class TaxAgencyResourceIT {
     @Test
     @WithMockUser(roles = "admin")
     void shouldReturnModel303() throws Exception {
-        LocalDate fromDate = LocalDate.of(2026, 4, 1);
-        LocalDate toDate = LocalDate.of(2026, 6, 30);
         VatSummary vatSummary = new VatSummary(
                 new BigDecimal("300.00"),
                 new BigDecimal("29.00"),
@@ -160,11 +158,13 @@ class TaxAgencyResourceIT {
                 new BigDecimal("4000.00"),
                 new BigDecimal("840.00")
         );
-        when(this.taxAgencyService.vatSummary(fromDate, toDate)).thenReturn(vatSummary);
+        when(this.taxAgencyService.vatSummary("2026", 2, 3)).thenReturn(vatSummary);
 
         this.mockMvc.perform(get("/tax-agency/models/303")
                         .param("year", "2026")
-                        .param("quarter", "T2"))
+                        .param("quarter", "T2")
+                        .param("from", "2")
+                        .param("to", "3"))
                 .andExpect(status().isOk())
                 .andExpect(content().json("""
                         {
@@ -181,7 +181,7 @@ class TaxAgencyResourceIT {
                         }
                         """));
 
-        verify(this.taxAgencyService).vatSummary(fromDate, toDate);
+        verify(this.taxAgencyService).vatSummary("2026", 2, 3);
     }
 
     @Test
@@ -194,11 +194,12 @@ class TaxAgencyResourceIT {
                 new BigDecimal("1200.00"),
                 new BigDecimal("10.00")
         );
-        when(this.taxAgencyService.netIncomeBreakdown(toDate)).thenReturn(netIncomeBreakdown);
+        when(this.taxAgencyService.netIncomeBreakdown("2026", 3, toDate)).thenReturn(netIncomeBreakdown);
 
         this.mockMvc.perform(get("/tax-agency/models/130")
                         .param("year", "2026")
-                        .param("quarter", "T2"))
+                        .param("quarter", "T2")
+                        .param("to", "3"))
                 .andExpect(status().isOk())
                 .andExpect(content().json("""
                         {
@@ -213,7 +214,7 @@ class TaxAgencyResourceIT {
                         }
                         """));
 
-        verify(this.taxAgencyService).netIncomeBreakdown(toDate);
+        verify(this.taxAgencyService).netIncomeBreakdown("2026", 3, toDate);
     }
 
     @Test

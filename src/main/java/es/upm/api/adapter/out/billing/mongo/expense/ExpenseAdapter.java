@@ -149,6 +149,12 @@ public class ExpenseAdapter implements ExpenseGateway {
     }
 
     @Override
+    public Stream<Expense> findCurrentExpensesBook(String series, int fromNumber, int toNumber) {
+        return this.expenseRepository.findCurrentExpensesBook(series, fromNumber, toNumber).stream()
+                .map(ExpenseEntity::toDomain);
+    }
+
+    @Override
     public Stream<Expense> findInvoiceReceivedInvestmentBook(
             LocalDate fromDate, LocalDate toDate, BigDecimal taxableBaseThreshold) {
         return this.expenseRepository.findReceivedInvestmentBook(
@@ -157,8 +163,22 @@ public class ExpenseAdapter implements ExpenseGateway {
     }
 
     @Override
+    public Stream<Expense> findInvoiceReceivedInvestmentBook(
+            String series, int fromNumber, int toNumber, BigDecimal taxableBaseThreshold) {
+        return this.expenseRepository.findReceivedInvestmentBook(
+                        series, fromNumber, toNumber, Decimal128.parse(taxableBaseThreshold.toPlainString())).stream()
+                .map(ExpenseEntity::toDomain);
+    }
+
+    @Override
     public Stream<Expense> findInvestmentAssetsUntil(LocalDate toDate) {
         return this.expenseRepository.findInvestmentAssetsUntil(toDate).stream()
+                .map(ExpenseEntity::toDomain);
+    }
+
+    @Override
+    public Stream<Expense> findInvestmentAssetsUntil(String series, int toNumber) {
+        return this.expenseRepository.findInvestmentAssetsUntil(series, toNumber).stream()
                 .map(ExpenseEntity::toDomain);
     }
 

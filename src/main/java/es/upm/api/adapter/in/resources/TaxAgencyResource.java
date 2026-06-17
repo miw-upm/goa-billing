@@ -41,19 +41,21 @@ public class TaxAgencyResource {
     public String receivedBook(@RequestParam int year, @RequestParam Quarter quarter,
                                @RequestParam int from, @RequestParam int to) {
         List<String> lines = this.taxAgencyService.invoiceReceiveBook(String.valueOf(year), from, to).stream()
-                .map(InvoiceBookDto::from)
+                .map(expense -> InvoiceBookDto.from(expense, quarter))
                 .map(InvoiceBookDto::toCsvLine)
                 .toList();
         return String.join("\r\n", lines);
     }
 
     @GetMapping(MODEL_303)
-    public Model303Dto model303(@RequestParam int year, @RequestParam Quarter quarter) {
-        return new Model303Dto(year, quarter, this.taxAgencyService.vatSummary(quarter.fromDate(year), quarter.toDate(year)));
+    public Model303Dto model303(@RequestParam int year, @RequestParam Quarter quarter,
+                                @RequestParam int from, @RequestParam int to) {
+        return new Model303Dto(year, quarter, this.taxAgencyService.vatSummary(String.valueOf(year), from, to));
     }
 
     @GetMapping(MODEL_130)
-    public Model130Dto model130(@RequestParam int year, @RequestParam Quarter quarter) {
-        return new Model130Dto(year, quarter, this.taxAgencyService.netIncomeBreakdown(quarter.toDate(year)));
+    public Model130Dto model130(@RequestParam int year, @RequestParam Quarter quarter, @RequestParam int to) {
+        return new Model130Dto(
+                year, quarter, this.taxAgencyService.netIncomeBreakdown(String.valueOf(year), to, quarter.toDate(year)));
     }
 }
