@@ -54,7 +54,7 @@ public record InvoiceBookDto(
         BigDecimal vatRate = BigDecimal.valueOf(expense.getVatRate()).divide(HUNDRED);
         BigDecimal vatAmount = expense.deductibleVatAmount();
         return new InvoiceBookDto(
-                String.valueOf(reference),
+                "%s (%s-%s)".formatted(reference, expense.getSeries(), expense.getNumber()),
                 Quarter.from(date),
                 date,
                 date,

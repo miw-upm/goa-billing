@@ -86,18 +86,18 @@ class TaxAgencyResourceIT {
     @WithMockUser(roles = "admin")
     void shouldGenerateReceivedBookCsvWithContinuedReference() throws Exception {
         Expense firstT2Expense = this.buildExpense(LocalDate.of(2026, 4, 10),
-                "Office Supplies", "B10000000", "100.00", 21, null);
+                "2026", 2, "Office Supplies", "B10000000", "100.00", 21, null);
         Expense secondT2Expense = this.buildExpense(LocalDate.of(2026, 5, 15),
-                "Book Store", "B20000000", "200.00", 4, new BigDecimal("50"));
+                "2026", 3, "Book Store", "B20000000", "200.00", 4, new BigDecimal("50"));
         String expected = String.join("\r\n",
-                "2;T2;%s;%s;Office Supplies;B10000000;%s;0,21;%s;%s".formatted(
+                "2 (2026-2);T2;%s;%s;Office Supplies;B10000000;%s;0,21;%s;%s".formatted(
                         DATE.format(LocalDate.of(2026, 4, 10)),
                         DATE.format(LocalDate.of(2026, 4, 10)),
                         AMOUNT.format(new BigDecimal("100.00")),
                         AMOUNT.format(new BigDecimal("21.00")),
                         AMOUNT.format(new BigDecimal("121.00"))
                 ),
-                "3;T2;%s;%s;Book Store;B20000000;%s;0,04;%s;%s".formatted(
+                "3 (2026-3);T2;%s;%s;Book Store;B20000000;%s;0,04;%s;%s".formatted(
                         DATE.format(LocalDate.of(2026, 5, 15)),
                         DATE.format(LocalDate.of(2026, 5, 15)),
                         AMOUNT.format(new BigDecimal("100.00")),
@@ -125,8 +125,8 @@ class TaxAgencyResourceIT {
     @WithMockUser(roles = "admin")
     void shouldGenerateReceivedBookCsvStartingAtOneInFirstQuarter() throws Exception {
         Expense expense = this.buildExpense(LocalDate.of(2026, 2, 10),
-                "Office Supplies", "B10000000", "100.00", 21, null);
-        String expected = "1;T1;%s;%s;Office Supplies;B10000000;%s;0,21;%s;%s".formatted(
+                "2026", 1, "Office Supplies", "B10000000", "100.00", 21, null);
+        String expected = "1 (2026-1);T1;%s;%s;Office Supplies;B10000000;%s;0,21;%s;%s".formatted(
                 DATE.format(LocalDate.of(2026, 2, 10)),
                 DATE.format(LocalDate.of(2026, 2, 10)),
                 AMOUNT.format(new BigDecimal("100.00")),
@@ -249,13 +249,20 @@ class TaxAgencyResourceIT {
 
     private Expense buildExpense(LocalDate issueDate, String supplierName, String supplierIdentity,
                                  String baseAmount, int vatRate) {
-        return this.buildExpense(issueDate, supplierName, supplierIdentity, baseAmount, vatRate, null);
+        return this.buildExpense(issueDate, null, null, supplierName, supplierIdentity, baseAmount, vatRate, null);
     }
 
     private Expense buildExpense(LocalDate issueDate, String supplierName, String supplierIdentity,
                                  String baseAmount, int vatRate, BigDecimal deductibleAmount) {
+        return this.buildExpense(issueDate, null, null, supplierName, supplierIdentity, baseAmount, vatRate, deductibleAmount);
+    }
+
+    private Expense buildExpense(LocalDate issueDate, String series, Integer number, String supplierName, String supplierIdentity,
+                                 String baseAmount, int vatRate, BigDecimal deductibleAmount) {
         return Expense.builder()
                 .id(UUID.randomUUID())
+                .series(series)
+                .number(number)
                 .issueDate(issueDate)
                 .baseAmount(new BigDecimal(baseAmount))
                 .deductibleAmount(deductibleAmount)
