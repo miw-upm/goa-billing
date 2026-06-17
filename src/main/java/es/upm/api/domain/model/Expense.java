@@ -51,7 +51,7 @@ public class Expense {
     private BigDecimal deductibleAmount;
 
     @NotNull
-    @Positive
+    @PositiveOrZero
     private Integer vatRate;
 
     @Valid

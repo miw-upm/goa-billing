@@ -42,7 +42,6 @@ public interface ExpenseRepository extends MongoRepository<ExpenseEntity, String
     @Query(value = """
             {
               'issueDate': { $gte: ?0, $lte: ?1 },
-              'vatRate': { $gt: 0 },
               'depreciationRate': 100
             }
             """, sort = "{ 'issueDate': 1 }")

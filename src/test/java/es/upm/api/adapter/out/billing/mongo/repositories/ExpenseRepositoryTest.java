@@ -162,9 +162,10 @@ class ExpenseRepositoryTest {
         List<ExpenseEntity> result = this.expenseRepository.findCurrentExpensesBook(
                 LocalDate.of(2026, 1, 1), LocalDate.of(2026, 3, 31));
 
-        assertEquals(2, result.size());
+        assertEquals(3, result.size());
         assertEquals(this.firstExpense.getId().toString(), result.getFirst().getId());
         assertEquals(this.secondExpense.getId().toString(), result.get(1).getId());
+        assertEquals(zeroVatExpense.getId().toString(), result.get(2).getId());
     }
 
     @Test
