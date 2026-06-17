@@ -1,10 +1,6 @@
 package es.upm.api.adapter.in.resources;
 
-import es.upm.api.domain.model.BillingInfo;
-import es.upm.api.domain.model.Expense;
-import es.upm.api.domain.model.Invoice;
-import es.upm.api.domain.model.SupplierInfo;
-import es.upm.api.domain.model.TaxCategory;
+import es.upm.api.domain.model.*;
 import es.upm.api.domain.model.report.NetIncomeBreakdown;
 import es.upm.api.domain.model.report.VatSummary;
 import es.upm.api.domain.services.TaxAgencyService;
@@ -26,10 +22,7 @@ import java.util.Locale;
 import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoInteractions;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;

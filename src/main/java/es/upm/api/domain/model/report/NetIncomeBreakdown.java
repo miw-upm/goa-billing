@@ -7,4 +7,5 @@ public record NetIncomeBreakdown(
         BigDecimal currentExpenses,
         BigDecimal investmentAmortization,
         BigDecimal withholdings
-){}
+) {
+}

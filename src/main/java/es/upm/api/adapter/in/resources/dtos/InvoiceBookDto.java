@@ -28,25 +28,6 @@ public record InvoiceBookDto(
     private static final BigDecimal HUNDRED = new BigDecimal("100");
     private static final DateTimeFormatter DATE = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
-    public String toCsvLine() {
-        NumberFormat amount = NumberFormat.getNumberInstance(Locale.forLanguageTag("es-ES"));
-        amount.setGroupingUsed(false);
-        amount.setMinimumFractionDigits(2);
-        amount.setMaximumFractionDigits(2);
-        return String.join(";", List.of(
-                this.reference,
-                this.quarter.name(),
-                DATE.format(this.operationDate),
-                DATE.format(this.emissionDate),
-                this.clientName,
-                this.clientNif,
-                amount.format(this.baseAmount),
-                amount.format(this.vatRate),
-                amount.format(this.vatAmount),
-                amount.format(this.totalAmount)
-        ));
-    }
-
     public static InvoiceBookDto from(Invoice invoice) {
         BillingInfo bi = invoice.getBillingInfo();
         LocalDate date = invoice.getOperationDate();
@@ -84,6 +65,25 @@ public record InvoiceBookDto(
                 vatAmount,
                 baseAmount.add(vatAmount)
         );
+    }
+
+    public String toCsvLine() {
+        NumberFormat amount = NumberFormat.getNumberInstance(Locale.forLanguageTag("es-ES"));
+        amount.setGroupingUsed(false);
+        amount.setMinimumFractionDigits(2);
+        amount.setMaximumFractionDigits(2);
+        return String.join(";", List.of(
+                this.reference,
+                this.quarter.name(),
+                DATE.format(this.operationDate),
+                DATE.format(this.emissionDate),
+                this.clientName,
+                this.clientNif,
+                amount.format(this.baseAmount),
+                amount.format(this.vatRate),
+                amount.format(this.vatAmount),
+                amount.format(this.totalAmount)
+        ));
     }
 
 }

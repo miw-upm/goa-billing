@@ -16,6 +16,10 @@ public enum Quarter {
         this.lastMonth = lastMonth;
     }
 
+    public static Quarter from(LocalDate date) {
+        return values()[(date.getMonthValue() - 1) / 3];
+    }
+
     public LocalDate fromDate(int year) {
         return LocalDate.of(year, this.firstMonth, 1);
     }
@@ -23,9 +27,5 @@ public enum Quarter {
     public LocalDate toDate(int year) {
         LocalDate firstDayOfLastMonth = LocalDate.of(year, this.lastMonth, 1);
         return firstDayOfLastMonth.withDayOfMonth(firstDayOfLastMonth.lengthOfMonth());
-    }
-
-    public static Quarter from(LocalDate date) {
-        return values()[(date.getMonthValue() - 1) / 3];
     }
 }

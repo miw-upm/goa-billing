@@ -1,10 +1,6 @@
 package es.upm.api.domain.services;
 
-import es.upm.api.domain.model.BillingInfo;
-import es.upm.api.domain.model.Expense;
-import es.upm.api.domain.model.Invoice;
-import es.upm.api.domain.model.SupplierInfo;
-import es.upm.api.domain.model.TaxCategory;
+import es.upm.api.domain.model.*;
 import es.upm.api.domain.model.report.NetIncomeBreakdown;
 import es.upm.api.domain.model.report.VatSummary;
 import es.upm.api.domain.ports.out.billing.ExpenseGateway;
