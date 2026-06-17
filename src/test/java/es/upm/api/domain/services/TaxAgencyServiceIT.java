@@ -131,26 +131,28 @@ class TaxAgencyServiceIT {
         Expense reducedCurrentExpense = this.buildExpense(LocalDate.of(2026, 5, 10), "25.00", 4, 100,
                 new BigDecimal("50"), new BigDecimal("2.50"));
         Expense currentYearInvestment = this.buildExpense(LocalDate.of(2026, 2, 12), "12000.00", 21, 12);
+        Expense smallCurrentYearInvestment = this.buildExpense(LocalDate.of(2026, 5, 7), "1000.00", 21, 50);
         Expense previousYearInvestment = this.buildExpense(LocalDate.of(2025, 6, 12), "6000.00", 21, 20);
         Expense alreadyAmortizedInvestment = this.buildExpense(LocalDate.of(2020, 1, 12), "6000.00", 21, 50);
         when(this.invoiceGateway.findIssuedBetween(fromYearDate, toDate))
                 .thenReturn(Stream.of(firstInvoice, secondInvoice));
-        when(this.expenseGateway.findInvoiceReceivedBook(fromYearDate, toDate, INVESTMENT_ASSET_THRESHOLD))
+        when(this.expenseGateway.findCurrentExpensesBook(fromYearDate, toDate))
                 .thenReturn(Stream.of(currentExpense, reducedCurrentExpense));
-        when(this.expenseGateway.findInvestmentAssetsUntil(toDate, INVESTMENT_ASSET_THRESHOLD))
-                .thenReturn(Stream.of(currentYearInvestment, previousYearInvestment, alreadyAmortizedInvestment));
+        when(this.expenseGateway.findInvestmentAssetsUntil(toDate))
+                .thenReturn(Stream.of(currentYearInvestment, smallCurrentYearInvestment,
+                        previousYearInvestment, alreadyAmortizedInvestment));
 
         NetIncomeBreakdown result = this.taxAgencyService.netIncomeBreakdown(toDate);
 
         this.assertNetIncomeBreakdown(new NetIncomeBreakdown(
                 new BigDecimal("300.00"),
                 new BigDecimal("62.50"),
-                new BigDecimal("1200.00"),
+                new BigDecimal("1283.333333"),
                 new BigDecimal("10.00")
         ), result);
         verify(this.invoiceGateway).findIssuedBetween(fromYearDate, toDate);
-        verify(this.expenseGateway).findInvoiceReceivedBook(fromYearDate, toDate, INVESTMENT_ASSET_THRESHOLD);
-        verify(this.expenseGateway).findInvestmentAssetsUntil(toDate, INVESTMENT_ASSET_THRESHOLD);
+        verify(this.expenseGateway).findCurrentExpensesBook(fromYearDate, toDate);
+        verify(this.expenseGateway).findInvestmentAssetsUntil(toDate);
     }
 
     private Invoice buildInvoice(int number, LocalDate emissionDate, LocalDate operationDate,

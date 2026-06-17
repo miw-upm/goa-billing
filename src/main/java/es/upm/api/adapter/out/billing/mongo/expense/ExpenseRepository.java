@@ -43,6 +43,15 @@ public interface ExpenseRepository extends MongoRepository<ExpenseEntity, String
             {
               'issueDate': { $gte: ?0, $lte: ?1 },
               'vatRate': { $gt: 0 },
+              'depreciationRate': 100
+            }
+            """, sort = "{ 'issueDate': 1 }")
+    List<ExpenseEntity> findCurrentExpensesBook(LocalDate fromDate, LocalDate toDate);
+
+    @Query(value = """
+            {
+              'issueDate': { $gte: ?0, $lte: ?1 },
+              'vatRate': { $gt: 0 },
               'depreciationRate': { $ne: 100 },
               'baseAmount': { $gt: ?2 }
             }
@@ -52,11 +61,10 @@ public interface ExpenseRepository extends MongoRepository<ExpenseEntity, String
     @Query(value = """
             {
               'issueDate': { $lte: ?0 },
-              'depreciationRate': { $ne: 100 },
-              'baseAmount': { $gt: ?1 }
+              'depreciationRate': { $ne: 100 }
             }
             """, sort = "{ 'issueDate': 1 }")
-    List<ExpenseEntity> findInvestmentAssetsUntil(LocalDate toDate, Decimal128 taxableBaseThreshold);
+    List<ExpenseEntity> findInvestmentAssetsUntil(LocalDate toDate);
 
     @Query(value = """
             {

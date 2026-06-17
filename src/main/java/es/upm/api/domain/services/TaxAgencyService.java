@@ -61,14 +61,15 @@ public class TaxAgencyService {
     public NetIncomeBreakdown netIncomeBreakdown(LocalDate toDate) {
         LocalDate fromDate = LocalDate.of(toDate.getYear(), 1, 1);
         List<Invoice> invoiceIssuedBook = this.invoiceIssuedBook(fromDate, toDate);
-        List<Expense> invoiceReceivedCurrentBook = this.invoiceReceiveBook(fromDate, toDate);
-        List<Expense> investmentAssets = this.expenseGateway.findInvestmentAssetsUntil(toDate, INVESTMENT_ASSET_THRESHOLD)
+        List<Expense> currentExpensesBook = this.expenseGateway.findCurrentExpensesBook(fromDate, toDate)
+                .toList();
+        List<Expense> investmentAssets = this.expenseGateway.findInvestmentAssetsUntil(toDate)
                 .toList();
         return new NetIncomeBreakdown(
                 this.sum(invoiceIssuedBook, Invoice::getBaseAmount),
-                this.sum(invoiceReceivedCurrentBook, Expense::deductibleBaseAmount),
+                this.sum(currentExpensesBook, Expense::deductibleBaseAmount),
                 this.sum(investmentAssets, investmentAsset -> this.investmentAmortization(investmentAsset, toDate)),
-                this.sum(invoiceReceivedCurrentBook,
+                this.sum(currentExpensesBook,
                         expense -> expense.getWithholdingTax() == null ? BigDecimal.ZERO : expense.getWithholdingTax())
         );
     }
