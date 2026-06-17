@@ -34,6 +34,11 @@ public class TaxAgencyService {
         return this.findInvoiceReceivedBook(fromDate, toDate, INVESTMENT_ASSET_THRESHOLD);
     }
 
+    public List<Expense> invoiceReceiveBook(String series, int fromNumber, int toNumber) {
+        return this.expenseGateway.findInvoiceReceivedBook(series, fromNumber, toNumber, INVESTMENT_ASSET_THRESHOLD)
+                .toList();
+    }
+
     public List<Expense> findInvoiceReceivedBook(LocalDate fromDate, LocalDate toDate, BigDecimal taxableBaseThreshold) {
         return this.expenseGateway.findInvoiceReceivedBook(fromDate, toDate, taxableBaseThreshold)
                 .toList();

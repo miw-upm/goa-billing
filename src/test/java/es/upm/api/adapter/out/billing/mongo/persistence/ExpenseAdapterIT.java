@@ -281,6 +281,18 @@ class ExpenseAdapterIT {
     }
 
     @Test
+    void shouldFindInvoiceReceivedBookByNumberRange() {
+        when(this.expenseRepository.findReceivedBook("2026", 2, 3, INVESTMENT_ASSET_THRESHOLD_DECIMAL))
+                .thenReturn(List.of(new ExpenseEntity(this.expense)));
+
+        List<Expense> expenses = this.expensePersistenceMongodb
+                .findInvoiceReceivedBook("2026", 2, 3, INVESTMENT_ASSET_THRESHOLD).toList();
+
+        assertEquals(List.of(this.expense), expenses);
+        verify(this.expenseRepository).findReceivedBook("2026", 2, 3, INVESTMENT_ASSET_THRESHOLD_DECIMAL);
+    }
+
+    @Test
     void shouldFindCurrentExpensesBook() {
         LocalDate fromDate = LocalDate.of(2026, 1, 1);
         LocalDate toDate = LocalDate.of(2026, 6, 30);

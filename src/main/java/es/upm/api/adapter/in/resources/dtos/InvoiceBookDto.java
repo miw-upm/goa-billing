@@ -47,14 +47,14 @@ public record InvoiceBookDto(
         );
     }
 
-    public static InvoiceBookDto from(Expense expense, int reference) {
+    public static InvoiceBookDto from(Expense expense) {
         SupplierInfo supplier = expense.getSupplier();
         LocalDate date = expense.getIssueDate();
         BigDecimal baseAmount = expense.deductibleBaseAmount();
         BigDecimal vatRate = BigDecimal.valueOf(expense.getVatRate()).divide(HUNDRED);
         BigDecimal vatAmount = expense.deductibleVatAmount();
         return new InvoiceBookDto(
-                "%s (%s-%s)".formatted(reference, expense.getSeries(), expense.getNumber()),
+                expense.getSeries() + "-" + expense.getNumber(),
                 Quarter.from(date),
                 date,
                 date,

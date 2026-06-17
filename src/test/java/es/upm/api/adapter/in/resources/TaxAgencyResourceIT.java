@@ -90,14 +90,14 @@ class TaxAgencyResourceIT {
         Expense secondT2Expense = this.buildExpense(LocalDate.of(2026, 5, 15),
                 "2026", 3, "Book Store", "B20000000", "200.00", 4, new BigDecimal("50"));
         String expected = String.join("\r\n",
-                "2 (2026-2);T2;%s;%s;Office Supplies;B10000000;%s;0,21;%s;%s".formatted(
+                "2026-2;T2;%s;%s;Office Supplies;B10000000;%s;0,21;%s;%s".formatted(
                         DATE.format(LocalDate.of(2026, 4, 10)),
                         DATE.format(LocalDate.of(2026, 4, 10)),
                         AMOUNT.format(new BigDecimal("100.00")),
                         AMOUNT.format(new BigDecimal("21.00")),
                         AMOUNT.format(new BigDecimal("121.00"))
                 ),
-                "3 (2026-3);T2;%s;%s;Book Store;B20000000;%s;0,04;%s;%s".formatted(
+                "2026-3;T2;%s;%s;Book Store;B20000000;%s;0,04;%s;%s".formatted(
                         DATE.format(LocalDate.of(2026, 5, 15)),
                         DATE.format(LocalDate.of(2026, 5, 15)),
                         AMOUNT.format(new BigDecimal("100.00")),
@@ -105,20 +105,19 @@ class TaxAgencyResourceIT {
                         AMOUNT.format(new BigDecimal("104.00"))
                 )
         );
-        when(this.taxAgencyService.countInvoiceReceiveBook(LocalDate.of(2026, 1, 1), LocalDate.of(2026, 3, 31)))
-                .thenReturn(1);
-        when(this.taxAgencyService.invoiceReceiveBook(LocalDate.of(2026, 4, 1), LocalDate.of(2026, 6, 30)))
+        when(this.taxAgencyService.invoiceReceiveBook("2026", 2, 3))
                 .thenReturn(List.of(firstT2Expense, secondT2Expense));
 
         this.mockMvc.perform(get("/tax-agency/received-book")
                         .param("year", "2026")
-                        .param("quarter", "T2"))
+                        .param("quarter", "T2")
+                        .param("from", "2")
+                        .param("to", "3"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith("text/csv"))
                 .andExpect(content().string(expected));
 
-        verify(this.taxAgencyService).countInvoiceReceiveBook(LocalDate.of(2026, 1, 1), LocalDate.of(2026, 3, 31));
-        verify(this.taxAgencyService).invoiceReceiveBook(LocalDate.of(2026, 4, 1), LocalDate.of(2026, 6, 30));
+        verify(this.taxAgencyService).invoiceReceiveBook("2026", 2, 3);
     }
 
     @Test
@@ -126,25 +125,26 @@ class TaxAgencyResourceIT {
     void shouldGenerateReceivedBookCsvStartingAtOneInFirstQuarter() throws Exception {
         Expense expense = this.buildExpense(LocalDate.of(2026, 2, 10),
                 "2026", 1, "Office Supplies", "B10000000", "100.00", 21, null);
-        String expected = "1 (2026-1);T1;%s;%s;Office Supplies;B10000000;%s;0,21;%s;%s".formatted(
+        String expected = "2026-1;T1;%s;%s;Office Supplies;B10000000;%s;0,21;%s;%s".formatted(
                 DATE.format(LocalDate.of(2026, 2, 10)),
                 DATE.format(LocalDate.of(2026, 2, 10)),
                 AMOUNT.format(new BigDecimal("100.00")),
                 AMOUNT.format(new BigDecimal("21.00")),
                 AMOUNT.format(new BigDecimal("121.00"))
         );
-        when(this.taxAgencyService.invoiceReceiveBook(LocalDate.of(2026, 1, 1), LocalDate.of(2026, 3, 31)))
+        when(this.taxAgencyService.invoiceReceiveBook("2026", 1, 1))
                 .thenReturn(List.of(expense));
 
         this.mockMvc.perform(get("/tax-agency/received-book")
                         .param("year", "2026")
-                        .param("quarter", "T1"))
+                        .param("quarter", "T1")
+                        .param("from", "1")
+                        .param("to", "1"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith("text/csv"))
                 .andExpect(content().string(expected));
 
-        verify(this.taxAgencyService, never()).countInvoiceReceiveBook(any(LocalDate.class), any(LocalDate.class));
-        verify(this.taxAgencyService).invoiceReceiveBook(LocalDate.of(2026, 1, 1), LocalDate.of(2026, 3, 31));
+        verify(this.taxAgencyService).invoiceReceiveBook("2026", 1, 1);
     }
 
     @Test

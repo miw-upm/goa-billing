@@ -41,6 +41,19 @@ public interface ExpenseRepository extends MongoRepository<ExpenseEntity, String
 
     @Query(value = """
             {
+              'series': ?0,
+              'number': { $gte: ?1, $lte: ?2 },
+              'vatRate': { $gt: 0 },
+              '$or': [
+                { 'depreciationRate': 100 },
+                { 'depreciationRate': { $ne: 100 }, 'baseAmount': { $lt: ?3 } }
+              ]
+            }
+            """, sort = "{ 'number': 1 }")
+    List<ExpenseEntity> findReceivedBook(String series, int fromNumber, int toNumber, Decimal128 taxableBaseThreshold);
+
+    @Query(value = """
+            {
               'issueDate': { $gte: ?0, $lte: ?1 },
               'depreciationRate': 100
             }

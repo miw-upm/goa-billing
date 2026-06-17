@@ -66,6 +66,19 @@ class TaxAgencyServiceIT {
     }
 
     @Test
+    void shouldFindReceivedBookByNumberRange() {
+        Expense first = this.buildExpense(LocalDate.of(2026, 4, 10));
+        Expense second = this.buildExpense(LocalDate.of(2026, 5, 15));
+        when(this.expenseGateway.findInvoiceReceivedBook("2026", 2, 3, INVESTMENT_ASSET_THRESHOLD))
+                .thenReturn(Stream.of(first, second));
+
+        List<Expense> expenses = this.taxAgencyService.invoiceReceiveBook("2026", 2, 3);
+
+        assertEquals(List.of(first, second), expenses);
+        verify(this.expenseGateway).findInvoiceReceivedBook("2026", 2, 3, INVESTMENT_ASSET_THRESHOLD);
+    }
+
+    @Test
     void shouldCountReceivedBookBeforeDate() {
         LocalDate fromDate = LocalDate.of(2026, 1, 1);
         LocalDate toDate = LocalDate.of(2026, 3, 31);
