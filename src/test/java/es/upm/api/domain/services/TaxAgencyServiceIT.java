@@ -79,16 +79,6 @@ class TaxAgencyServiceIT {
     }
 
     @Test
-    void shouldCountReceivedBookBeforeDate() {
-        LocalDate fromDate = LocalDate.of(2026, 1, 1);
-        LocalDate toDate = LocalDate.of(2026, 3, 31);
-        when(this.expenseGateway.countInvoiceReceivedBook(fromDate, toDate, INVESTMENT_ASSET_THRESHOLD)).thenReturn(3L);
-
-        assertEquals(3, this.taxAgencyService.countInvoiceReceivedBook(fromDate, toDate, INVESTMENT_ASSET_THRESHOLD));
-        verify(this.expenseGateway).countInvoiceReceivedBook(fromDate, toDate, INVESTMENT_ASSET_THRESHOLD);
-    }
-
-    @Test
     void shouldReturnEmptyListWhenThereAreNoInvoices() {
         LocalDate fromDate = LocalDate.of(2026, 10, 1);
         LocalDate toDate = LocalDate.of(2026, 12, 31);
@@ -99,7 +89,9 @@ class TaxAgencyServiceIT {
     }
 
     @Test
-    void shouldBuildModel303ByNumberRange() {
+    void shouldBuildModel303WithIssuedByDateAndReceivedByNumberRange() {
+        LocalDate fromDate = LocalDate.of(2026, 4, 1);
+        LocalDate toDate = LocalDate.of(2026, 6, 30);
         Invoice firstInvoice = this.buildInvoice(31, LocalDate.of(2026, 4, 20), LocalDate.of(2026, 4, 19),
                 "12345678Z", "First Client", "100.00", "21.00");
         Invoice secondInvoice = this.buildInvoice(32, LocalDate.of(2026, 5, 20), LocalDate.of(2026, 5, 19),
@@ -107,14 +99,14 @@ class TaxAgencyServiceIT {
         Expense currentExpense = this.buildExpense(LocalDate.of(2026, 4, 10), "50.00", 21, 100);
         Expense reducedVatCurrentExpense = this.buildExpense(LocalDate.of(2026, 5, 10), "25.00", 4, 100, new BigDecimal("50"));
         Expense investmentExpense = this.buildExpense(LocalDate.of(2026, 6, 10), "4000.00", 21, 10, new BigDecimal("25"));
-        when(this.invoiceGateway.findIssuedBetween("2026", 31, 32))
+        when(this.invoiceGateway.findIssuedBetween(fromDate, toDate))
                 .thenReturn(Stream.of(firstInvoice, secondInvoice));
         when(this.expenseGateway.findInvoiceReceivedBook("2026", 31, 32, INVESTMENT_ASSET_THRESHOLD))
                 .thenReturn(Stream.of(currentExpense, reducedVatCurrentExpense));
         when(this.expenseGateway.findInvoiceReceivedInvestmentBook("2026", 31, 32, INVESTMENT_ASSET_THRESHOLD))
                 .thenReturn(Stream.of(investmentExpense));
 
-        VatSummary result = this.taxAgencyService.vatSummary("2026", 31, 32);
+        VatSummary result = this.taxAgencyService.vatSummary(fromDate, toDate, "2026", 31, 32);
 
         this.assertVatSummary(new VatSummary(
                 new BigDecimal("300.00"),
@@ -124,7 +116,7 @@ class TaxAgencyServiceIT {
                 new BigDecimal("1000.00"),
                 new BigDecimal("210.00")
         ), result);
-        verify(this.invoiceGateway).findIssuedBetween("2026", 31, 32);
+        verify(this.invoiceGateway).findIssuedBetween(fromDate, toDate);
         verify(this.expenseGateway).findInvoiceReceivedBook("2026", 31, 32, INVESTMENT_ASSET_THRESHOLD);
         verify(this.expenseGateway).findInvoiceReceivedInvestmentBook("2026", 31, 32, INVESTMENT_ASSET_THRESHOLD);
     }

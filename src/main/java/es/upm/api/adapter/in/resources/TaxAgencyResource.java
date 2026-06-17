@@ -50,7 +50,8 @@ public class TaxAgencyResource {
     @GetMapping(MODEL_303)
     public Model303Dto model303(@RequestParam int year, @RequestParam Quarter quarter,
                                 @RequestParam int from, @RequestParam int to) {
-        return new Model303Dto(year, quarter, this.taxAgencyService.vatSummary(String.valueOf(year), from, to));
+        return new Model303Dto(year, quarter, this.taxAgencyService.vatSummary(
+                quarter.fromDate(year), quarter.toDate(year), String.valueOf(year), from, to));
     }
 
     @GetMapping(MODEL_130)

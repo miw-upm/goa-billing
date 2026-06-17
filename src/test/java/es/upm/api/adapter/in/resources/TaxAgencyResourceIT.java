@@ -150,6 +150,8 @@ class TaxAgencyResourceIT {
     @Test
     @WithMockUser(roles = "admin")
     void shouldReturnModel303() throws Exception {
+        LocalDate fromDate = LocalDate.of(2026, 4, 1);
+        LocalDate toDate = LocalDate.of(2026, 6, 30);
         VatSummary vatSummary = new VatSummary(
                 new BigDecimal("300.00"),
                 new BigDecimal("29.00"),
@@ -158,7 +160,7 @@ class TaxAgencyResourceIT {
                 new BigDecimal("4000.00"),
                 new BigDecimal("840.00")
         );
-        when(this.taxAgencyService.vatSummary("2026", 2, 3)).thenReturn(vatSummary);
+        when(this.taxAgencyService.vatSummary(fromDate, toDate, "2026", 2, 3)).thenReturn(vatSummary);
 
         this.mockMvc.perform(get("/tax-agency/models/303")
                         .param("year", "2026")
@@ -181,7 +183,7 @@ class TaxAgencyResourceIT {
                         }
                         """));
 
-        verify(this.taxAgencyService).vatSummary("2026", 2, 3);
+        verify(this.taxAgencyService).vatSummary(fromDate, toDate, "2026", 2, 3);
     }
 
     @Test

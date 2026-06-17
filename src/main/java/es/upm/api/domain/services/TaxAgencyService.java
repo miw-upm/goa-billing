@@ -30,10 +30,6 @@ public class TaxAgencyService {
                 .toList();
     }
 
-    public List<Expense> invoiceReceiveBook(LocalDate fromDate, LocalDate toDate) {
-        return this.findInvoiceReceivedBook(fromDate, toDate, INVESTMENT_ASSET_THRESHOLD);
-    }
-
     public List<Expense> invoiceReceiveBook(String series, int fromNumber, int toNumber) {
         return this.expenseGateway.findInvoiceReceivedBook(series, fromNumber, toNumber, INVESTMENT_ASSET_THRESHOLD)
                 .toList();
@@ -44,21 +40,8 @@ public class TaxAgencyService {
                 .toList();
     }
 
-    public List<Expense> invoiceReceivedInvestmentBook(LocalDate fromDate, LocalDate toDate) {
-        return this.expenseGateway.findInvoiceReceivedInvestmentBook(fromDate, toDate, INVESTMENT_ASSET_THRESHOLD)
-                .toList();
-    }
-
-    public VatSummary vatSummary(LocalDate fromDate, LocalDate toDate) {
+    public VatSummary vatSummary(LocalDate fromDate, LocalDate toDate, String series, int fromNumber, int toNumber) {
         List<Invoice> invoiceIssuedBook = this.invoiceIssuedBook(fromDate, toDate);
-        List<Expense> invoiceReceivedCurrentBook = this.invoiceReceiveBook(fromDate, toDate);
-        List<Expense> invoiceReceivedInvestmentBook = this.invoiceReceivedInvestmentBook(fromDate, toDate);
-        return this.vatSummary(invoiceIssuedBook, invoiceReceivedCurrentBook, invoiceReceivedInvestmentBook);
-    }
-
-    public VatSummary vatSummary(String series, int fromNumber, int toNumber) {
-        List<Invoice> invoiceIssuedBook = this.invoiceGateway.findIssuedBetween(series, fromNumber, toNumber)
-                .toList();
         List<Expense> invoiceReceivedCurrentBook = this.invoiceReceiveBook(series, fromNumber, toNumber);
         List<Expense> invoiceReceivedInvestmentBook = this.expenseGateway
                 .findInvoiceReceivedInvestmentBook(series, fromNumber, toNumber, INVESTMENT_ASSET_THRESHOLD)
@@ -114,14 +97,6 @@ public class TaxAgencyService {
                 this.sum(currentExpensesBook,
                         expense -> expense.getWithholdingTax() == null ? BigDecimal.ZERO : expense.getWithholdingTax())
         );
-    }
-
-    public int countInvoiceReceiveBook(LocalDate fromDate, LocalDate toDate) {
-        return this.countInvoiceReceivedBook(fromDate, toDate, INVESTMENT_ASSET_THRESHOLD);
-    }
-
-    public int countInvoiceReceivedBook(LocalDate fromDate, LocalDate toDate, BigDecimal taxableBaseThreshold) {
-        return Math.toIntExact(this.expenseGateway.countInvoiceReceivedBook(fromDate, toDate, taxableBaseThreshold));
     }
 
     private <T> BigDecimal sum(List<T> values, Function<T, BigDecimal> mapper) {
