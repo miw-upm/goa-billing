@@ -81,15 +81,15 @@ public class InvoiceAdapter implements InvoiceGateway {
         if (StringUtils.hasText(criteria.getEngagementId())) {
             String engagementIdPrefix = this.normalizeEngagementIdPrefix(criteria.getEngagementId());
             if (criteria.getFromDate() == null) {
-                result = this.invoiceRepository.findByEngagementIdStartingWithOrderByEmissionDateDesc(engagementIdPrefix);
+                result = this.invoiceRepository.findByEngagementIdStartingWithOrderBySeriesDescNumberDesc(engagementIdPrefix);
             } else {
-                result = this.invoiceRepository.findByEngagementIdStartingWithAndEmissionDateGreaterThanEqualOrderByEmissionDateDesc(
+                result = this.invoiceRepository.findByEngagementIdStartingWithAndEmissionDateGreaterThanEqualOrderBySeriesDescNumberDesc(
                         engagementIdPrefix, criteria.getFromDate());
             }
         } else if (criteria.isEmpty() || criteria.getFromDate() == null) {
-            result = this.invoiceRepository.findAllByOrderByEmissionDateDesc();
+            result = this.invoiceRepository.findAllByOrderBySeriesDescNumberDesc();
         } else {
-            result = this.invoiceRepository.findByEmissionDateGreaterThanEqualOrderByEmissionDateDesc(criteria.getFromDate());
+            result = this.invoiceRepository.findByEmissionDateGreaterThanEqualOrderBySeriesDescNumberDesc(criteria.getFromDate());
         }
 
         Stream<Invoice> stream = result.stream()

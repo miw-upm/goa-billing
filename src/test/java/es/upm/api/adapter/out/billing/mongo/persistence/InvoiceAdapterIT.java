@@ -147,27 +147,27 @@ class InvoiceAdapterIT {
 
     @Test
     void shouldFindInvoicesWithoutFilters() {
-        when(this.invoiceRepository.findAllByOrderByEmissionDateDesc())
+        when(this.invoiceRepository.findAllByOrderBySeriesDescNumberDesc())
                 .thenReturn(List.of(new InvoiceEntity(this.invoice)));
 
         Stream<Invoice> stream = this.invoiceAdapter.find(this.criteria);
 
         assertEquals(this.invoice, stream.findFirst().orElse(null));
-        verify(this.invoiceRepository).findAllByOrderByEmissionDateDesc();
+        verify(this.invoiceRepository).findAllByOrderBySeriesDescNumberDesc();
     }
 
     @Test
     void shouldFindInvoicesByFromDate() {
         LocalDate fromDate = LocalDate.of(2026, 3, 20);
         InvoiceFindCriteria findCriteria = new InvoiceFindCriteria(null, fromDate);
-        when(this.invoiceRepository.findByEmissionDateGreaterThanEqualOrderByEmissionDateDesc(fromDate))
+        when(this.invoiceRepository.findByEmissionDateGreaterThanEqualOrderBySeriesDescNumberDesc(fromDate))
                 .thenReturn(List.of(new InvoiceEntity(this.invoice)));
 
         List<Invoice> result = this.invoiceAdapter.find(findCriteria).toList();
 
         assertEquals(1, result.size());
         assertEquals(this.invoice.getId(), result.get(0).getId());
-        verify(this.invoiceRepository).findByEmissionDateGreaterThanEqualOrderByEmissionDateDesc(fromDate);
+        verify(this.invoiceRepository).findByEmissionDateGreaterThanEqualOrderBySeriesDescNumberDesc(fromDate);
     }
 
     @Test
@@ -175,14 +175,14 @@ class InvoiceAdapterIT {
         String engagementIdPrefix = this.engagementId.toString().substring(0, 4);
         InvoiceFindCriteria findCriteria = new InvoiceFindCriteria();
         findCriteria.setEngagementId(engagementIdPrefix);
-        when(this.invoiceRepository.findByEngagementIdStartingWithOrderByEmissionDateDesc(engagementIdPrefix))
+        when(this.invoiceRepository.findByEngagementIdStartingWithOrderBySeriesDescNumberDesc(engagementIdPrefix))
                 .thenReturn(List.of(new InvoiceEntity(this.invoice)));
 
         List<Invoice> result = this.invoiceAdapter.find(findCriteria).toList();
 
         assertEquals(1, result.size());
         assertEquals(this.invoice.getId(), result.get(0).getId());
-        verify(this.invoiceRepository).findByEngagementIdStartingWithOrderByEmissionDateDesc(engagementIdPrefix);
+        verify(this.invoiceRepository).findByEngagementIdStartingWithOrderBySeriesDescNumberDesc(engagementIdPrefix);
     }
 
     @Test
@@ -192,7 +192,7 @@ class InvoiceAdapterIT {
         InvoiceFindCriteria findCriteria = new InvoiceFindCriteria();
         findCriteria.setFromDate(fromDate);
         findCriteria.setEngagementId(engagementIdPrefix);
-        when(this.invoiceRepository.findByEngagementIdStartingWithAndEmissionDateGreaterThanEqualOrderByEmissionDateDesc(
+        when(this.invoiceRepository.findByEngagementIdStartingWithAndEmissionDateGreaterThanEqualOrderBySeriesDescNumberDesc(
                 engagementIdPrefix, fromDate))
                 .thenReturn(List.of(new InvoiceEntity(this.invoice)));
 
@@ -200,7 +200,7 @@ class InvoiceAdapterIT {
 
         assertEquals(1, result.size());
         assertEquals(this.invoice.getId(), result.get(0).getId());
-        verify(this.invoiceRepository).findByEngagementIdStartingWithAndEmissionDateGreaterThanEqualOrderByEmissionDateDesc(
+        verify(this.invoiceRepository).findByEngagementIdStartingWithAndEmissionDateGreaterThanEqualOrderBySeriesDescNumberDesc(
                 engagementIdPrefix, fromDate);
     }
 
@@ -211,14 +211,14 @@ class InvoiceAdapterIT {
         unissuedInvoice.setEmissionDate(null);
         InvoiceFindCriteria findCriteria = new InvoiceFindCriteria();
         findCriteria.setIssued(true);
-        when(this.invoiceRepository.findAllByOrderByEmissionDateDesc())
+        when(this.invoiceRepository.findAllByOrderBySeriesDescNumberDesc())
                 .thenReturn(List.of(new InvoiceEntity(this.invoice), new InvoiceEntity(unissuedInvoice)));
 
         List<Invoice> result = this.invoiceAdapter.find(findCriteria).toList();
 
         assertEquals(1, result.size());
         assertEquals(this.invoice.getId(), result.getFirst().getId());
-        verify(this.invoiceRepository).findAllByOrderByEmissionDateDesc();
+        verify(this.invoiceRepository).findAllByOrderBySeriesDescNumberDesc();
     }
 
     @Test
@@ -228,14 +228,14 @@ class InvoiceAdapterIT {
         unissuedInvoice.setEmissionDate(null);
         InvoiceFindCriteria findCriteria = new InvoiceFindCriteria();
         findCriteria.setIssued(false);
-        when(this.invoiceRepository.findAllByOrderByEmissionDateDesc())
+        when(this.invoiceRepository.findAllByOrderBySeriesDescNumberDesc())
                 .thenReturn(List.of(new InvoiceEntity(this.invoice), new InvoiceEntity(unissuedInvoice)));
 
         List<Invoice> result = this.invoiceAdapter.find(findCriteria).toList();
 
         assertEquals(1, result.size());
         assertEquals(unissuedInvoice.getId(), result.getFirst().getId());
-        verify(this.invoiceRepository).findAllByOrderByEmissionDateDesc();
+        verify(this.invoiceRepository).findAllByOrderBySeriesDescNumberDesc();
     }
 
     @Test
