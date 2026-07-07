@@ -2,8 +2,8 @@ package es.upm.api.domain.services;
 
 import es.upm.api.domain.model.Expense;
 import es.upm.api.domain.model.Invoice;
-import es.upm.api.domain.model.report.NetIncomeBreakdown;
-import es.upm.api.domain.model.report.VatSummary;
+import es.upm.api.domain.model.report.NetIncomeBreakdownReport;
+import es.upm.api.domain.model.report.VatSummaryReport;
 import es.upm.api.domain.ports.out.billing.ExpenseGateway;
 import es.upm.api.domain.ports.out.billing.InvoiceGateway;
 import lombok.RequiredArgsConstructor;
@@ -40,7 +40,7 @@ public class TaxAgencyService {
                 .toList();
     }
 
-    public VatSummary vatSummary(LocalDate fromDate, LocalDate toDate, String series, int fromNumber, int toNumber) {
+    public VatSummaryReport vatSummary(LocalDate fromDate, LocalDate toDate, String series, int fromNumber, int toNumber) {
         List<Invoice> invoiceIssuedBook = this.invoiceIssuedBook(fromDate, toDate);
         List<Expense> invoiceReceivedCurrentBook = this.invoiceReceiveBook(series, fromNumber, toNumber);
         List<Expense> invoiceReceivedInvestmentBook = this.expenseGateway
@@ -49,12 +49,12 @@ public class TaxAgencyService {
         return this.vatSummary(invoiceIssuedBook, invoiceReceivedCurrentBook, invoiceReceivedInvestmentBook);
     }
 
-    private VatSummary vatSummary(
+    private VatSummaryReport vatSummary(
             List<Invoice> invoiceIssuedBook,
             List<Expense> invoiceReceivedCurrentBook,
             List<Expense> invoiceReceivedInvestmentBook
     ) {
-        return new VatSummary(
+        return new VatSummaryReport(
                 this.sum(invoiceIssuedBook, Invoice::getBaseAmount),
                 this.sum(invoiceIssuedBook, Invoice::getVatAmount),
                 this.sum(invoiceReceivedCurrentBook, Expense::deductibleBaseAmount),
@@ -64,7 +64,7 @@ public class TaxAgencyService {
         );
     }
 
-    public NetIncomeBreakdown netIncomeBreakdown(LocalDate toDate) {
+    public NetIncomeBreakdownReport netIncomeBreakdown(LocalDate toDate) {
         LocalDate fromDate = LocalDate.of(toDate.getYear(), 1, 1);
         List<Invoice> invoiceIssuedBook = this.invoiceIssuedBook(fromDate, toDate);
         List<Expense> currentExpensesBook = this.expenseGateway.findCurrentExpensesBook(fromDate, toDate)
@@ -74,7 +74,7 @@ public class TaxAgencyService {
         return this.netIncomeBreakdown(invoiceIssuedBook, currentExpensesBook, investmentAssets, toDate);
     }
 
-    public NetIncomeBreakdown netIncomeBreakdown(String series, int toNumber, LocalDate toDate) {
+    public NetIncomeBreakdownReport netIncomeBreakdown(String series, int toNumber, LocalDate toDate) {
         List<Invoice> invoiceIssuedBook = this.invoiceGateway.findIssuedBetween(series, 1, toNumber)
                 .toList();
         List<Expense> currentExpensesBook = this.expenseGateway.findCurrentExpensesBook(series, 1, toNumber)
@@ -84,13 +84,13 @@ public class TaxAgencyService {
         return this.netIncomeBreakdown(invoiceIssuedBook, currentExpensesBook, investmentAssets, toDate);
     }
 
-    private NetIncomeBreakdown netIncomeBreakdown(
+    private NetIncomeBreakdownReport netIncomeBreakdown(
             List<Invoice> invoiceIssuedBook,
             List<Expense> currentExpensesBook,
             List<Expense> investmentAssets,
             LocalDate toDate
     ) {
-        return new NetIncomeBreakdown(
+        return new NetIncomeBreakdownReport(
                 this.sum(invoiceIssuedBook, Invoice::getBaseAmount),
                 this.sum(currentExpensesBook, Expense::deductibleBaseAmount),
                 this.sum(investmentAssets, investmentAsset -> this.investmentAmortization(investmentAsset, toDate)),

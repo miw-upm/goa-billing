@@ -1,8 +1,8 @@
 package es.upm.api.domain.services;
 
 import es.upm.api.domain.model.*;
-import es.upm.api.domain.model.report.NetIncomeBreakdown;
-import es.upm.api.domain.model.report.VatSummary;
+import es.upm.api.domain.model.report.NetIncomeBreakdownReport;
+import es.upm.api.domain.model.report.VatSummaryReport;
 import es.upm.api.domain.ports.out.billing.ExpenseGateway;
 import es.upm.api.domain.ports.out.billing.InvoiceGateway;
 import org.junit.jupiter.api.Test;
@@ -106,9 +106,9 @@ class TaxAgencyServiceIT {
         when(this.expenseGateway.findInvoiceReceivedInvestmentBook("2026", 31, 32, INVESTMENT_ASSET_THRESHOLD))
                 .thenReturn(Stream.of(investmentExpense));
 
-        VatSummary result = this.taxAgencyService.vatSummary(fromDate, toDate, "2026", 31, 32);
+        VatSummaryReport result = this.taxAgencyService.vatSummary(fromDate, toDate, "2026", 31, 32);
 
-        this.assertVatSummary(new VatSummary(
+        this.assertVatSummary(new VatSummaryReport(
                 new BigDecimal("300.00"),
                 new BigDecimal("29.00"),
                 new BigDecimal("62.50"),
@@ -145,9 +145,9 @@ class TaxAgencyServiceIT {
                 .thenReturn(Stream.of(currentYearInvestment, smallCurrentYearInvestment,
                         previousYearInvestment, alreadyAmortizedInvestment));
 
-        NetIncomeBreakdown result = this.taxAgencyService.netIncomeBreakdown(toDate);
+        NetIncomeBreakdownReport result = this.taxAgencyService.netIncomeBreakdown(toDate);
 
-        this.assertNetIncomeBreakdown(new NetIncomeBreakdown(
+        this.assertNetIncomeBreakdown(new NetIncomeBreakdownReport(
                 new BigDecimal("300.00"),
                 new BigDecimal("62.50"),
                 new BigDecimal("1283.333333"),
@@ -181,9 +181,9 @@ class TaxAgencyServiceIT {
                 .thenReturn(Stream.of(currentYearInvestment, smallCurrentYearInvestment,
                         previousYearInvestment, alreadyAmortizedInvestment));
 
-        NetIncomeBreakdown result = this.taxAgencyService.netIncomeBreakdown("2026", 3, toDate);
+        NetIncomeBreakdownReport result = this.taxAgencyService.netIncomeBreakdown("2026", 3, toDate);
 
-        this.assertNetIncomeBreakdown(new NetIncomeBreakdown(
+        this.assertNetIncomeBreakdown(new NetIncomeBreakdownReport(
                 new BigDecimal("300.00"),
                 new BigDecimal("62.50"),
                 new BigDecimal("1283.333333"),
@@ -245,7 +245,7 @@ class TaxAgencyServiceIT {
                 .build();
     }
 
-    private void assertVatSummary(VatSummary expected, VatSummary actual) {
+    private void assertVatSummary(VatSummaryReport expected, VatSummaryReport actual) {
         this.assertBigDecimalEquals(expected.invoiceIssuedBase(), actual.invoiceIssuedBase());
         this.assertBigDecimalEquals(expected.invoiceIssuedVat(), actual.invoiceIssuedVat());
         this.assertBigDecimalEquals(expected.invoiceReceivedCurrentBase(), actual.invoiceReceivedCurrentBase());
@@ -254,7 +254,7 @@ class TaxAgencyServiceIT {
         this.assertBigDecimalEquals(expected.invoiceReceivedInvestmentVat(), actual.invoiceReceivedInvestmentVat());
     }
 
-    private void assertNetIncomeBreakdown(NetIncomeBreakdown expected, NetIncomeBreakdown actual) {
+    private void assertNetIncomeBreakdown(NetIncomeBreakdownReport expected, NetIncomeBreakdownReport actual) {
         this.assertBigDecimalEquals(expected.income(), actual.income());
         this.assertBigDecimalEquals(expected.currentExpenses(), actual.currentExpenses());
         this.assertBigDecimalEquals(expected.investmentAmortization(), actual.investmentAmortization());

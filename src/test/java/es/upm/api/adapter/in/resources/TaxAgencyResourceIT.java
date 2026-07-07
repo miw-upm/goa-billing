@@ -1,8 +1,8 @@
 package es.upm.api.adapter.in.resources;
 
 import es.upm.api.domain.model.*;
-import es.upm.api.domain.model.report.NetIncomeBreakdown;
-import es.upm.api.domain.model.report.VatSummary;
+import es.upm.api.domain.model.report.NetIncomeBreakdownReport;
+import es.upm.api.domain.model.report.VatSummaryReport;
 import es.upm.api.domain.services.TaxAgencyService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -152,7 +152,7 @@ class TaxAgencyResourceIT {
     void shouldReturnModel303() throws Exception {
         LocalDate fromDate = LocalDate.of(2026, 4, 1);
         LocalDate toDate = LocalDate.of(2026, 6, 30);
-        VatSummary vatSummary = new VatSummary(
+        VatSummaryReport vatSummaryReport = new VatSummaryReport(
                 new BigDecimal("300.00"),
                 new BigDecimal("29.00"),
                 new BigDecimal("75.00"),
@@ -160,7 +160,7 @@ class TaxAgencyResourceIT {
                 new BigDecimal("4000.00"),
                 new BigDecimal("840.00")
         );
-        when(this.taxAgencyService.vatSummary(fromDate, toDate, "2026", 2, 3)).thenReturn(vatSummary);
+        when(this.taxAgencyService.vatSummary(fromDate, toDate, "2026", 2, 3)).thenReturn(vatSummaryReport);
 
         this.mockMvc.perform(get("/tax-agency/models/303")
                         .param("year", "2026")
@@ -172,7 +172,7 @@ class TaxAgencyResourceIT {
                         {
                           "year": 2026,
                           "quarter": "T2",
-                          "vatSummary": {
+                          "vatSummaryReport": {
                             "invoiceIssuedBase": 300.00,
                             "invoiceIssuedVat": 29.00,
                             "invoiceReceivedCurrentBase": 75.00,
@@ -190,13 +190,13 @@ class TaxAgencyResourceIT {
     @WithMockUser(roles = "admin")
     void shouldReturnModel130() throws Exception {
         LocalDate toDate = LocalDate.of(2026, 6, 30);
-        NetIncomeBreakdown netIncomeBreakdown = new NetIncomeBreakdown(
+        NetIncomeBreakdownReport netIncomeBreakdownReport = new NetIncomeBreakdownReport(
                 new BigDecimal("300.00"),
                 new BigDecimal("75.00"),
                 new BigDecimal("1200.00"),
                 new BigDecimal("10.00")
         );
-        when(this.taxAgencyService.netIncomeBreakdown("2026", 3, toDate)).thenReturn(netIncomeBreakdown);
+        when(this.taxAgencyService.netIncomeBreakdown("2026", 3, toDate)).thenReturn(netIncomeBreakdownReport);
 
         this.mockMvc.perform(get("/tax-agency/models/130")
                         .param("year", "2026")
@@ -207,7 +207,7 @@ class TaxAgencyResourceIT {
                         {
                           "year": 2026,
                           "quarter": "T2",
-                          "netIncomeBreakdown": {
+                          "netIncomeBreakdownReport": {
                             "income": 300.00,
                             "currentExpenses": 75.00,
                             "investmentAmortization": 1200.00,

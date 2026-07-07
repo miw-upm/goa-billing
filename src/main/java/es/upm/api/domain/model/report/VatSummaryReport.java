@@ -2,7 +2,7 @@ package es.upm.api.domain.model.report;
 
 import java.math.BigDecimal;
 
-public record VatSummary(
+public record VatSummaryReport(
         BigDecimal invoiceIssuedBase,
         BigDecimal invoiceIssuedVat,
         BigDecimal invoiceReceivedCurrentBase,
