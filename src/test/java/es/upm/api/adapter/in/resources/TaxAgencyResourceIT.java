@@ -1,6 +1,7 @@
 package es.upm.api.adapter.in.resources;
 
 import es.upm.api.domain.model.*;
+import es.upm.api.domain.model.report.Quarter;
 import es.upm.api.domain.model.report.NetIncomeBreakdownReport;
 import es.upm.api.domain.model.report.VatSummaryReport;
 import es.upm.api.domain.services.TaxAgencyService;
@@ -48,8 +49,6 @@ class TaxAgencyResourceIT {
     @Test
     @WithMockUser(roles = "admin")
     void shouldGenerateInvoiceIssuedBookCsv() throws Exception {
-        LocalDate fromDate = LocalDate.of(2026, 1, 1);
-        LocalDate toDate = LocalDate.of(2026, 3, 31);
         Invoice first = this.buildInvoice(31, LocalDate.of(2026, 1, 20), LocalDate.of(2026, 1, 19),
                 "12345678Z", "First Client", "100.00", "21", "21.00");
         Invoice second = this.buildInvoice(32, LocalDate.of(2026, 2, 20), LocalDate.of(2026, 2, 19),
@@ -70,7 +69,7 @@ class TaxAgencyResourceIT {
                         AMOUNT.format(new BigDecimal("208.00"))
                 )
         );
-        when(this.taxAgencyService.invoiceIssuedBook(fromDate, toDate)).thenReturn(List.of(first, second));
+        when(this.taxAgencyService.invoiceIssuedBook(2026, Quarter.T1)).thenReturn(List.of(first, second));
 
         this.mockMvc.perform(get("/tax-agency/invoice-issued-book")
                         .param("year", "2026")
@@ -79,7 +78,7 @@ class TaxAgencyResourceIT {
                 .andExpect(content().contentTypeCompatibleWith("text/csv"))
                 .andExpect(content().string(expected));
 
-        verify(this.taxAgencyService).invoiceIssuedBook(fromDate, toDate);
+        verify(this.taxAgencyService).invoiceIssuedBook(2026, Quarter.T1);
     }
 
     @Test
@@ -105,7 +104,7 @@ class TaxAgencyResourceIT {
                         AMOUNT.format(new BigDecimal("104.00"))
                 )
         );
-        when(this.taxAgencyService.invoiceReceiveBook("2026", 2, 3))
+        when(this.taxAgencyService.invoiceReceiveBook(2026, 2, 3))
                 .thenReturn(List.of(firstT2Expense, secondT2Expense));
 
         this.mockMvc.perform(get("/tax-agency/received-book")
@@ -117,7 +116,7 @@ class TaxAgencyResourceIT {
                 .andExpect(content().contentTypeCompatibleWith("text/csv"))
                 .andExpect(content().string(expected));
 
-        verify(this.taxAgencyService).invoiceReceiveBook("2026", 2, 3);
+        verify(this.taxAgencyService).invoiceReceiveBook(2026, 2, 3);
     }
 
     @Test
@@ -132,7 +131,7 @@ class TaxAgencyResourceIT {
                 AMOUNT.format(new BigDecimal("21.00")),
                 AMOUNT.format(new BigDecimal("121.00"))
         );
-        when(this.taxAgencyService.invoiceReceiveBook("2026", 1, 1))
+        when(this.taxAgencyService.invoiceReceiveBook(2026, 1, 1))
                 .thenReturn(List.of(expense));
 
         this.mockMvc.perform(get("/tax-agency/received-book")
@@ -144,14 +143,12 @@ class TaxAgencyResourceIT {
                 .andExpect(content().contentTypeCompatibleWith("text/csv"))
                 .andExpect(content().string(expected));
 
-        verify(this.taxAgencyService).invoiceReceiveBook("2026", 1, 1);
+        verify(this.taxAgencyService).invoiceReceiveBook(2026, 1, 1);
     }
 
     @Test
     @WithMockUser(roles = "admin")
     void shouldReturnModel303() throws Exception {
-        LocalDate fromDate = LocalDate.of(2026, 4, 1);
-        LocalDate toDate = LocalDate.of(2026, 6, 30);
         VatSummaryReport vatSummaryReport = new VatSummaryReport(
                 new BigDecimal("300.00"),
                 new BigDecimal("29.00"),
@@ -160,7 +157,7 @@ class TaxAgencyResourceIT {
                 new BigDecimal("4000.00"),
                 new BigDecimal("840.00")
         );
-        when(this.taxAgencyService.vatSummary(fromDate, toDate, "2026", 2, 3)).thenReturn(vatSummaryReport);
+        when(this.taxAgencyService.vatSummary(2026, Quarter.T2, 2, 3)).thenReturn(vatSummaryReport);
 
         this.mockMvc.perform(get("/tax-agency/models/303")
                         .param("year", "2026")
@@ -183,7 +180,7 @@ class TaxAgencyResourceIT {
                         }
                         """));
 
-        verify(this.taxAgencyService).vatSummary(fromDate, toDate, "2026", 2, 3);
+        verify(this.taxAgencyService).vatSummary(2026, Quarter.T2, 2, 3);
     }
 
     @Test

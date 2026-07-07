@@ -41,7 +41,7 @@ public class TaxAgencyResource {
     @GetMapping(value = RECEIVED_BOOK, produces = {"text/csv"})
     public String receivedBook(@RequestParam int year, @RequestParam Quarter quarter,
                                @RequestParam int from, @RequestParam int to) {
-        List<String> lines = this.taxAgencyService.invoiceReceiveBook(year, quarter, from, to).stream()
+        List<String> lines = this.taxAgencyService.invoiceReceiveBook(year, from, to).stream()
                 .map(expense -> InvoiceBookReport.from(expense, quarter))
                 .map(InvoiceBookReport::toCsvLine)
                 .toList();

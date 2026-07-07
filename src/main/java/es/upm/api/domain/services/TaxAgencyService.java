@@ -31,19 +31,16 @@ public class TaxAgencyService {
                 .toList();
     }
 
-    public List<Expense> invoiceReceiveBook(String series, int fromNumber, int toNumber) {
-        return this.expenseGateway.findInvoiceReceivedBook(series, fromNumber, toNumber, INVESTMENT_ASSET_THRESHOLD)
+    public List<Expense> invoiceReceiveBook(int year, int fromNumber, int toNumber) {
+        return this.expenseGateway.findInvoiceReceivedBook(
+                        String.valueOf(year), fromNumber, toNumber, INVESTMENT_ASSET_THRESHOLD)
                 .toList();
     }
 
-    public List<Expense> findInvoiceReceivedBook(LocalDate fromDate, LocalDate toDate, BigDecimal taxableBaseThreshold) {
-        return this.expenseGateway.findInvoiceReceivedBook(fromDate, toDate, taxableBaseThreshold)
-                .toList();
-    }
-
-    public VatSummaryReport vatSummary(LocalDate fromDate, LocalDate toDate, String series, int fromNumber, int toNumber) {
-        List<Invoice> invoiceIssuedBook = this.invoiceIssuedBook(fromDate, toDate);
-        List<Expense> invoiceReceivedCurrentBook = this.invoiceReceiveBook(series, fromNumber, toNumber);
+    public VatSummaryReport vatSummary(int year, Quarter quarter, int fromNumber, int toNumber) {
+        String series = String.valueOf(year);
+        List<Invoice> invoiceIssuedBook = this.invoiceIssuedBook(year, quarter);
+        List<Expense> invoiceReceivedCurrentBook = this.invoiceReceiveBook(year, fromNumber, toNumber);
         List<Expense> invoiceReceivedInvestmentBook = this.expenseGateway
                 .findInvoiceReceivedInvestmentBook(series, fromNumber, toNumber, INVESTMENT_ASSET_THRESHOLD)
                 .toList();
@@ -63,16 +60,6 @@ public class TaxAgencyService {
                 this.sum(invoiceReceivedInvestmentBook, Expense::deductibleBaseAmount),
                 this.sum(invoiceReceivedInvestmentBook, Expense::deductibleVatAmount)
         );
-    }
-
-    public NetIncomeBreakdownReport netIncomeBreakdown(LocalDate toDate) {
-        LocalDate fromDate = LocalDate.of(toDate.getYear(), 1, 1);
-        List<Invoice> invoiceIssuedBook = this.invoiceIssuedBook(fromDate, toDate);
-        List<Expense> currentExpensesBook = this.expenseGateway.findCurrentExpensesBook(fromDate, toDate)
-                .toList();
-        List<Expense> investmentAssets = this.expenseGateway.findInvestmentAssetsUntil(toDate)
-                .toList();
-        return this.netIncomeBreakdown(invoiceIssuedBook, currentExpensesBook, investmentAssets, toDate);
     }
 
     public NetIncomeBreakdownReport netIncomeBreakdown(String series, int toNumber, LocalDate toDate) {
