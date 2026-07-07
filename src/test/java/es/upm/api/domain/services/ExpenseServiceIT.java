@@ -7,6 +7,7 @@ import es.upm.api.domain.model.criteria.ExpenseFindCriteria;
 import es.upm.api.domain.model.external.EngagementSnapshot;
 import es.upm.api.domain.ports.out.billing.ExpenseGateway;
 import es.upm.api.domain.ports.out.engagement.EngagementGateway;
+import es.upm.miw.exception.ClientBusinessException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,7 +16,9 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.math.BigDecimal;
+import java.time.Clock;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.UUID;
 import java.util.stream.Stream;
 
@@ -91,6 +94,85 @@ class ExpenseServiceIT {
 
         verify(this.expenseGateway).find(this.criteria);
         assertEquals(this.expense, allExpenses.findFirst().orElse(null));
+    }
+
+    @Test
+    void shouldUpdateExpenseUntilDay20OfMonthAfterQuarter() {
+        ExpenseService service = this.expenseServiceAt(LocalDate.of(2026, 4, 20));
+        UUID expenseId = UUID.randomUUID();
+        this.expense.setSeries("2026");
+        this.expense.setNumber(1);
+        this.expense.setIssueDate(LocalDate.of(2026, 3, 20));
+        when(this.expenseGateway.read(expenseId)).thenReturn(this.expense);
+
+        service.update(expenseId, Expense.builder()
+                .baseAmount(BigDecimal.valueOf(35))
+                .vatRate(21)
+                .supplier(this.expense.getSupplier())
+                .taxCategory(TaxCategory.OTROS)
+                .depreciationRate(100)
+                .issueDate(LocalDate.of(2026, 3, 21))
+                .build());
+
+        verify(this.expenseGateway).update(eq(expenseId), any(Expense.class));
+    }
+
+    @Test
+    void shouldNotUpdateExpenseAfterDay20OfMonthAfterQuarter() {
+        ExpenseService service = this.expenseServiceAt(LocalDate.of(2026, 4, 21));
+        UUID expenseId = UUID.randomUUID();
+        this.expense.setSeries("2026");
+        this.expense.setNumber(1);
+        this.expense.setIssueDate(LocalDate.of(2026, 3, 20));
+        when(this.expenseGateway.read(expenseId)).thenReturn(this.expense);
+
+        assertThrows(ClientBusinessException.class, () -> service.update(expenseId, this.expense));
+
+        verify(this.expenseGateway, never()).update(any(), any());
+    }
+
+    @Test
+    void shouldUpdateFourthQuarterExpenseUntilJanuary30() {
+        ExpenseService service = this.expenseServiceAt(LocalDate.of(2027, 1, 30));
+        UUID expenseId = UUID.randomUUID();
+        this.expense.setSeries("2026");
+        this.expense.setNumber(4);
+        this.expense.setIssueDate(LocalDate.of(2026, 12, 31));
+        when(this.expenseGateway.read(expenseId)).thenReturn(this.expense);
+
+        service.update(expenseId, Expense.builder()
+                .baseAmount(BigDecimal.valueOf(35))
+                .vatRate(21)
+                .supplier(this.expense.getSupplier())
+                .taxCategory(TaxCategory.OTROS)
+                .depreciationRate(100)
+                .issueDate(LocalDate.of(2026, 12, 30))
+                .build());
+
+        verify(this.expenseGateway).update(eq(expenseId), any(Expense.class));
+    }
+
+    @Test
+    void shouldNotUpdateFourthQuarterExpenseAfterJanuary30() {
+        ExpenseService service = this.expenseServiceAt(LocalDate.of(2027, 1, 31));
+        UUID expenseId = UUID.randomUUID();
+        this.expense.setSeries("2026");
+        this.expense.setNumber(4);
+        this.expense.setIssueDate(LocalDate.of(2026, 12, 31));
+        when(this.expenseGateway.read(expenseId)).thenReturn(this.expense);
+
+        assertThrows(ClientBusinessException.class, () -> service.update(expenseId, this.expense));
+
+        verify(this.expenseGateway, never()).update(any(), any());
+    }
+
+    private ExpenseService expenseServiceAt(LocalDate date) {
+        ZoneId zone = ZoneId.systemDefault();
+        return new ExpenseService(
+                this.expenseGateway,
+                this.engagementGateway,
+                Clock.fixed(date.atStartOfDay(zone).toInstant(), zone)
+        );
     }
 
 }
