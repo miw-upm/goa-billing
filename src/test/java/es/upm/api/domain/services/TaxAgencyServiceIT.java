@@ -1,6 +1,7 @@
 package es.upm.api.domain.services;
 
 import es.upm.api.domain.model.*;
+import es.upm.api.domain.model.report.InvoiceBookReport;
 import es.upm.api.domain.model.report.NetIncomeBreakdownReport;
 import es.upm.api.domain.model.report.Quarter;
 import es.upm.api.domain.model.report.VatSummaryReport;
@@ -44,9 +45,9 @@ class TaxAgencyServiceIT {
                 "87654321X", "Second Client", "200.00", "42.00");
         when(this.invoiceGateway.findIssuedBetween(fromDate, toDate)).thenReturn(Stream.of(first, second));
 
-        List<Invoice> invoices = this.taxAgencyService.invoiceIssuedBook(2026, Quarter.T1);
+        List<InvoiceBookReport> invoices = this.taxAgencyService.invoiceIssuedBook(2026, Quarter.T1);
 
-        assertEquals(List.of(first, second), invoices);
+        assertEquals(List.of(InvoiceBookReport.from(first), InvoiceBookReport.from(second)), invoices);
         verify(this.invoiceGateway).findIssuedBetween(fromDate, toDate);
     }
 

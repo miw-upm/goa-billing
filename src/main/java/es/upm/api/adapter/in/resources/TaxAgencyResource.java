@@ -32,7 +32,6 @@ public class TaxAgencyResource {
     public String invoiceIssuedBook(@RequestParam int year, @RequestParam Quarter quarter) {
         List<String> lines = this.taxAgencyService
                 .invoiceIssuedBook(year, quarter).stream()
-                .map(InvoiceBookReport::from)
                 .map(InvoiceBookReport::toCsvLine)
                 .toList();
         return String.join("\r\n", lines);

@@ -2,6 +2,7 @@ package es.upm.api.domain.services;
 
 import es.upm.api.domain.model.Expense;
 import es.upm.api.domain.model.Invoice;
+import es.upm.api.domain.model.report.InvoiceBookReport;
 import es.upm.api.domain.model.report.NetIncomeBreakdownReport;
 import es.upm.api.domain.model.report.Quarter;
 import es.upm.api.domain.model.report.VatSummaryReport;
@@ -26,8 +27,9 @@ public class TaxAgencyService {
     private final InvoiceGateway invoiceGateway;
     private final ExpenseGateway expenseGateway;
 
-    public List<Invoice> invoiceIssuedBook(int year, Quarter quarter) {
+    public List<InvoiceBookReport> invoiceIssuedBook(int year, Quarter quarter) {
         return this.invoiceGateway.findIssuedBetween(quarter.fromDate(year), quarter.toDate(year))
+                .map(InvoiceBookReport::from)
                 .toList();
     }
 
@@ -39,7 +41,8 @@ public class TaxAgencyService {
 
     public VatSummaryReport vatSummary(int year, Quarter quarter, int fromNumber, int toNumber) {
         String series = String.valueOf(year);
-        List<Invoice> invoiceIssuedBook = this.invoiceIssuedBook(year, quarter);
+        List<Invoice> invoiceIssuedBook = this.invoiceGateway.findIssuedBetween(quarter.fromDate(year), quarter.toDate(year))
+                .toList();
         List<Expense> invoiceReceivedCurrentBook = this.invoiceReceiveBook(year, fromNumber, toNumber);
         List<Expense> invoiceReceivedInvestmentBook = this.expenseGateway
                 .findInvoiceReceivedInvestmentBook(series, fromNumber, toNumber, INVESTMENT_ASSET_THRESHOLD)

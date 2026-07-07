@@ -1,6 +1,7 @@
 package es.upm.api.adapter.in.resources;
 
 import es.upm.api.domain.model.*;
+import es.upm.api.domain.model.report.InvoiceBookReport;
 import es.upm.api.domain.model.report.Quarter;
 import es.upm.api.domain.model.report.NetIncomeBreakdownReport;
 import es.upm.api.domain.model.report.VatSummaryReport;
@@ -69,7 +70,8 @@ class TaxAgencyResourceIT {
                         AMOUNT.format(new BigDecimal("208.00"))
                 )
         );
-        when(this.taxAgencyService.invoiceIssuedBook(2026, Quarter.T1)).thenReturn(List.of(first, second));
+        when(this.taxAgencyService.invoiceIssuedBook(2026, Quarter.T1))
+                .thenReturn(List.of(InvoiceBookReport.from(first), InvoiceBookReport.from(second)));
 
         this.mockMvc.perform(get("/tax-agency/invoice-issued-book")
                         .param("year", "2026")
