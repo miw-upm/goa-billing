@@ -265,6 +265,7 @@ class TaxAgencyResourceIT {
                 .id(UUID.randomUUID())
                 .series(series)
                 .number(number)
+                .recordedAt(issueDate.atTime(9, 0))
                 .issueDate(issueDate)
                 .baseAmount(new BigDecimal(baseAmount))
                 .deductibleAmount(deductibleAmount)

@@ -48,15 +48,14 @@ public record InvoiceBookReport(
 
     public static InvoiceBookReport from(Expense expense, Quarter quarter) {
         SupplierInfo supplier = expense.getSupplier();
-        LocalDate date = expense.getIssueDate();
         BigDecimal baseAmount = expense.deductibleBaseAmount();
         BigDecimal vatRate = BigDecimal.valueOf(expense.getVatRate()).divide(HUNDRED);
         BigDecimal vatAmount = expense.deductibleVatAmount();
         return new InvoiceBookReport(
                 expense.getSeries() + "-" + expense.getNumber(),
                 quarter,
-                date,
-                date,
+                expense.getRecordedAt().toLocalDate(),
+                expense.getIssueDate(),
                 supplier.getName(),
                 supplier.getIdentity(),
                 baseAmount,
