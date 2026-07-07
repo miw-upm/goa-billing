@@ -3,6 +3,7 @@ package es.upm.api.domain.services;
 import es.upm.api.domain.model.Expense;
 import es.upm.api.domain.model.Invoice;
 import es.upm.api.domain.model.report.NetIncomeBreakdownReport;
+import es.upm.api.domain.model.report.Quarter;
 import es.upm.api.domain.model.report.VatSummaryReport;
 import es.upm.api.domain.ports.out.billing.ExpenseGateway;
 import es.upm.api.domain.ports.out.billing.InvoiceGateway;
@@ -25,8 +26,8 @@ public class TaxAgencyService {
     private final InvoiceGateway invoiceGateway;
     private final ExpenseGateway expenseGateway;
 
-    public List<Invoice> invoiceIssuedBook(LocalDate fromDate, LocalDate toDate) {
-        return this.invoiceGateway.findIssuedBetween(fromDate, toDate)
+    public List<Invoice> invoiceIssuedBook(int year, Quarter quarter) {
+        return this.invoiceGateway.findIssuedBetween(quarter.fromDate(year), quarter.toDate(year))
                 .toList();
     }
 

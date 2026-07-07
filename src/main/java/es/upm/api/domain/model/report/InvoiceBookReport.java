@@ -1,6 +1,5 @@
-package es.upm.api.adapter.in.resources.dtos;
+package es.upm.api.domain.model.report;
 
-import es.upm.api.adapter.in.resources.Quarter;
 import es.upm.api.domain.model.BillingInfo;
 import es.upm.api.domain.model.Expense;
 import es.upm.api.domain.model.Invoice;
@@ -13,7 +12,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Locale;
 
-public record InvoiceBookDto(
+public record InvoiceBookReport(
         String reference,
         Quarter quarter,
         LocalDate operationDate,
@@ -28,12 +27,12 @@ public record InvoiceBookDto(
     private static final BigDecimal HUNDRED = new BigDecimal("100");
     private static final DateTimeFormatter DATE = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
-    public static InvoiceBookDto from(Invoice invoice) {
+    public static InvoiceBookReport from(Invoice invoice) {
         BillingInfo bi = invoice.getBillingInfo();
         LocalDate date = invoice.getOperationDate();
         BigDecimal baseAmount = invoice.getBaseAmount();
         BigDecimal vatAmount = invoice.getVatAmount();
-        return new InvoiceBookDto(
+        return new InvoiceBookReport(
                 invoice.getSeries() + "-" + invoice.getNumber(),
                 Quarter.from(date),
                 invoice.getOperationDate(),
@@ -47,13 +46,13 @@ public record InvoiceBookDto(
         );
     }
 
-    public static InvoiceBookDto from(Expense expense, Quarter quarter) {
+    public static InvoiceBookReport from(Expense expense, Quarter quarter) {
         SupplierInfo supplier = expense.getSupplier();
         LocalDate date = expense.getIssueDate();
         BigDecimal baseAmount = expense.deductibleBaseAmount();
         BigDecimal vatRate = BigDecimal.valueOf(expense.getVatRate()).divide(HUNDRED);
         BigDecimal vatAmount = expense.deductibleVatAmount();
-        return new InvoiceBookDto(
+        return new InvoiceBookReport(
                 expense.getSeries() + "-" + expense.getNumber(),
                 quarter,
                 date,

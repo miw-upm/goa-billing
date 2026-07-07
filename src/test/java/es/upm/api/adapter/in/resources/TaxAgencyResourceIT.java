@@ -172,7 +172,7 @@ class TaxAgencyResourceIT {
                         {
                           "year": 2026,
                           "quarter": "T2",
-                          "vatSummaryReport": {
+                          "vatSummary": {
                             "invoiceIssuedBase": 300.00,
                             "invoiceIssuedVat": 29.00,
                             "invoiceReceivedCurrentBase": 75.00,
@@ -207,7 +207,7 @@ class TaxAgencyResourceIT {
                         {
                           "year": 2026,
                           "quarter": "T2",
-                          "netIncomeBreakdownReport": {
+                          "netIncomeBreakdown": {
                             "income": 300.00,
                             "currentExpenses": 75.00,
                             "investmentAmortization": 1200.00,

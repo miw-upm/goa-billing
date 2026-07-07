@@ -1,8 +1,9 @@
 package es.upm.api.adapter.in.resources;
 
-import es.upm.api.adapter.in.resources.dtos.InvoiceBookDto;
 import es.upm.api.adapter.in.resources.dtos.Model130Dto;
 import es.upm.api.adapter.in.resources.dtos.Model303Dto;
+import es.upm.api.domain.model.report.InvoiceBookReport;
+import es.upm.api.domain.model.report.Quarter;
 import es.upm.api.domain.services.TaxAgencyService;
 import es.upm.miw.security.Security;
 import lombok.RequiredArgsConstructor;
@@ -30,9 +31,9 @@ public class TaxAgencyResource {
     @GetMapping(value = INVOICE_ISSUED_BOOK, produces = {"text/csv"})
     public String invoiceIssuedBook(@RequestParam int year, @RequestParam Quarter quarter) {
         List<String> lines = this.taxAgencyService
-                .invoiceIssuedBook(quarter.fromDate(year), quarter.toDate(year)).stream()
-                .map(InvoiceBookDto::from)
-                .map(InvoiceBookDto::toCsvLine)
+                .invoiceIssuedBook(year, quarter).stream()
+                .map(InvoiceBookReport::from)
+                .map(InvoiceBookReport::toCsvLine)
                 .toList();
         return String.join("\r\n", lines);
     }
@@ -40,9 +41,9 @@ public class TaxAgencyResource {
     @GetMapping(value = RECEIVED_BOOK, produces = {"text/csv"})
     public String receivedBook(@RequestParam int year, @RequestParam Quarter quarter,
                                @RequestParam int from, @RequestParam int to) {
-        List<String> lines = this.taxAgencyService.invoiceReceiveBook(String.valueOf(year), from, to).stream()
-                .map(expense -> InvoiceBookDto.from(expense, quarter))
-                .map(InvoiceBookDto::toCsvLine)
+        List<String> lines = this.taxAgencyService.invoiceReceiveBook(year, quarter, from, to).stream()
+                .map(expense -> InvoiceBookReport.from(expense, quarter))
+                .map(InvoiceBookReport::toCsvLine)
                 .toList();
         return String.join("\r\n", lines);
     }
@@ -51,7 +52,7 @@ public class TaxAgencyResource {
     public Model303Dto model303(@RequestParam int year, @RequestParam Quarter quarter,
                                 @RequestParam int from, @RequestParam int to) {
         return new Model303Dto(year, quarter, this.taxAgencyService.vatSummary(
-                quarter.fromDate(year), quarter.toDate(year), String.valueOf(year), from, to));
+                year, quarter, from, to));
     }
 
     @GetMapping(MODEL_130)
