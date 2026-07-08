@@ -6,6 +6,7 @@ import es.upm.api.domain.model.Invoice;
 import es.upm.api.domain.model.SupplierInfo;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.text.NumberFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -22,17 +23,27 @@ public record InvoiceBookReport(
         String category
 ) {
     private static final BigDecimal HUNDRED = new BigDecimal("100");
+    private static final int SCALE = 6;
     private static final DateTimeFormatter DATE = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
     public static InvoiceBookReport from(Invoice invoice) {
         BillingInfo bi = invoice.getBillingInfo();
         LocalDate date = invoice.getOperationDate();
-        BigDecimal baseAmount = invoice.getBaseAmount();
-        BigDecimal vatAmount = invoice.getVatAmount();
-        BigDecimal totalAmount =  baseAmount.add(vatAmount);
         TreeMap<Integer, VatLine> vatLines = new TreeMap<>(Comparator.reverseOrder());
-        VatLine vatLine = new VatLine(baseAmount, vatAmount, totalAmount);
-        vatLines.put(invoice.getVatRate().intValue(),vatLine);
+        addVatLine(vatLines, invoice.getVatRate().intValue(), invoice.getBaseAmount(), invoice.getVatAmount());
+
+        if (Boolean.TRUE.equals(invoice.getClosed())) {
+            BigDecimal percentageFactor = invoice.getPercentage() == null
+                    ? BigDecimal.ONE
+                    : invoice.getPercentage().divide(HUNDRED, SCALE, RoundingMode.HALF_UP);
+            Optional.ofNullable(invoice.getExpenses())
+                    .orElse(List.of())
+                    .forEach(expense -> {
+                        BigDecimal baseAmount = expense.getBaseAmount().multiply(percentageFactor);
+                        BigDecimal vatAmount = expense.vatAmount().multiply(percentageFactor);
+                        addVatLine(vatLines, expense.getVatRate(), baseAmount, vatAmount);
+                    });
+        }
 
         return new InvoiceBookReport(
                 invoice.getSeries() + "-" + invoice.getNumber(),
@@ -44,6 +55,18 @@ public record InvoiceBookReport(
                 vatLines,
                 ""
         );
+    }
+
+    private static void addVatLine(Map<Integer, VatLine> vatLines, Integer vatRate,
+                                   BigDecimal baseAmount, BigDecimal vatAmount) {
+        VatLine current = vatLines.getOrDefault(vatRate,
+                new VatLine(BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO));
+        BigDecimal totalAmount = baseAmount.add(vatAmount);
+        vatLines.put(vatRate, new VatLine(
+                current.baseAmount().add(baseAmount),
+                current.vatAmount().add(vatAmount),
+                current.totalAmount().add(totalAmount)
+        ));
     }
 
     public static InvoiceBookReport from(Expense expense, Quarter quarter) {

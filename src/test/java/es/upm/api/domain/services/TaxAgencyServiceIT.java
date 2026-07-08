@@ -52,6 +52,29 @@ class TaxAgencyServiceIT {
     }
 
     @Test
+    void shouldAddClosedInvoiceExpensesGroupedByVatRateToInvoiceIssuedBookReport() {
+        Invoice invoice = this.buildInvoice(31, LocalDate.of(2026, 1, 20), LocalDate.of(2026, 1, 19),
+                "12345678Z", "First Client", "100.00", "21.00");
+        invoice.setClosed(true);
+        invoice.setPercentage(new BigDecimal("50"));
+        invoice.setExpenses(List.of(
+                this.buildExpense(LocalDate.of(2026, 1, 10), "30.00", 21, 100),
+                this.buildExpense(LocalDate.of(2026, 1, 11), "10.00", 21, 100),
+                this.buildExpense(LocalDate.of(2026, 1, 12), "40.00", 10, 100)
+        ));
+
+        InvoiceBookReport report = InvoiceBookReport.from(invoice);
+
+        assertEquals(List.of(21, 10), List.copyOf(report.vatLines().keySet()));
+        this.assertBigDecimalEquals(new BigDecimal("120.00"), report.vatLines().get(21).baseAmount());
+        this.assertBigDecimalEquals(new BigDecimal("25.20"), report.vatLines().get(21).vatAmount());
+        this.assertBigDecimalEquals(new BigDecimal("145.20"), report.vatLines().get(21).totalAmount());
+        this.assertBigDecimalEquals(new BigDecimal("20.00"), report.vatLines().get(10).baseAmount());
+        this.assertBigDecimalEquals(new BigDecimal("2.00"), report.vatLines().get(10).vatAmount());
+        this.assertBigDecimalEquals(new BigDecimal("22.00"), report.vatLines().get(10).totalAmount());
+    }
+
+    @Test
     void shouldFindReceivedBookByNumberRange() {
         Expense first = this.buildExpense(LocalDate.of(2026, 4, 10));
         Expense second = this.buildExpense(LocalDate.of(2026, 5, 15));
