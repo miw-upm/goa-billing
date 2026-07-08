@@ -9,8 +9,7 @@ import java.math.BigDecimal;
 import java.text.NumberFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.List;
-import java.util.Locale;
+import java.util.*;
 
 public record InvoiceBookReport(
         String reference,
@@ -19,10 +18,8 @@ public record InvoiceBookReport(
         LocalDate emissionDate,
         String clientName,
         String clientNif,
-        BigDecimal baseAmount,
-        BigDecimal vatRate,
-        BigDecimal vatAmount,
-        BigDecimal totalAmount
+        Map<Integer, VatLine> vatLines,
+        String category
 ) {
     private static final BigDecimal HUNDRED = new BigDecimal("100");
     private static final DateTimeFormatter DATE = DateTimeFormatter.ofPattern("dd/MM/yyyy");
@@ -32,6 +29,11 @@ public record InvoiceBookReport(
         LocalDate date = invoice.getOperationDate();
         BigDecimal baseAmount = invoice.getBaseAmount();
         BigDecimal vatAmount = invoice.getVatAmount();
+        BigDecimal totalAmount =  baseAmount.add(vatAmount);
+        TreeMap<Integer, VatLine> vatLines = new TreeMap<>(Comparator.reverseOrder());
+        VatLine vatLine = new VatLine(baseAmount, vatAmount, totalAmount);
+        vatLines.put(invoice.getVatRate().intValue(),vatLine);
+
         return new InvoiceBookReport(
                 invoice.getSeries() + "-" + invoice.getNumber(),
                 Quarter.from(date),
@@ -39,18 +41,18 @@ public record InvoiceBookReport(
                 invoice.getEmissionDate(),
                 bi.getFullName(),
                 bi.getIdentity(),
-                baseAmount,
-                invoice.vatFactor(),
-                vatAmount,
-                baseAmount.add(vatAmount)
+                vatLines,
+                ""
         );
     }
 
     public static InvoiceBookReport from(Expense expense, Quarter quarter) {
         SupplierInfo supplier = expense.getSupplier();
         BigDecimal baseAmount = expense.deductibleBaseAmount();
-        BigDecimal vatRate = BigDecimal.valueOf(expense.getVatRate()).divide(HUNDRED);
         BigDecimal vatAmount = expense.deductibleVatAmount();
+        TreeMap<Integer, VatLine> vatLines = new TreeMap<>(Comparator.reverseOrder());
+        vatLines.put(expense.getVatRate(), new VatLine(baseAmount, vatAmount, baseAmount.add(vatAmount)));
+
         return new InvoiceBookReport(
                 expense.getSeries() + "-" + expense.getNumber(),
                 quarter,
@@ -58,30 +60,56 @@ public record InvoiceBookReport(
                 expense.getIssueDate(),
                 supplier.getName(),
                 supplier.getIdentity(),
-                baseAmount,
-                vatRate,
-                vatAmount,
-                baseAmount.add(vatAmount)
+                vatLines,
+                expense.getTaxCategory().name()
         );
     }
 
+    // Libro de emitidas: columnas por tipo de IVA, necesita allRates para alinear
+    public String toCsvLine(SortedSet<Integer> allRates) {
+        NumberFormat amount = numberFormat();
+        List<String> fields = new ArrayList<>(this.commonFields());
+        VatLine empty = new VatLine(BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO);
+        allRates.forEach(rate -> {
+            VatLine vatLine = this.vatLines.getOrDefault(rate, empty);
+            fields.add(amount.format(vatLine.baseAmount()));
+            fields.add(amount.format(vatLine.vatAmount()));
+            fields.add(amount.format(vatLine.totalAmount()));
+        });
+        return String.join(";", fields);
+    }
+
+    // Libro de recibidas: un solo tipo por fila, el tipo es una columna más
     public String toCsvLine() {
-        NumberFormat amount = NumberFormat.getNumberInstance(Locale.forLanguageTag("es-ES"));
-        amount.setGroupingUsed(false);
-        amount.setMinimumFractionDigits(2);
-        amount.setMaximumFractionDigits(2);
-        return String.join(";", List.of(
+        NumberFormat amount = numberFormat();
+        Map.Entry<Integer, VatLine> entry = this.vatLines.entrySet().iterator().next();
+        VatLine vatLine = entry.getValue();
+        List<String> fields = new ArrayList<>(this.commonFields());
+        fields.add(amount.format(vatLine.baseAmount()));
+        fields.add(String.valueOf(entry.getKey()));
+        fields.add(amount.format(vatLine.vatAmount()));
+        fields.add(amount.format(vatLine.totalAmount()));
+        fields.add(category);
+        return String.join(";", fields);
+    }
+
+    private List<String> commonFields() {
+        return List.of(
                 this.reference,
                 this.quarter.name(),
                 DATE.format(this.operationDate),
                 DATE.format(this.emissionDate),
                 this.clientName,
-                this.clientNif,
-                amount.format(this.baseAmount),
-                amount.format(this.vatRate),
-                amount.format(this.vatAmount),
-                amount.format(this.totalAmount)
-        ));
+                this.clientNif
+        );
+    }
+
+    private static NumberFormat numberFormat() {
+        NumberFormat amount = NumberFormat.getNumberInstance(Locale.forLanguageTag("es-ES"));
+        amount.setGroupingUsed(false);
+        amount.setMinimumFractionDigits(2);
+        amount.setMaximumFractionDigits(2);
+        return amount;
     }
 
 }

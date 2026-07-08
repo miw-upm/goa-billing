@@ -13,7 +13,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Comparator;
 import java.util.List;
+import java.util.SortedSet;
+import java.util.TreeSet;
+import java.util.stream.Collectors;
 
 @PreAuthorize(Security.ADMIN_MANAGER_OPERATOR)
 @RestController
@@ -30,9 +34,12 @@ public class TaxAgencyResource {
 
     @GetMapping(value = INVOICE_ISSUED_BOOK, produces = {"text/csv"})
     public String invoiceIssuedBook(@RequestParam int year, @RequestParam Quarter quarter) {
-        List<String> lines = this.taxAgencyService
-                .invoiceIssuedBook(year, quarter).stream()
-                .map(InvoiceBookReport::toCsvLine)
+        List<InvoiceBookReport> reports = this.taxAgencyService.invoiceIssuedBook(year, quarter);
+        SortedSet<Integer> allRates = reports.stream()
+                .flatMap(report -> report.vatLines().keySet().stream())
+                .collect(Collectors.toCollection(() -> new TreeSet<Integer>(Comparator.reverseOrder())));
+        List<String> lines = reports.stream()
+                .map(report -> report.toCsvLine(allRates))
                 .toList();
         return String.join("\r\n", lines);
     }

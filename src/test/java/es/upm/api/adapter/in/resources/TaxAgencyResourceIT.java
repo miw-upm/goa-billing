@@ -55,16 +55,22 @@ class TaxAgencyResourceIT {
         Invoice second = this.buildInvoice(32, LocalDate.of(2026, 2, 20), LocalDate.of(2026, 2, 19),
                 "87654321X", "Second Client", "200.00", "4", "8.00");
         String expected = String.join("\r\n",
-                "2026-31;T1;%s;%s;First Client;12345678Z;%s;0,21;%s;%s".formatted(
+                "2026-31;T1;%s;%s;First Client;12345678Z;%s;%s;%s;%s;%s;%s".formatted(
                         DATE.format(LocalDate.of(2026, 1, 19)),
                         DATE.format(LocalDate.of(2026, 1, 20)),
                         AMOUNT.format(new BigDecimal("100.00")),
                         AMOUNT.format(new BigDecimal("21.00")),
-                        AMOUNT.format(new BigDecimal("121.00"))
+                        AMOUNT.format(new BigDecimal("121.00")),
+                        AMOUNT.format(BigDecimal.ZERO),
+                        AMOUNT.format(BigDecimal.ZERO),
+                        AMOUNT.format(BigDecimal.ZERO)
                 ),
-                "2026-32;T1;%s;%s;Second Client;87654321X;%s;0,04;%s;%s".formatted(
+                "2026-32;T1;%s;%s;Second Client;87654321X;%s;%s;%s;%s;%s;%s".formatted(
                         DATE.format(LocalDate.of(2026, 2, 19)),
                         DATE.format(LocalDate.of(2026, 2, 20)),
+                        AMOUNT.format(BigDecimal.ZERO),
+                        AMOUNT.format(BigDecimal.ZERO),
+                        AMOUNT.format(BigDecimal.ZERO),
                         AMOUNT.format(new BigDecimal("200.00")),
                         AMOUNT.format(new BigDecimal("8.00")),
                         AMOUNT.format(new BigDecimal("208.00"))
@@ -91,14 +97,14 @@ class TaxAgencyResourceIT {
         Expense secondT2Expense = this.buildExpense(LocalDate.of(2026, 5, 15),
                 "2026", 3, "Book Store", "B20000000", "200.00", 4, new BigDecimal("50"));
         String expected = String.join("\r\n",
-                "2026-2;T2;%s;%s;Office Supplies;B10000000;%s;0,21;%s;%s".formatted(
+                "2026-2;T2;%s;%s;Office Supplies;B10000000;%s;21;%s;%s;OTROS".formatted(
                         DATE.format(LocalDate.of(2026, 3, 10)),
                         DATE.format(LocalDate.of(2026, 3, 10)),
                         AMOUNT.format(new BigDecimal("100.00")),
                         AMOUNT.format(new BigDecimal("21.00")),
                         AMOUNT.format(new BigDecimal("121.00"))
                 ),
-                "2026-3;T2;%s;%s;Book Store;B20000000;%s;0,04;%s;%s".formatted(
+                "2026-3;T2;%s;%s;Book Store;B20000000;%s;4;%s;%s;OTROS".formatted(
                         DATE.format(LocalDate.of(2026, 5, 15)),
                         DATE.format(LocalDate.of(2026, 5, 15)),
                         AMOUNT.format(new BigDecimal("100.00")),
@@ -126,7 +132,7 @@ class TaxAgencyResourceIT {
     void shouldGenerateReceivedBookCsvStartingAtOneInFirstQuarter() throws Exception {
         Expense expense = this.buildExpense(LocalDate.of(2026, 2, 10),
                 "2026", 1, "Office Supplies", "B10000000", "100.00", 21, null);
-        String expected = "2026-1;T1;%s;%s;Office Supplies;B10000000;%s;0,21;%s;%s".formatted(
+        String expected = "2026-1;T1;%s;%s;Office Supplies;B10000000;%s;21;%s;%s;OTROS".formatted(
                 DATE.format(LocalDate.of(2026, 2, 10)),
                 DATE.format(LocalDate.of(2026, 2, 10)),
                 AMOUNT.format(new BigDecimal("100.00")),
