@@ -8,13 +8,13 @@ import java.util.List;
 import java.util.Optional;
 
 public interface InvoiceRepository extends MongoRepository<InvoiceEntity, String> {
-    List<InvoiceEntity> findAllByOrderByEmissionDateDesc();
+    List<InvoiceEntity> findAllByOrderBySeriesDescNumberDesc();
 
-    List<InvoiceEntity> findByEmissionDateGreaterThanEqualOrderByEmissionDateDesc(LocalDate emissionDate);
+    List<InvoiceEntity> findByEmissionDateGreaterThanEqualOrderBySeriesDescNumberDesc(LocalDate emissionDate);
 
-    List<InvoiceEntity> findByEngagementIdStartingWithOrderByEmissionDateDesc(String engagementIdPrefix);
+    List<InvoiceEntity> findByEngagementIdStartingWithOrderBySeriesDescNumberDesc(String engagementIdPrefix);
 
-    List<InvoiceEntity> findByEngagementIdStartingWithAndEmissionDateGreaterThanEqualOrderByEmissionDateDesc(
+    List<InvoiceEntity> findByEngagementIdStartingWithAndEmissionDateGreaterThanEqualOrderBySeriesDescNumberDesc(
             String engagementIdPrefix, LocalDate emissionDate);
 
     @Query(value = """

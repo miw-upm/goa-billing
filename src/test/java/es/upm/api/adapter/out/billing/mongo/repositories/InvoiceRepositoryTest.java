@@ -109,34 +109,68 @@ class InvoiceRepositoryTest {
     }
 
     @Test
-    void shouldFindByEmissionDateGreaterThanEqualOrderByEmissionDateDesc() {
-        List<InvoiceEntity> byDate = this.invoiceRepository.findByEmissionDateGreaterThanEqualOrderByEmissionDateDesc(
+    void shouldFindByEmissionDateGreaterThanEqualOrderBySeriesDescNumberDesc() {
+        Invoice higherSeries = this.buildMinimalInvoice(1, LocalDate.of(2026, 3, 22), LocalDate.of(2026, 3, 22));
+        higherSeries.setSeries("B");
+        this.invoiceRepository.save(new InvoiceEntity(higherSeries));
+
+        List<InvoiceEntity> byDate = this.invoiceRepository.findByEmissionDateGreaterThanEqualOrderBySeriesDescNumberDesc(
                 LocalDate.of(2026, 3, 21)
         );
 
-        assertEquals(1, byDate.size());
-        assertEquals(this.secondInvoice.getId().toString(), byDate.getFirst().getId());
+        assertEquals(2, byDate.size());
+        assertEquals(higherSeries.getId().toString(), byDate.getFirst().getId());
+        assertEquals(this.secondInvoice.getId().toString(), byDate.get(1).getId());
     }
 
     @Test
-    void shouldFindByEngagementIdPrefixOrderByEmissionDateDesc() {
+    void shouldFindAllOrderBySeriesDescNumberDesc() {
+        Invoice higherSeries = this.buildMinimalInvoice(1, LocalDate.of(2026, 3, 1), LocalDate.of(2026, 3, 1));
+        higherSeries.setSeries("B");
+        Invoice higherNumber = this.buildMinimalInvoice(3, LocalDate.of(2026, 3, 1), LocalDate.of(2026, 3, 1));
+        this.invoiceRepository.saveAll(List.of(new InvoiceEntity(higherSeries), new InvoiceEntity(higherNumber)));
+
+        List<InvoiceEntity> result = this.invoiceRepository.findAllByOrderBySeriesDescNumberDesc();
+
+        assertEquals(4, result.size());
+        assertEquals(higherSeries.getId().toString(), result.getFirst().getId());
+        assertEquals(higherNumber.getId().toString(), result.get(1).getId());
+        assertEquals(this.secondInvoice.getId().toString(), result.get(2).getId());
+        assertEquals(this.firstInvoice.getId().toString(), result.get(3).getId());
+    }
+
+    @Test
+    void shouldFindByEngagementIdPrefixOrderBySeriesDescNumberDesc() {
+        Invoice higherSeries = this.buildMinimalInvoice(1, LocalDate.of(2026, 3, 1), LocalDate.of(2026, 3, 1));
+        higherSeries.setSeries("B");
+        higherSeries.setEngagement(this.firstInvoice.getEngagement());
+        this.invoiceRepository.save(new InvoiceEntity(higherSeries));
+
         String engagementPrefix = this.firstInvoice.getEngagement().getId().toString().substring(0, 4);
-        List<InvoiceEntity> result = this.invoiceRepository.findByEngagementIdStartingWithOrderByEmissionDateDesc(engagementPrefix);
+        List<InvoiceEntity> result = this.invoiceRepository.findByEngagementIdStartingWithOrderBySeriesDescNumberDesc(
+                engagementPrefix);
 
-        assertEquals(2, result.size());
-        assertEquals(this.secondInvoice.getId().toString(), result.getFirst().getId());
-        assertEquals(this.firstInvoice.getId().toString(), result.get(1).getId());
+        assertEquals(3, result.size());
+        assertEquals(higherSeries.getId().toString(), result.getFirst().getId());
+        assertEquals(this.secondInvoice.getId().toString(), result.get(1).getId());
+        assertEquals(this.firstInvoice.getId().toString(), result.get(2).getId());
     }
 
     @Test
-    void shouldFindByEngagementIdPrefixAndEmissionDateOrderByEmissionDateDesc() {
+    void shouldFindByEngagementIdPrefixAndEmissionDateOrderBySeriesDescNumberDesc() {
+        Invoice higherSeries = this.buildMinimalInvoice(1, LocalDate.of(2026, 3, 23), LocalDate.of(2026, 3, 23));
+        higherSeries.setSeries("B");
+        higherSeries.setEngagement(this.firstInvoice.getEngagement());
+        this.invoiceRepository.save(new InvoiceEntity(higherSeries));
+
         String engagementPrefix = this.firstInvoice.getEngagement().getId().toString().substring(0, 4);
         List<InvoiceEntity> result = this.invoiceRepository
-                .findByEngagementIdStartingWithAndEmissionDateGreaterThanEqualOrderByEmissionDateDesc(
+                .findByEngagementIdStartingWithAndEmissionDateGreaterThanEqualOrderBySeriesDescNumberDesc(
                         engagementPrefix, LocalDate.of(2026, 3, 22));
 
-        assertEquals(1, result.size());
-        assertEquals(this.secondInvoice.getId().toString(), result.getFirst().getId());
+        assertEquals(2, result.size());
+        assertEquals(higherSeries.getId().toString(), result.getFirst().getId());
+        assertEquals(this.secondInvoice.getId().toString(), result.get(1).getId());
     }
 
     @Test

@@ -6,28 +6,43 @@ import es.upm.api.domain.model.criteria.ExpenseFindCriteria;
 import es.upm.api.domain.ports.out.billing.ExpenseGateway;
 import es.upm.api.domain.ports.out.engagement.EngagementGateway;
 import es.upm.miw.exception.ClientBusinessException;
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.Clock;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.Month;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Stream;
 
 @Service
-@RequiredArgsConstructor
 public class ExpenseService {
+    private static final int QUARTER_CLOSE_DAY = 20;
+    private static final int FOURTH_QUARTER_CLOSE_DAY = 30;
     private final ExpenseGateway expenseGateway;
     private final EngagementGateway engagementGateway;
+    private final Clock clock;
+
+    @Autowired
+    public ExpenseService(ExpenseGateway expenseGateway, EngagementGateway engagementGateway) {
+        this(expenseGateway, engagementGateway, Clock.systemDefaultZone());
+    }
+
+    ExpenseService(ExpenseGateway expenseGateway, EngagementGateway engagementGateway, Clock clock) {
+        this.expenseGateway = expenseGateway;
+        this.engagementGateway = engagementGateway;
+        this.clock = clock;
+    }
 
     public void create(Expense expense) {
         expense.setId(UUID.randomUUID());
-        expense.setRecordedAt(LocalDateTime.now());
+        expense.setRecordedAt(LocalDateTime.now(this.clock));
         if (expense.getEngagement() != null) {
             expense.setEngagement(this.engagementGateway.read(expense.getEngagement().getId()));
         }
-        String series = String.valueOf(LocalDate.now().getYear());
+        String series = String.valueOf(LocalDate.now(this.clock).getYear());
         if (Objects.isNull(expense.getNumber())) {
             expense.setSeries(series);
             expense.setNumber(this.expenseGateway.findNextNumber(series, expense.getDepreciationRate()));
@@ -48,7 +63,7 @@ public class ExpenseService {
         Expense currentExpense = this.expenseGateway.read(id);
         this.assertQuarterOpen(currentExpense);
         expense.setId(id);
-        expense.setRecordedAt(LocalDateTime.now());
+        expense.setRecordedAt(LocalDateTime.now(this.clock));
         expense.setSeries(currentExpense.getSeries());
         expense.setNumber(currentExpense.getNumber());
         expense.setDocumentPath(currentExpense.getDocumentPath());
@@ -60,11 +75,13 @@ public class ExpenseService {
 
     private void assertQuarterOpen(Expense expense) {
         LocalDate expenseDate = expense.getIssueDate();
-        LocalDate endOfQuarter = expenseDate
-                .with(expenseDate.getMonth().firstMonthOfQuarter())
-                .plusMonths(3)
-                .minusDays(1);
-        if (LocalDate.now().isAfter(endOfQuarter)) {
+        Month firstMonthOfQuarter = expenseDate.getMonth().firstMonthOfQuarter();
+        LocalDate firstDayAfterQuarter = LocalDate.of(expenseDate.getYear(), firstMonthOfQuarter, 1)
+                .plusMonths(3);
+        int closeDay = firstMonthOfQuarter == Month.OCTOBER ? FOURTH_QUARTER_CLOSE_DAY : QUARTER_CLOSE_DAY;
+        LocalDate quarterCloseDate = firstDayAfterQuarter.withDayOfMonth(closeDay);
+
+        if (LocalDate.now(this.clock).isAfter(quarterCloseDate)) {
             throw new ClientBusinessException(
                     "No se puede modificar un gasto de un trimestre ya cerrado: "
                             + expense.getSeries() + "-" + expense.getNumber());

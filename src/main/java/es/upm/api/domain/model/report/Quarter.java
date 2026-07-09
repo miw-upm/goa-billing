@@ -1,4 +1,4 @@
-package es.upm.api.adapter.in.resources;
+package es.upm.api.domain.model.report;
 
 import java.time.LocalDate;
 
