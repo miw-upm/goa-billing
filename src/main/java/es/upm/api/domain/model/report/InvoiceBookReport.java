@@ -96,6 +96,7 @@ public record InvoiceBookReport(
         allRates.forEach(rate -> {
             VatLine vatLine = this.vatLines.getOrDefault(rate, empty);
             fields.add(amount.format(vatLine.baseAmount()));
+            fields.add(String.valueOf(rate));
             fields.add(amount.format(vatLine.vatAmount()));
             fields.add(amount.format(vatLine.totalAmount()));
         });
