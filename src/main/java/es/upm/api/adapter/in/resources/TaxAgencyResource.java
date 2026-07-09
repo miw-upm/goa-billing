@@ -39,7 +39,7 @@ public class TaxAgencyResource {
                 .flatMap(report -> report.vatLines().keySet().stream())
                 .collect(Collectors.toCollection(() -> new TreeSet<Integer>(Comparator.reverseOrder())));
         List<String> lines = reports.stream()
-                .map(report -> report.toCsvLine(allRates))
+                .map(report -> report.toInvoiceCsvLine(allRates))
                 .toList();
         return String.join("\r\n", lines);
     }
@@ -49,7 +49,7 @@ public class TaxAgencyResource {
                                @RequestParam int from, @RequestParam int to) {
         List<String> lines = this.taxAgencyService.invoiceReceiveBook(year, from, to).stream()
                 .map(expense -> InvoiceBookReport.from(expense, quarter))
-                .map(InvoiceBookReport::toCsvLine)
+                .map(InvoiceBookReport::toExpenseCsvLine)
                 .toList();
         return String.join("\r\n", lines);
     }
