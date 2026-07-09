@@ -55,7 +55,7 @@ class TaxAgencyResourceIT {
         Invoice second = this.buildInvoice(32, LocalDate.of(2026, 2, 20), LocalDate.of(2026, 2, 19),
                 "87654321X", "Second Client", "200.00", "4", "8.00");
         String expected = String.join("\r\n",
-                "2026-31;T1;%s;%s;First Client;12345678Z;%s;%s;%s;%s;%s;%s".formatted(
+                "2026-31;T1;%s;%s;First Client;12345678Z;%s;21;%s;%s;%s;4;%s;%s".formatted(
                         DATE.format(LocalDate.of(2026, 1, 19)),
                         DATE.format(LocalDate.of(2026, 1, 20)),
                         AMOUNT.format(new BigDecimal("100.00")),
@@ -65,7 +65,7 @@ class TaxAgencyResourceIT {
                         AMOUNT.format(BigDecimal.ZERO),
                         AMOUNT.format(BigDecimal.ZERO)
                 ),
-                "2026-32;T1;%s;%s;Second Client;87654321X;%s;%s;%s;%s;%s;%s".formatted(
+                "2026-32;T1;%s;%s;Second Client;87654321X;%s;21;%s;%s;%s;4;%s;%s".formatted(
                         DATE.format(LocalDate.of(2026, 2, 19)),
                         DATE.format(LocalDate.of(2026, 2, 20)),
                         AMOUNT.format(BigDecimal.ZERO),

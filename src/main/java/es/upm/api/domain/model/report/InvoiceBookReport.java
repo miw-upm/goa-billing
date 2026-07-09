@@ -89,7 +89,7 @@ public record InvoiceBookReport(
     }
 
     // Libro de emitidas: columnas por tipo de IVA, necesita allRates para alinear
-    public String toCsvLine(SortedSet<Integer> allRates) {
+    public String toInvoiceCsvLine(SortedSet<Integer> allRates) {
         NumberFormat amount = numberFormat();
         List<String> fields = new ArrayList<>(this.commonFields());
         VatLine empty = new VatLine(BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO);
@@ -104,7 +104,7 @@ public record InvoiceBookReport(
     }
 
     // Libro de recibidas: un solo tipo por fila, el tipo es una columna más
-    public String toCsvLine() {
+    public String toExpenseCsvLine() {
         NumberFormat amount = numberFormat();
         Map.Entry<Integer, VatLine> entry = this.vatLines.entrySet().iterator().next();
         VatLine vatLine = entry.getValue();
