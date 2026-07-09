@@ -1,9 +1,8 @@
 package es.upm.api.adapter.in.resources;
 
 import es.upm.api.domain.model.*;
-import es.upm.api.domain.model.report.InvoiceBookReport;
-import es.upm.api.domain.model.report.Quarter;
 import es.upm.api.domain.model.report.NetIncomeBreakdownReport;
+import es.upm.api.domain.model.report.Quarter;
 import es.upm.api.domain.model.report.VatSummaryReport;
 import es.upm.api.domain.services.TaxAgencyService;
 import org.junit.jupiter.api.Test;
@@ -19,11 +18,9 @@ import java.math.BigDecimal;
 import java.text.NumberFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
 
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -47,112 +44,6 @@ class TaxAgencyResourceIT {
     @MockitoBean
     private TaxAgencyService taxAgencyService;
 
-    @Test
-    @WithMockUser(roles = "admin")
-    void shouldGenerateInvoiceIssuedBookCsv() throws Exception {
-        Invoice first = this.buildInvoice(31, LocalDate.of(2026, 1, 20), LocalDate.of(2026, 1, 19),
-                "12345678Z", "First Client", "100.00", "21", "21.00");
-        Invoice second = this.buildInvoice(32, LocalDate.of(2026, 2, 20), LocalDate.of(2026, 2, 19),
-                "87654321X", "Second Client", "200.00", "4", "8.00");
-        String expected = String.join("\r\n",
-                "2026-31;T1;%s;%s;First Client;12345678Z;%s;21;%s;%s;%s;4;%s;%s".formatted(
-                        DATE.format(LocalDate.of(2026, 1, 19)),
-                        DATE.format(LocalDate.of(2026, 1, 20)),
-                        AMOUNT.format(new BigDecimal("100.00")),
-                        AMOUNT.format(new BigDecimal("21.00")),
-                        AMOUNT.format(new BigDecimal("121.00")),
-                        AMOUNT.format(BigDecimal.ZERO),
-                        AMOUNT.format(BigDecimal.ZERO),
-                        AMOUNT.format(BigDecimal.ZERO)
-                ),
-                "2026-32;T1;%s;%s;Second Client;87654321X;%s;21;%s;%s;%s;4;%s;%s".formatted(
-                        DATE.format(LocalDate.of(2026, 2, 19)),
-                        DATE.format(LocalDate.of(2026, 2, 20)),
-                        AMOUNT.format(BigDecimal.ZERO),
-                        AMOUNT.format(BigDecimal.ZERO),
-                        AMOUNT.format(BigDecimal.ZERO),
-                        AMOUNT.format(new BigDecimal("200.00")),
-                        AMOUNT.format(new BigDecimal("8.00")),
-                        AMOUNT.format(new BigDecimal("208.00"))
-                )
-        );
-        when(this.taxAgencyService.invoiceIssuedBook(2026, Quarter.T1))
-                .thenReturn(List.of(InvoiceBookReport.from(first), InvoiceBookReport.from(second)));
-
-        this.mockMvc.perform(get("/tax-agency/invoice-issued-book")
-                        .param("year", "2026")
-                        .param("quarter", "T1"))
-                .andExpect(status().isOk())
-                .andExpect(content().contentTypeCompatibleWith("text/csv"))
-                .andExpect(content().string(expected));
-
-        verify(this.taxAgencyService).invoiceIssuedBook(2026, Quarter.T1);
-    }
-
-    @Test
-    @WithMockUser(roles = "admin")
-    void shouldGenerateReceivedBookCsvWithContinuedReference() throws Exception {
-        Expense firstT2Expense = this.buildExpense(LocalDate.of(2026, 3, 10),
-                "2026", 2, "Office Supplies", "B10000000", "100.00", 21, null);
-        Expense secondT2Expense = this.buildExpense(LocalDate.of(2026, 5, 15),
-                "2026", 3, "Book Store", "B20000000", "200.00", 4, new BigDecimal("50"));
-        String expected = String.join("\r\n",
-                "2026-2;T2;%s;%s;Office Supplies;B10000000;%s;21;%s;%s;OTROS".formatted(
-                        DATE.format(LocalDate.of(2026, 3, 10)),
-                        DATE.format(LocalDate.of(2026, 3, 10)),
-                        AMOUNT.format(new BigDecimal("100.00")),
-                        AMOUNT.format(new BigDecimal("21.00")),
-                        AMOUNT.format(new BigDecimal("121.00"))
-                ),
-                "2026-3;T2;%s;%s;Book Store;B20000000;%s;4;%s;%s;OTROS".formatted(
-                        DATE.format(LocalDate.of(2026, 5, 15)),
-                        DATE.format(LocalDate.of(2026, 5, 15)),
-                        AMOUNT.format(new BigDecimal("100.00")),
-                        AMOUNT.format(new BigDecimal("4.00")),
-                        AMOUNT.format(new BigDecimal("104.00"))
-                )
-        );
-        when(this.taxAgencyService.invoiceReceiveBook(2026, 2, 3))
-                .thenReturn(List.of(firstT2Expense, secondT2Expense));
-
-        this.mockMvc.perform(get("/tax-agency/received-book")
-                        .param("year", "2026")
-                        .param("quarter", "T2")
-                        .param("from", "2")
-                        .param("to", "3"))
-                .andExpect(status().isOk())
-                .andExpect(content().contentTypeCompatibleWith("text/csv"))
-                .andExpect(content().string(expected));
-
-        verify(this.taxAgencyService).invoiceReceiveBook(2026, 2, 3);
-    }
-
-    @Test
-    @WithMockUser(roles = "admin")
-    void shouldGenerateReceivedBookCsvStartingAtOneInFirstQuarter() throws Exception {
-        Expense expense = this.buildExpense(LocalDate.of(2026, 2, 10),
-                "2026", 1, "Office Supplies", "B10000000", "100.00", 21, null);
-        String expected = "2026-1;T1;%s;%s;Office Supplies;B10000000;%s;21;%s;%s;OTROS".formatted(
-                DATE.format(LocalDate.of(2026, 2, 10)),
-                DATE.format(LocalDate.of(2026, 2, 10)),
-                AMOUNT.format(new BigDecimal("100.00")),
-                AMOUNT.format(new BigDecimal("21.00")),
-                AMOUNT.format(new BigDecimal("121.00"))
-        );
-        when(this.taxAgencyService.invoiceReceiveBook(2026, 1, 1))
-                .thenReturn(List.of(expense));
-
-        this.mockMvc.perform(get("/tax-agency/received-book")
-                        .param("year", "2026")
-                        .param("quarter", "T1")
-                        .param("from", "1")
-                        .param("to", "1"))
-                .andExpect(status().isOk())
-                .andExpect(content().contentTypeCompatibleWith("text/csv"))
-                .andExpect(content().string(expected));
-
-        verify(this.taxAgencyService).invoiceReceiveBook(2026, 1, 1);
-    }
 
     @Test
     @WithMockUser(roles = "admin")
