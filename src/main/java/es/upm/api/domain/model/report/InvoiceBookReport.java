@@ -88,6 +88,14 @@ public record InvoiceBookReport(
         );
     }
 
+    private static NumberFormat numberFormat() {
+        NumberFormat amount = NumberFormat.getNumberInstance(Locale.forLanguageTag("es-ES"));
+        amount.setGroupingUsed(false);
+        amount.setMinimumFractionDigits(2);
+        amount.setMaximumFractionDigits(2);
+        return amount;
+    }
+
     // Libro de emitidas: columnas por tipo de IVA, necesita allRates para alinear
     public String toInvoiceCsvLine(SortedSet<Integer> allRates) {
         NumberFormat amount = numberFormat();
@@ -96,7 +104,7 @@ public record InvoiceBookReport(
         allRates.forEach(rate -> {
             VatLine vatLine = this.vatLines.getOrDefault(rate, empty);
             fields.add(amount.format(vatLine.baseAmount()));
-            fields.add(String.valueOf(rate));
+            fields.add(rate + "%");
             fields.add(amount.format(vatLine.vatAmount()));
             fields.add(amount.format(vatLine.totalAmount()));
         });
@@ -110,7 +118,7 @@ public record InvoiceBookReport(
         VatLine vatLine = entry.getValue();
         List<String> fields = new ArrayList<>(this.commonFields());
         fields.add(amount.format(vatLine.baseAmount()));
-        fields.add(String.valueOf(entry.getKey()));
+        fields.add(entry.getKey() + "%");
         fields.add(amount.format(vatLine.vatAmount()));
         fields.add(amount.format(vatLine.totalAmount()));
         fields.add(category);
@@ -126,14 +134,6 @@ public record InvoiceBookReport(
                 this.clientName,
                 this.clientNif
         );
-    }
-
-    private static NumberFormat numberFormat() {
-        NumberFormat amount = NumberFormat.getNumberInstance(Locale.forLanguageTag("es-ES"));
-        amount.setGroupingUsed(false);
-        amount.setMinimumFractionDigits(2);
-        amount.setMaximumFractionDigits(2);
-        return amount;
     }
 
 }
