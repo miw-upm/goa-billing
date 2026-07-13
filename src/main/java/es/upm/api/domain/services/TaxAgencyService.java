@@ -56,8 +56,8 @@ public class TaxAgencyService {
             List<Expense> invoiceReceivedInvestmentBook
     ) {
         return new VatSummaryReport(
-                this.sum(invoiceIssuedBook, Invoice::getBaseAmount),
-                this.sum(invoiceIssuedBook, Invoice::getVatAmount),
+                this.sum(invoiceIssuedBook, this::invoiceIssuedBaseAmount),
+                this.sum(invoiceIssuedBook, this::invoiceIssuedVatAmount),
                 this.sum(invoiceReceivedCurrentBook, Expense::deductibleBaseAmount),
                 this.sum(invoiceReceivedCurrentBook, Expense::deductibleVatAmount),
                 this.sum(invoiceReceivedInvestmentBook, Expense::deductibleBaseAmount),
@@ -94,6 +94,20 @@ public class TaxAgencyService {
         return values.stream()
                 .map(mapper)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    private BigDecimal invoiceIssuedBaseAmount(Invoice invoice) {
+        return this.amount(invoice.getBaseAmount())
+                .add((invoice.getClosed() == null || invoice.getClosed()) ? this.amount(invoice.getBaseExpense()) : BigDecimal.ZERO);
+    }
+
+    private BigDecimal invoiceIssuedVatAmount(Invoice invoice) {
+        return this.amount(invoice.getVatAmount())
+                .add((invoice.getClosed() == null || invoice.getClosed()) ? this.amount(invoice.getVatExpense()) : BigDecimal.ZERO);
+    }
+
+    private BigDecimal amount(BigDecimal amount) {
+        return amount == null ? BigDecimal.ZERO : amount;
     }
 
     private BigDecimal investmentAmortization(Expense investmentAsset, LocalDate toDate) {

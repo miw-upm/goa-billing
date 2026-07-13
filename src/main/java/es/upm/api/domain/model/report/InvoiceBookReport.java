@@ -32,7 +32,7 @@ public record InvoiceBookReport(
         TreeMap<Integer, VatLine> vatLines = new TreeMap<>(Comparator.reverseOrder());
         addVatLine(vatLines, invoice.getVatRate().intValue(), invoice.getBaseAmount(), invoice.getVatAmount());
 
-        if (Boolean.TRUE.equals(invoice.getClosed())) {
+        if (invoice.getClosed() == null || invoice.getClosed()) {
             BigDecimal percentageFactor = invoice.getPercentage() == null
                     ? BigDecimal.ONE
                     : invoice.getPercentage().divide(HUNDRED, SCALE, RoundingMode.HALF_UP);

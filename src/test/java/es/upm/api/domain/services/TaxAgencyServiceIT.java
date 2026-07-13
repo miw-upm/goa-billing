@@ -131,6 +131,42 @@ class TaxAgencyServiceIT {
     }
 
     @Test
+    void shouldAddClosedInvoiceExpensesToVatSummaryIssuedAmounts() {
+        LocalDate fromDate = LocalDate.of(2026, 4, 1);
+        LocalDate toDate = LocalDate.of(2026, 6, 30);
+        Invoice closedInvoice = this.buildInvoice(31, LocalDate.of(2026, 4, 20), LocalDate.of(2026, 4, 19),
+                "12345678Z", "First Client", "100.00", "21.00");
+        closedInvoice.setClosed(true);
+        closedInvoice.setBaseExpense(new BigDecimal("70.00"));
+        closedInvoice.setVatExpense(new BigDecimal("10.30"));
+        Invoice openInvoice = this.buildInvoice(32, LocalDate.of(2026, 5, 20), LocalDate.of(2026, 5, 19),
+                "87654321X", "Second Client", "200.00", "42.00");
+        openInvoice.setClosed(false);
+        openInvoice.setBaseExpense(new BigDecimal("999.00"));
+        openInvoice.setVatExpense(new BigDecimal("999.00"));
+        when(this.invoiceGateway.findIssuedBetween(fromDate, toDate))
+                .thenReturn(Stream.of(closedInvoice, openInvoice));
+        when(this.expenseGateway.findInvoiceReceivedBook("2026", 31, 32, INVESTMENT_ASSET_THRESHOLD))
+                .thenReturn(Stream.empty());
+        when(this.expenseGateway.findInvoiceReceivedInvestmentBook("2026", 31, 32, INVESTMENT_ASSET_THRESHOLD))
+                .thenReturn(Stream.empty());
+
+        VatSummaryReport result = this.taxAgencyService.vatSummary(2026, Quarter.T2, 31, 32);
+
+        this.assertVatSummary(new VatSummaryReport(
+                new BigDecimal("370.00"),
+                new BigDecimal("73.30"),
+                BigDecimal.ZERO,
+                BigDecimal.ZERO,
+                BigDecimal.ZERO,
+                BigDecimal.ZERO
+        ), result);
+        verify(this.invoiceGateway).findIssuedBetween(fromDate, toDate);
+        verify(this.expenseGateway).findInvoiceReceivedBook("2026", 31, 32, INVESTMENT_ASSET_THRESHOLD);
+        verify(this.expenseGateway).findInvoiceReceivedInvestmentBook("2026", 31, 32, INVESTMENT_ASSET_THRESHOLD);
+    }
+
+    @Test
     void shouldBuildNetIncomeBreakdownByNumberRange() {
         LocalDate toDate = LocalDate.of(2026, 6, 30);
         Invoice firstInvoice = this.buildInvoice(31, LocalDate.of(2026, 4, 20), LocalDate.of(2026, 4, 19),
