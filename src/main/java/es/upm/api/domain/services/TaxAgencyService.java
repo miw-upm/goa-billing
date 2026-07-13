@@ -56,8 +56,8 @@ public class TaxAgencyService {
             List<Expense> invoiceReceivedInvestmentBook
     ) {
         return new VatSummaryReport(
-                this.sum(invoiceIssuedBook, this::invoiceIssuedBaseAmount),
-                this.sum(invoiceIssuedBook, this::invoiceIssuedVatAmount),
+                this.sum(invoiceIssuedBook, this::invoiceAndExpenseBaseAmount),
+                this.sum(invoiceIssuedBook, this::invoiceAndExpenseVatAmount),
                 this.sum(invoiceReceivedCurrentBook, Expense::deductibleBaseAmount),
                 this.sum(invoiceReceivedCurrentBook, Expense::deductibleVatAmount),
                 this.sum(invoiceReceivedInvestmentBook, Expense::deductibleBaseAmount),
@@ -65,12 +65,14 @@ public class TaxAgencyService {
         );
     }
 
-    public NetIncomeBreakdownReport netIncomeBreakdown(String series, int toNumber, LocalDate toDate) {
-        List<Invoice> invoiceIssuedBook = this.invoiceGateway.findIssuedBetween(series, 1, toNumber)
+    public NetIncomeBreakdownReport netIncomeBreakdown(int year, Quarter quarter, int toNumber) {
+        LocalDate fromDate = LocalDate.of(year, 1, 1);
+        LocalDate toDate = quarter.toDate(year);
+        List<Invoice> invoiceIssuedBook = this.invoiceGateway.findIssuedBetween(fromDate, toDate)
                 .toList();
-        List<Expense> currentExpensesBook = this.expenseGateway.findCurrentExpensesBook(series, 1, toNumber)
+        List<Expense> currentExpensesBook = this.expenseGateway.findCurrentExpensesBook(String.valueOf(year), 1, toNumber)
                 .toList();
-        List<Expense> investmentAssets = this.expenseGateway.findInvestmentAssetsUntil(series, toNumber)
+        List<Expense> investmentAssets = this.expenseGateway.findInvestmentAssetsUntil(String.valueOf(year), toNumber)
                 .toList();
         return this.netIncomeBreakdown(invoiceIssuedBook, currentExpensesBook, investmentAssets, toDate);
     }
@@ -82,7 +84,7 @@ public class TaxAgencyService {
             LocalDate toDate
     ) {
         return new NetIncomeBreakdownReport(
-                this.sum(invoiceIssuedBook, Invoice::getBaseAmount),
+                this.sum(invoiceIssuedBook, this::invoiceAndExpenseBaseAmount),
                 this.sum(currentExpensesBook, Expense::deductibleBaseAmount),
                 this.sum(investmentAssets, investmentAsset -> this.investmentAmortization(investmentAsset, toDate)),
                 this.sum(currentExpensesBook,
@@ -96,12 +98,12 @@ public class TaxAgencyService {
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
-    private BigDecimal invoiceIssuedBaseAmount(Invoice invoice) {
+    private BigDecimal invoiceAndExpenseBaseAmount(Invoice invoice) {
         return this.amount(invoice.getBaseAmount())
                 .add((invoice.getClosed() == null || invoice.getClosed()) ? this.amount(invoice.getBaseExpense()) : BigDecimal.ZERO);
     }
 
-    private BigDecimal invoiceIssuedVatAmount(Invoice invoice) {
+    private BigDecimal invoiceAndExpenseVatAmount(Invoice invoice) {
         return this.amount(invoice.getVatAmount())
                 .add((invoice.getClosed() == null || invoice.getClosed()) ? this.amount(invoice.getVatExpense()) : BigDecimal.ZERO);
     }

@@ -167,7 +167,8 @@ class TaxAgencyServiceIT {
     }
 
     @Test
-    void shouldBuildNetIncomeBreakdownByNumberRange() {
+    void shouldBuildNetIncomeBreakdownByDateAndNumberRange() {
+        LocalDate fromDate = LocalDate.of(2026, 1, 1);
         LocalDate toDate = LocalDate.of(2026, 6, 30);
         Invoice firstInvoice = this.buildInvoice(31, LocalDate.of(2026, 4, 20), LocalDate.of(2026, 4, 19),
                 "12345678Z", "First Client", "100.00", "21.00");
@@ -181,7 +182,7 @@ class TaxAgencyServiceIT {
         Expense smallCurrentYearInvestment = this.buildExpense(LocalDate.of(2026, 5, 7), "1000.00", 21, 50);
         Expense previousYearInvestment = this.buildExpense(LocalDate.of(2025, 6, 12), "6000.00", 21, 20);
         Expense alreadyAmortizedInvestment = this.buildExpense(LocalDate.of(2020, 1, 12), "6000.00", 21, 50);
-        when(this.invoiceGateway.findIssuedBetween("2026", 1, 3))
+        when(this.invoiceGateway.findIssuedBetween(fromDate, toDate))
                 .thenReturn(Stream.of(firstInvoice, secondInvoice));
         when(this.expenseGateway.findCurrentExpensesBook("2026", 1, 3))
                 .thenReturn(Stream.of(currentExpense, reducedCurrentExpense));
@@ -189,7 +190,7 @@ class TaxAgencyServiceIT {
                 .thenReturn(Stream.of(currentYearInvestment, smallCurrentYearInvestment,
                         previousYearInvestment, alreadyAmortizedInvestment));
 
-        NetIncomeBreakdownReport result = this.taxAgencyService.netIncomeBreakdown("2026", 3, toDate);
+        NetIncomeBreakdownReport result = this.taxAgencyService.netIncomeBreakdown(2026, Quarter.T2, 3);
 
         this.assertNetIncomeBreakdown(new NetIncomeBreakdownReport(
                 new BigDecimal("300.00"),
@@ -197,7 +198,7 @@ class TaxAgencyServiceIT {
                 new BigDecimal("1283.333333"),
                 new BigDecimal("10.00")
         ), result);
-        verify(this.invoiceGateway).findIssuedBetween("2026", 1, 3);
+        verify(this.invoiceGateway).findIssuedBetween(fromDate, toDate);
         verify(this.expenseGateway).findCurrentExpensesBook("2026", 1, 3);
         verify(this.expenseGateway).findInvestmentAssetsUntil("2026", 3);
     }

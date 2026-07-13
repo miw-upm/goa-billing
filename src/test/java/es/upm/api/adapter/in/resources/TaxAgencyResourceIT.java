@@ -85,14 +85,13 @@ class TaxAgencyResourceIT {
     @Test
     @WithMockUser(roles = "admin")
     void shouldReturnModel130() throws Exception {
-        LocalDate toDate = LocalDate.of(2026, 6, 30);
         NetIncomeBreakdownReport netIncomeBreakdownReport = new NetIncomeBreakdownReport(
                 new BigDecimal("300.00"),
                 new BigDecimal("75.00"),
                 new BigDecimal("1200.00"),
                 new BigDecimal("10.00")
         );
-        when(this.taxAgencyService.netIncomeBreakdown("2026", 3, toDate)).thenReturn(netIncomeBreakdownReport);
+        when(this.taxAgencyService.netIncomeBreakdown(2026, Quarter.T2, 3)).thenReturn(netIncomeBreakdownReport);
 
         this.mockMvc.perform(get("/tax-agency/models/130")
                         .param("year", "2026")
@@ -112,7 +111,7 @@ class TaxAgencyResourceIT {
                         }
                         """));
 
-        verify(this.taxAgencyService).netIncomeBreakdown("2026", 3, toDate);
+        verify(this.taxAgencyService).netIncomeBreakdown(2026, Quarter.T2, 3);
     }
 
     @Test
