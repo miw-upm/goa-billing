@@ -64,6 +64,6 @@ public class TaxAgencyResource {
     @GetMapping(MODEL_130)
     public Model130Dto model130(@RequestParam int year, @RequestParam Quarter quarter, @RequestParam int to) {
         return new Model130Dto(
-                year, quarter, this.taxAgencyService.netIncomeBreakdown(String.valueOf(year), to, quarter.toDate(year)));
+                year, quarter, this.taxAgencyService.netIncomeBreakdown(year, quarter, to));
     }
 }
