@@ -242,26 +242,26 @@ class InvoiceAdapterIT {
     void shouldFindIssuedInvoicesBetweenDates() {
         LocalDate fromDate = LocalDate.of(2026, 1, 1);
         LocalDate toDate = LocalDate.of(2026, 3, 31);
-        when(this.invoiceRepository.findIssuedBetweenOrderByNumberAsc(fromDate, toDate))
+        when(this.invoiceRepository.findByEmissionDateRange(fromDate, toDate))
                 .thenReturn(List.of(new InvoiceEntity(this.invoice)));
 
         List<Invoice> result = this.invoiceAdapter.findIssuedBetween(fromDate, toDate).toList();
 
         assertEquals(1, result.size());
         assertEquals(this.invoice.getId(), result.getFirst().getId());
-        verify(this.invoiceRepository).findIssuedBetweenOrderByNumberAsc(fromDate, toDate);
+        verify(this.invoiceRepository).findByEmissionDateRange(fromDate, toDate);
     }
 
     @Test
     void shouldFindIssuedInvoicesBetweenNumbers() {
-        when(this.invoiceRepository.findIssuedBetweenOrderByNumberAsc("2026", 1, 2))
+        when(this.invoiceRepository.findIssuedBySeriesAndNumberRange("2026", 1, 2))
                 .thenReturn(List.of(new InvoiceEntity(this.invoice)));
 
-        List<Invoice> result = this.invoiceAdapter.findIssuedBetween("2026", 1, 2).toList();
+        List<Invoice> result = this.invoiceAdapter.findIssuedByNumberRange("2026", 1, 2).toList();
 
         assertEquals(1, result.size());
         assertEquals(this.invoice.getId(), result.getFirst().getId());
-        verify(this.invoiceRepository).findIssuedBetweenOrderByNumberAsc("2026", 1, 2);
+        verify(this.invoiceRepository).findIssuedBySeriesAndNumberRange("2026", 1, 2);
     }
 
     private Invoice buildInvoice(UUID invoiceId, UUID engagementId, UUID userId, UUID paymentId,

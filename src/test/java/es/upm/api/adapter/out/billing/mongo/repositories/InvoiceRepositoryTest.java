@@ -174,7 +174,7 @@ class InvoiceRepositoryTest {
     }
 
     @Test
-    void shouldFindIssuedBetweenUsingOperationDateOrEmissionDateFallbackOrderByNumberAsc() {
+    void shouldFindIssuedBetweenUsingEmissionDateOrderByNumberAsc() {
         Invoice fallbackEmissionDate = this.buildMinimalInvoice(4, LocalDate.of(2026, 3, 10), null);
         Invoice operationDateOutsideRange = this.buildMinimalInvoice(3, LocalDate.of(2026, 3, 10), LocalDate.of(2026, 4, 1));
         Invoice draft = this.buildMinimalInvoice(0, null, LocalDate.of(2026, 3, 10));
@@ -184,13 +184,14 @@ class InvoiceRepositoryTest {
                 new InvoiceEntity(draft)
         ));
 
-        List<InvoiceEntity> result = this.invoiceRepository.findIssuedBetweenOrderByNumberAsc(
+        List<InvoiceEntity> result = this.invoiceRepository.findByEmissionDateRange(
                 LocalDate.of(2026, 3, 1), LocalDate.of(2026, 3, 31));
 
-        assertEquals(3, result.size());
+        assertEquals(4, result.size());
         assertEquals(1, result.get(0).getNumber());
         assertEquals(2, result.get(1).getNumber());
-        assertEquals(4, result.get(2).getNumber());
+        assertEquals(3, result.get(2).getNumber());
+        assertEquals(4, result.get(3).getNumber());
     }
 
     @Test
@@ -200,7 +201,7 @@ class InvoiceRepositoryTest {
         otherSeries.setSeries("B");
         this.invoiceRepository.saveAll(List.of(new InvoiceEntity(draft), new InvoiceEntity(otherSeries)));
 
-        List<InvoiceEntity> result = this.invoiceRepository.findIssuedBetweenOrderByNumberAsc("A", 1, 3);
+        List<InvoiceEntity> result = this.invoiceRepository.findIssuedBySeriesAndNumberRange("A", 1, 3);
 
         assertEquals(2, result.size());
         assertEquals(1, result.getFirst().getNumber());
