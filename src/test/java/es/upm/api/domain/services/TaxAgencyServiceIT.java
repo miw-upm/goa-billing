@@ -2,7 +2,6 @@ package es.upm.api.domain.services;
 
 import es.upm.api.domain.model.*;
 import es.upm.api.domain.model.report.InvoiceBookReport;
-import es.upm.api.domain.model.report.NetIncomeBreakdownReport;
 import es.upm.api.domain.model.report.Quarter;
 import es.upm.api.domain.model.report.VatSummaryReport;
 import es.upm.api.domain.ports.out.billing.ExpenseGateway;
@@ -85,6 +84,19 @@ class TaxAgencyServiceIT {
 
         assertEquals(List.of(first, second), expenses);
         verify(this.expenseGateway).findInvoiceReceivedBook("2026", 2, 3, INVESTMENT_ASSET_THRESHOLD);
+    }
+
+    @Test
+    void shouldFindReceivedBookZeroVatByNumberRange() {
+        Expense first = this.buildExpense(LocalDate.of(2026, 4, 10), "100.00", 0, 100);
+        Expense second = this.buildExpense(LocalDate.of(2026, 5, 15), "200.00", 0, 100);
+        when(this.expenseGateway.findInvoiceReceivedBookZeroVat("2026", 2, 3, INVESTMENT_ASSET_THRESHOLD))
+                .thenReturn(Stream.of(first, second));
+
+        List<Expense> expenses = this.taxAgencyService.invoiceReceiveBookZeroVat(2026, 2, 3);
+
+        assertEquals(List.of(first, second), expenses);
+        verify(this.expenseGateway).findInvoiceReceivedBookZeroVat("2026", 2, 3, INVESTMENT_ASSET_THRESHOLD);
     }
 
     @Test

@@ -30,6 +30,8 @@ public interface ExpenseGateway {
 
     Stream<Expense> findInvoiceReceivedBook(String series, int fromNumber, int toNumber, BigDecimal taxableBaseThreshold);
 
+    Stream<Expense> findInvoiceReceivedBookZeroVat(String series, int fromNumber, int toNumber, BigDecimal taxableBaseThreshold);
+
     Stream<Expense> findCurrentExpensesBook(LocalDate fromDate, LocalDate toDate);
 
     Stream<Expense> findCurrentExpensesBook(String series, int fromNumber, int toNumber);

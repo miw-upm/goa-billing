@@ -197,6 +197,58 @@ class ExpenseRepositoryTest {
     }
 
     @Test
+    void shouldFindReceivedBookWithZeroVatByNumberRange() {
+        Expense zeroVatExpense = Expense.builder()
+                .id(UUID.randomUUID())
+                .series("2026")
+                .number(3)
+                .baseAmount(BigDecimal.valueOf(50))
+                .vatRate(0)
+                .supplier(SupplierInfo.builder().name("No Vat").identity("N10000000").build())
+                .taxCategory(TaxCategory.OTROS)
+                .depreciationRate(100)
+                .issueDate(LocalDate.of(2026, 3, 23))
+                .withholdingTax(BigDecimal.ZERO)
+                .build();
+        Expense zeroVatSmallInvestmentExpense = Expense.builder()
+                .id(UUID.randomUUID())
+                .series("2026")
+                .number(4)
+                .baseAmount(BigDecimal.valueOf(300))
+                .vatRate(0)
+                .supplier(SupplierInfo.builder().name("No Vat Small Investment").identity("N20000000").build())
+                .taxCategory(TaxCategory.OTROS)
+                .depreciationRate(10)
+                .issueDate(LocalDate.of(2026, 3, 24))
+                .withholdingTax(BigDecimal.ZERO)
+                .build();
+        Expense zeroVatInvestmentAssetExpense = Expense.builder()
+                .id(UUID.randomUUID())
+                .series("2026")
+                .number(5)
+                .baseAmount(BigDecimal.valueOf(4000))
+                .vatRate(0)
+                .supplier(SupplierInfo.builder().name("No Vat Investment").identity("N30000000").build())
+                .taxCategory(TaxCategory.OTROS)
+                .depreciationRate(10)
+                .issueDate(LocalDate.of(2026, 3, 25))
+                .withholdingTax(BigDecimal.ZERO)
+                .build();
+        this.expenseRepository.saveAll(List.of(
+                new ExpenseEntity(zeroVatExpense),
+                new ExpenseEntity(zeroVatSmallInvestmentExpense),
+                new ExpenseEntity(zeroVatInvestmentAssetExpense)
+        ));
+
+        List<ExpenseEntity> result = this.expenseRepository.findReceivedBookWithZeroVat(
+                "2026", 1, 5, INVESTMENT_ASSET_THRESHOLD);
+
+        assertEquals(2, result.size());
+        assertEquals(zeroVatExpense.getId().toString(), result.getFirst().getId());
+        assertEquals(zeroVatSmallInvestmentExpense.getId().toString(), result.get(1).getId());
+    }
+
+    @Test
     void shouldFindCurrentExpensesBookExcludingInvestments() {
         Expense zeroVatExpense = Expense.builder()
                 .id(UUID.randomUUID())

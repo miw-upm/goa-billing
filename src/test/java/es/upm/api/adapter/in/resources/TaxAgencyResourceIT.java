@@ -18,6 +18,7 @@ import java.math.BigDecimal;
 import java.text.NumberFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
 
@@ -112,6 +113,24 @@ class TaxAgencyResourceIT {
                         """));
 
         verify(this.taxAgencyService).netIncomeBreakdown(2026, Quarter.T2, 3);
+    }
+
+    @Test
+    @WithMockUser(roles = "admin")
+    void shouldReturnReceivedBookZeroVat() throws Exception {
+        Expense zeroVatExpense = this.buildExpense(LocalDate.of(2026, 4, 10), "2026", 3,
+                "No Vat", "N10000000", "50.00", 0, null);
+        when(this.taxAgencyService.invoiceReceiveBookZeroVat(2026, 2, 3)).thenReturn(List.of(zeroVatExpense));
+
+        this.mockMvc.perform(get("/tax-agency/received-book-zero-vat")
+                        .param("year", "2026")
+                        .param("quarter", "T2")
+                        .param("from", "2")
+                        .param("to", "3"))
+                .andExpect(status().isOk())
+                .andExpect(content().string("2026-3;T2;10/04/2026;10/04/2026;No Vat;N10000000;50,00;0%;0,00;50,00;OTROS"));
+
+        verify(this.taxAgencyService).invoiceReceiveBookZeroVat(2026, 2, 3);
     }
 
     @Test

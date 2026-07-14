@@ -39,6 +39,12 @@ public class TaxAgencyService {
                 .toList();
     }
 
+    public List<Expense> invoiceReceiveBookZeroVat(int year, int fromNumber, int toNumber) {
+        return this.expenseGateway.findInvoiceReceivedBookZeroVat(
+                        String.valueOf(year), fromNumber, toNumber, INVESTMENT_ASSET_THRESHOLD)
+                .toList();
+    }
+
     public VatSummaryReport vatSummary(int year, Quarter quarter, int fromNumber, int toNumber) {
         String series = String.valueOf(year);
         List<Invoice> invoiceIssuedBook = this.invoiceGateway.findIssuedBetween(quarter.fromDate(year), quarter.toDate(year))
