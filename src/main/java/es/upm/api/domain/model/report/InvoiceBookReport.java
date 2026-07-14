@@ -28,7 +28,7 @@ public record InvoiceBookReport(
 
     public static InvoiceBookReport from(Invoice invoice) {
         BillingInfo bi = invoice.getBillingInfo();
-        LocalDate date = invoice.getOperationDate();
+        LocalDate date = invoice.getEmissionDate();
         TreeMap<Integer, VatLine> vatLines = new TreeMap<>(Comparator.reverseOrder());
         addVatLine(vatLines, invoice.getVatRate().intValue(), invoice.getBaseAmount(), invoice.getVatAmount());
 
@@ -49,7 +49,7 @@ public record InvoiceBookReport(
                 invoice.getSeries() + "-" + invoice.getNumber(),
                 Quarter.from(date),
                 invoice.getOperationDate(),
-                invoice.getEmissionDate(),
+                date,
                 bi.getFullName(),
                 bi.getIdentity(),
                 vatLines,
