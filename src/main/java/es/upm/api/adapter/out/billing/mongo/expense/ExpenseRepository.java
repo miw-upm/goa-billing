@@ -37,7 +37,7 @@ public interface ExpenseRepository extends MongoRepository<ExpenseEntity, String
               ]
             }
             """, sort = "{ 'issueDate': 1 }")
-    List<ExpenseEntity> findReceivedBook(LocalDate fromDate, LocalDate toDate, Decimal128 taxableBaseThreshold);
+    List<ExpenseEntity> findReceivedBookWithVat(LocalDate fromDate, LocalDate toDate, Decimal128 taxableBaseThreshold);
 
     @Query(value = """
             {
@@ -50,7 +50,7 @@ public interface ExpenseRepository extends MongoRepository<ExpenseEntity, String
               ]
             }
             """, sort = "{ 'number': 1 }")
-    List<ExpenseEntity> findReceivedBook(String series, int fromNumber, int toNumber, Decimal128 taxableBaseThreshold);
+    List<ExpenseEntity> findReceivedBookWithVat(String series, int fromNumber, int toNumber, Decimal128 taxableBaseThreshold);
 
     @Query(value = """
             {

@@ -72,7 +72,7 @@ public class TaxAgencyService {
                 .toList();
         List<Expense> currentExpensesBook = this.expenseGateway.findCurrentExpensesBook(String.valueOf(year), 1, toNumber)
                 .toList();
-        List<Expense> investmentAssets = this.expenseGateway.findInvestmentAssetsUntil(String.valueOf(year), toNumber)
+        List<Expense> investmentAssets = this.expenseGateway.findInvestmentAssetsUntil(toDate)
                 .toList();
         return this.netIncomeBreakdown(invoiceIssuedBook, currentExpensesBook, investmentAssets, toDate);
     }

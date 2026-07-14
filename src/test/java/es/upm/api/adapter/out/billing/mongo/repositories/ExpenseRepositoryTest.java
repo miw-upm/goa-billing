@@ -107,7 +107,7 @@ class ExpenseRepositoryTest {
     }
 
     @Test
-    void shouldFindReceivedBook() {
+    void shouldFindReceivedBookWithVat() {
         Expense zeroVatExpense = Expense.builder()
                 .id(UUID.randomUUID())
                 .series("2026")
@@ -134,7 +134,7 @@ class ExpenseRepositoryTest {
                 .build();
         this.expenseRepository.saveAll(List.of(new ExpenseEntity(zeroVatExpense), new ExpenseEntity(excludedInvestmentAssetExpense)));
 
-        List<ExpenseEntity> result = this.expenseRepository.findReceivedBook(
+        List<ExpenseEntity> result = this.expenseRepository.findReceivedBookWithVat(
                 LocalDate.of(2026, 1, 1), LocalDate.of(2026, 3, 31), INVESTMENT_ASSET_THRESHOLD);
 
         assertEquals(3, result.size());
@@ -144,7 +144,7 @@ class ExpenseRepositoryTest {
     }
 
     @Test
-    void shouldFindReceivedBookByNumberRange() {
+    void shouldFindReceivedBookWithVatByNumberRange() {
         Expense zeroVatExpense = Expense.builder()
                 .id(UUID.randomUUID())
                 .series("2026")
@@ -187,7 +187,7 @@ class ExpenseRepositoryTest {
                 new ExpenseEntity(smallInvestmentExpense)
         ));
 
-        List<ExpenseEntity> result = this.expenseRepository.findReceivedBook(
+        List<ExpenseEntity> result = this.expenseRepository.findReceivedBookWithVat(
                 "2026", 1, 5, INVESTMENT_ASSET_THRESHOLD);
 
         assertEquals(3, result.size());

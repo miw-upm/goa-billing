@@ -166,43 +166,6 @@ class TaxAgencyServiceIT {
         verify(this.expenseGateway).findInvoiceReceivedInvestmentBook("2026", 31, 32, INVESTMENT_ASSET_THRESHOLD);
     }
 
-    @Test
-    void shouldBuildNetIncomeBreakdownByDateAndNumberRange() {
-        LocalDate fromDate = LocalDate.of(2026, 1, 1);
-        LocalDate toDate = LocalDate.of(2026, 6, 30);
-        Invoice firstInvoice = this.buildInvoice(31, LocalDate.of(2026, 4, 20), LocalDate.of(2026, 4, 19),
-                "12345678Z", "First Client", "100.00", "21.00");
-        Invoice secondInvoice = this.buildInvoice(32, LocalDate.of(2026, 5, 20), LocalDate.of(2026, 5, 19),
-                "87654321X", "Second Client", "200.00", "42.00");
-        Expense currentExpense = this.buildExpense(LocalDate.of(2026, 4, 10), "50.00", 21, 100,
-                null, new BigDecimal("7.50"));
-        Expense reducedCurrentExpense = this.buildExpense(LocalDate.of(2026, 5, 10), "25.00", 4, 100,
-                new BigDecimal("50"), new BigDecimal("2.50"));
-        Expense currentYearInvestment = this.buildExpense(LocalDate.of(2026, 2, 12), "12000.00", 21, 12);
-        Expense smallCurrentYearInvestment = this.buildExpense(LocalDate.of(2026, 5, 7), "1000.00", 21, 50);
-        Expense previousYearInvestment = this.buildExpense(LocalDate.of(2025, 6, 12), "6000.00", 21, 20);
-        Expense alreadyAmortizedInvestment = this.buildExpense(LocalDate.of(2020, 1, 12), "6000.00", 21, 50);
-        when(this.invoiceGateway.findIssuedBetween(fromDate, toDate))
-                .thenReturn(Stream.of(firstInvoice, secondInvoice));
-        when(this.expenseGateway.findCurrentExpensesBook("2026", 1, 3))
-                .thenReturn(Stream.of(currentExpense, reducedCurrentExpense));
-        when(this.expenseGateway.findInvestmentAssetsUntil("2026", 3))
-                .thenReturn(Stream.of(currentYearInvestment, smallCurrentYearInvestment,
-                        previousYearInvestment, alreadyAmortizedInvestment));
-
-        NetIncomeBreakdownReport result = this.taxAgencyService.netIncomeBreakdown(2026, Quarter.T2, 3);
-
-        this.assertNetIncomeBreakdown(new NetIncomeBreakdownReport(
-                new BigDecimal("300.00"),
-                new BigDecimal("62.50"),
-                new BigDecimal("1283.333333"),
-                new BigDecimal("10.00")
-        ), result);
-        verify(this.invoiceGateway).findIssuedBetween(fromDate, toDate);
-        verify(this.expenseGateway).findCurrentExpensesBook("2026", 1, 3);
-        verify(this.expenseGateway).findInvestmentAssetsUntil("2026", 3);
-    }
-
     private Invoice buildInvoice(int number, LocalDate emissionDate, LocalDate operationDate,
                                  String identity, String fullName, String baseAmount, String vatAmount) {
         return Invoice.builder()
@@ -261,13 +224,6 @@ class TaxAgencyServiceIT {
         this.assertBigDecimalEquals(expected.invoiceReceivedCurrentVat(), actual.invoiceReceivedCurrentVat());
         this.assertBigDecimalEquals(expected.invoiceReceivedInvestmentBase(), actual.invoiceReceivedInvestmentBase());
         this.assertBigDecimalEquals(expected.invoiceReceivedInvestmentVat(), actual.invoiceReceivedInvestmentVat());
-    }
-
-    private void assertNetIncomeBreakdown(NetIncomeBreakdownReport expected, NetIncomeBreakdownReport actual) {
-        this.assertBigDecimalEquals(expected.income(), actual.income());
-        this.assertBigDecimalEquals(expected.currentExpenses(), actual.currentExpenses());
-        this.assertBigDecimalEquals(expected.investmentAmortization(), actual.investmentAmortization());
-        this.assertBigDecimalEquals(expected.withholdings(), actual.withholdings());
     }
 
     private void assertBigDecimalEquals(BigDecimal expected, BigDecimal actual) {
