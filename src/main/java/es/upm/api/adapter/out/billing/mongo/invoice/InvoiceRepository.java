@@ -17,25 +17,17 @@ public interface InvoiceRepository extends MongoRepository<InvoiceEntity, String
     List<InvoiceEntity> findByEngagementIdStartingWithAndEmissionDateGreaterThanEqualOrderBySeriesDescNumberDesc(
             String engagementIdPrefix, LocalDate emissionDate);
 
-    @Query(value = """
-            {
-              'emissionDate': { $ne: null },
-              '$or': [
-                { 'operationDate': { $gte: ?0, $lte: ?1 } },
-                { 'operationDate': null, 'emissionDate': { $gte: ?0, $lte: ?1 } }
-              ]
-            }
-            """, sort = "{ 'number': 1 }")
-    List<InvoiceEntity> findIssuedBetweenOrderByNumberAsc(LocalDate fromDate, LocalDate toDate);
+    @Query(value = "{ 'emissionDate': { $gte: ?0, $lte: ?1 } }", sort = "{ 'number': 1 }")
+    List<InvoiceEntity> findByEmissionDateRange(LocalDate fromDate, LocalDate toDate);
 
     @Query(value = """
-            {
-              'series': ?0,
-              'number': { $gte: ?1, $lte: ?2 },
-              'emissionDate': { $ne: null }
-            }
-            """, sort = "{ 'number': 1 }")
-    List<InvoiceEntity> findIssuedBetweenOrderByNumberAsc(String series, int fromNumber, int toNumber);
+        {
+          'series': ?0,
+          'number': { $gte: ?1, $lte: ?2 },
+          'emissionDate': { $ne: null }
+        }
+        """, sort = "{ 'number': 1 }")
+    List<InvoiceEntity> findIssuedBySeriesAndNumberRange(String series, int fromNumber, int toNumber);
 
     Optional<InvoiceEntity> findFirstBySeriesOrderByNumberDesc(String series);
 

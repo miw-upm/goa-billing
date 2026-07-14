@@ -102,25 +102,19 @@ public class InvoiceAdapter implements InvoiceGateway {
 
     @Override
     public Stream<Invoice> findIssuedBetween(LocalDate fromDate, LocalDate toDate) {
-        return this.invoiceRepository.findIssuedBetweenOrderByNumberAsc(fromDate, toDate).stream()
+        return this.invoiceRepository.findByEmissionDateRange(fromDate, toDate).stream()
                 .map(InvoiceEntity::toDomain);
     }
 
     @Override
-    public Stream<Invoice> findIssuedBetween(String series, int fromNumber, int toNumber) {
-        return this.invoiceRepository.findIssuedBetweenOrderByNumberAsc(series, fromNumber, toNumber).stream()
+    public Stream<Invoice> findIssuedByNumberRange(String series, int fromNumber, int toNumber) {
+        return this.invoiceRepository.findIssuedBySeriesAndNumberRange(series, fromNumber, toNumber).stream()
                 .map(InvoiceEntity::toDomain);
     }
 
     private String normalizeEngagementIdPrefix(String engagementId) {
         String normalized = engagementId.trim();
         return normalized.length() <= 4 ? normalized : normalized.substring(0, 4);
-    }
-
-    @Override
-    public Optional<Invoice> findById(UUID id) {
-        return this.invoiceRepository.findById(id.toString())
-                .map(InvoiceEntity::toDomain);
     }
 
     @Override
