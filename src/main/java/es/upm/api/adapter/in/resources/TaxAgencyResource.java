@@ -27,6 +27,7 @@ public class TaxAgencyResource {
     public static final String TAX_AGENCY = "/tax-agency";
     public static final String INVOICE_ISSUED_BOOK = "/invoice-issued-book";
     public static final String RECEIVED_BOOK = "/received-book";
+    public static final String RECEIVED_BOOK_ZERO_VAT = "/received-book-zero-vat";
     public static final String MODEL_130 = "/models/130";
     public static final String MODEL_303 = "/models/303";
 
@@ -48,6 +49,16 @@ public class TaxAgencyResource {
     public String receivedBook(@RequestParam int year, @RequestParam Quarter quarter,
                                @RequestParam int from, @RequestParam int to) {
         List<String> lines = this.taxAgencyService.invoiceReceiveBook(year, from, to).stream()
+                .map(expense -> InvoiceBookReport.from(expense, quarter))
+                .map(InvoiceBookReport::toExpenseCsvLine)
+                .toList();
+        return String.join("\r\n", lines);
+    }
+
+    @GetMapping(value = RECEIVED_BOOK_ZERO_VAT, produces = {"text/csv"})
+    public String receivedBookZeroVat(@RequestParam int year, @RequestParam Quarter quarter,
+                                      @RequestParam int from, @RequestParam int to) {
+        List<String> lines = this.taxAgencyService.invoiceReceiveBookZeroVat(year, from, to).stream()
                 .map(expense -> InvoiceBookReport.from(expense, quarter))
                 .map(InvoiceBookReport::toExpenseCsvLine)
                 .toList();

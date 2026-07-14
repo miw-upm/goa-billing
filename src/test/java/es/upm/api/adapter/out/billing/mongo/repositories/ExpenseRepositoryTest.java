@@ -107,7 +107,7 @@ class ExpenseRepositoryTest {
     }
 
     @Test
-    void shouldFindReceivedBook() {
+    void shouldFindReceivedBookWithVat() {
         Expense zeroVatExpense = Expense.builder()
                 .id(UUID.randomUUID())
                 .series("2026")
@@ -134,7 +134,7 @@ class ExpenseRepositoryTest {
                 .build();
         this.expenseRepository.saveAll(List.of(new ExpenseEntity(zeroVatExpense), new ExpenseEntity(excludedInvestmentAssetExpense)));
 
-        List<ExpenseEntity> result = this.expenseRepository.findReceivedBook(
+        List<ExpenseEntity> result = this.expenseRepository.findReceivedBookWithVat(
                 LocalDate.of(2026, 1, 1), LocalDate.of(2026, 3, 31), INVESTMENT_ASSET_THRESHOLD);
 
         assertEquals(3, result.size());
@@ -144,7 +144,7 @@ class ExpenseRepositoryTest {
     }
 
     @Test
-    void shouldFindReceivedBookByNumberRange() {
+    void shouldFindReceivedBookWithVatByNumberRange() {
         Expense zeroVatExpense = Expense.builder()
                 .id(UUID.randomUUID())
                 .series("2026")
@@ -187,13 +187,65 @@ class ExpenseRepositoryTest {
                 new ExpenseEntity(smallInvestmentExpense)
         ));
 
-        List<ExpenseEntity> result = this.expenseRepository.findReceivedBook(
+        List<ExpenseEntity> result = this.expenseRepository.findReceivedBookWithVat(
                 "2026", 1, 5, INVESTMENT_ASSET_THRESHOLD);
 
         assertEquals(3, result.size());
         assertEquals(this.firstExpense.getId().toString(), result.getFirst().getId());
         assertEquals(this.secondExpense.getId().toString(), result.get(1).getId());
         assertEquals(smallInvestmentExpense.getId().toString(), result.get(2).getId());
+    }
+
+    @Test
+    void shouldFindReceivedBookWithZeroVatByNumberRange() {
+        Expense zeroVatExpense = Expense.builder()
+                .id(UUID.randomUUID())
+                .series("2026")
+                .number(3)
+                .baseAmount(BigDecimal.valueOf(50))
+                .vatRate(0)
+                .supplier(SupplierInfo.builder().name("No Vat").identity("N10000000").build())
+                .taxCategory(TaxCategory.OTROS)
+                .depreciationRate(100)
+                .issueDate(LocalDate.of(2026, 3, 23))
+                .withholdingTax(BigDecimal.ZERO)
+                .build();
+        Expense zeroVatSmallInvestmentExpense = Expense.builder()
+                .id(UUID.randomUUID())
+                .series("2026")
+                .number(4)
+                .baseAmount(BigDecimal.valueOf(300))
+                .vatRate(0)
+                .supplier(SupplierInfo.builder().name("No Vat Small Investment").identity("N20000000").build())
+                .taxCategory(TaxCategory.OTROS)
+                .depreciationRate(10)
+                .issueDate(LocalDate.of(2026, 3, 24))
+                .withholdingTax(BigDecimal.ZERO)
+                .build();
+        Expense zeroVatInvestmentAssetExpense = Expense.builder()
+                .id(UUID.randomUUID())
+                .series("2026")
+                .number(5)
+                .baseAmount(BigDecimal.valueOf(4000))
+                .vatRate(0)
+                .supplier(SupplierInfo.builder().name("No Vat Investment").identity("N30000000").build())
+                .taxCategory(TaxCategory.OTROS)
+                .depreciationRate(10)
+                .issueDate(LocalDate.of(2026, 3, 25))
+                .withholdingTax(BigDecimal.ZERO)
+                .build();
+        this.expenseRepository.saveAll(List.of(
+                new ExpenseEntity(zeroVatExpense),
+                new ExpenseEntity(zeroVatSmallInvestmentExpense),
+                new ExpenseEntity(zeroVatInvestmentAssetExpense)
+        ));
+
+        List<ExpenseEntity> result = this.expenseRepository.findReceivedBookWithZeroVat(
+                "2026", 1, 5, INVESTMENT_ASSET_THRESHOLD);
+
+        assertEquals(2, result.size());
+        assertEquals(zeroVatExpense.getId().toString(), result.getFirst().getId());
+        assertEquals(zeroVatSmallInvestmentExpense.getId().toString(), result.get(1).getId());
     }
 
     @Test

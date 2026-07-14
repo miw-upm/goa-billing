@@ -21,12 +21,12 @@ public interface InvoiceRepository extends MongoRepository<InvoiceEntity, String
     List<InvoiceEntity> findByEmissionDateRange(LocalDate fromDate, LocalDate toDate);
 
     @Query(value = """
-        {
-          'series': ?0,
-          'number': { $gte: ?1, $lte: ?2 },
-          'emissionDate': { $ne: null }
-        }
-        """, sort = "{ 'number': 1 }")
+            {
+              'series': ?0,
+              'number': { $gte: ?1, $lte: ?2 },
+              'emissionDate': { $ne: null }
+            }
+            """, sort = "{ 'number': 1 }")
     List<InvoiceEntity> findIssuedBySeriesAndNumberRange(String series, int fromNumber, int toNumber);
 
     Optional<InvoiceEntity> findFirstBySeriesOrderByNumberDesc(String series);
