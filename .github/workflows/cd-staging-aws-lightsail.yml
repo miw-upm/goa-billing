@@ -22,12 +22,6 @@ jobs:
           java-version: 21
           cache: maven
 
-      - name: ⚙️ Configure Maven settings for GitHub Packages
-        uses: s4u/maven-settings-action@v3.0.0
-        with:
-          servers: |
-            [{"id": "github", "username": "${{ github.actor }}", "password": "${{ secrets.GITHUB_TOKEN }}"}]
-
       - name: 🏷️ Prepare container image metadata (repository in lowercase, artifact, version...)
         run: |
           echo "REPOSITORY=${GITHUB_REPOSITORY,,}" >> $GITHUB_ENV
